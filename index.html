@@ -1,542 +1,590 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#0284c7" />
-<title>🏝️ Olango Island Trip — Weekly Payment Tracker</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      fontFamily: {
-        body: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['Outfit', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-      },
-      animation: {
-        'pulse-soft': 'pulseSoft 2s cubic-bezier(0.4,0,0.6,1) infinite',
-        'float': 'float 3s ease-in-out infinite',
-        'slide-up': 'slideUp 0.3s ease-out',
-        'fade-in': 'fadeIn 0.25s ease-out',
-        'scale-in': 'scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        'shimmer': 'shimmer 2s linear infinite',
-      },
-      keyframes: {
-        pulseSoft: { '0%,100%': { opacity: 1, transform: 'scale(1)' }, '50%': { opacity: 0.5, transform: 'scale(0.85)' } },
-        float: { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-6px)' } },
-        slideUp: { from: { opacity: 0, transform: 'translateY(20px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
-        fadeIn: { from: { opacity: 0 }, to: { opacity: 1 } },
-        scaleIn: { from: { opacity: 0, transform: 'scale(0.94)' }, to: { opacity: 1, transform: 'scale(1)' } },
-        shimmer: { '0%': { backgroundPosition: '-1000px 0' }, '100%': { backgroundPosition: '1000px 0' } },
-      }
-    }
-  }
-}
-</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0284c7">
+<title>🏝️ Olango Trip — Live Cloud Tracker</title>
+
+<!-- Firebase SDKs (Compat version for single-file html) -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
 <style>
-  *{-webkit-tap-highlight-color:transparent}
-  html,body{font-family:'Inter',ui-sans-serif,system-ui,sans-serif;overscroll-behavior-y:none}
-  .font-display{font-family:'Outfit','Inter',ui-sans-serif,system-ui,sans-serif}
-  ::selection{background:#0ea5e9;color:#fff}
-  ::-webkit-scrollbar{width:10px;height:10px}
-  ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px;border:2px solid transparent;background-clip:padding-box}
-  ::-webkit-scrollbar-thumb:hover{background:#94a3b8;background-clip:padding-box;border:2px solid transparent}
-  input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
-  input[type=number]{-moz-appearance:textfield;appearance:textfield}
+/* ============ RESET & NATIVE STYLES ============ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:#f8fafc;color:#1e293b;line-height:1.5;overscroll-behavior:none;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font:inherit;color:inherit}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em}
+pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+::selection{background:#0ea5e9;color:#fff}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px}
 
-  .glass{background:rgba(255,255,255,0.72);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%)}
-  .glass-dark{background:rgba(15,23,42,0.4);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+/* ============ LOADER ============ */
+#loader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#f0f9ff,#ecfeff);transition:opacity .3s ease,visibility .3s ease}
+#loader.hide{opacity:0;visibility:hidden;pointer-events:none}
+#loader .logo{font-size:56px;animation:float 2s ease-in-out infinite}
+#loader p{margin-top:12px;font-size:13px;font-weight:600;color:#64748b}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+#app{opacity:0;transition:opacity .35s ease}
+#app.ready{opacity:1}
 
-  .hero-bg{
-    background-image:
-      radial-gradient(ellipse at top left, rgba(56,189,248,0.35), transparent 50%),
-      radial-gradient(ellipse at bottom right, rgba(20,184,166,0.35), transparent 50%),
-      linear-gradient(135deg, #0c4a6e 0%, #164e63 50%, #0e7490 100%);
-  }
-  .hero-pattern{
-    background-image:
-      radial-gradient(circle at 20% 30%, rgba(255,255,255,0.08) 0%, transparent 40%),
-      radial-gradient(circle at 80% 70%, rgba(255,255,255,0.06) 0%, transparent 40%);
-  }
+/* ============ LAYOUT ============ */
+.wrap{max-width:1120px;margin:0 auto;padding:16px 12px 120px}
+@media(min-width:640px){.wrap{padding:16px 24px 40px}}
 
-  .checkbox-locked{
-    appearance:none;-webkit-appearance:none;
-    height:26px;width:26px;
-    border-radius:8px;
-    display:inline-flex;align-items:center;justify-content:center;
-    cursor:not-allowed;pointer-events:none;flex-shrink:0;
-    transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
-    position:relative;
-  }
-  .checkbox-locked.paid{
-    background:linear-gradient(135deg,#10b981,#059669);
-    border:none;
-    box-shadow:0 4px 12px -2px rgba(16,185,129,0.4), 0 0 0 1px rgba(16,185,129,0.2) inset;
-  }
-  .checkbox-locked.paid::after{content:'✓';color:white;font-size:15px;font-weight:900;line-height:1}
-  .checkbox-locked.partial{
-    background:linear-gradient(135deg,#fbbf24,#f59e0b);
-    border:none;
-    box-shadow:0 4px 12px -2px rgba(251,191,36,0.4);
-  }
-  .checkbox-locked.partial::after{content:'~';color:white;font-size:16px;font-weight:900;line-height:1;margin-top:-2px}
-  .checkbox-locked.empty{
-    background:#f8fafc;
-    border:2px dashed #cbd5e1;
-  }
-  .checkbox-locked.missed{
-    background:#fef2f2;
-    border:2px dashed #fca5a5;
-  }
-  .checkbox-locked.missed::after{content:'✗';color:#ef4444;font-size:14px;font-weight:900}
+/* ============ HERO ============ */
+.hero{position:relative;overflow:hidden;border-radius:24px;background:linear-gradient(135deg,#0c4a6e,#164e63 50%,#0e7490);color:#fff;padding:20px;box-shadow:0 20px 40px -12px rgba(14,116,144,.3);margin-bottom:16px}
+@media(min-width:640px){.hero{padding:32px}}
+.hero::before{content:"";position:absolute;top:-80px;right:-80px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.05)}
+.hero::after{content:"";position:absolute;bottom:-120px;left:-40px;width:280px;height:280px;border-radius:50%;background:rgba(103,232,249,.08)}
+.hero-grid{position:relative;display:flex;flex-direction:column;gap:20px;justify-content:space-between}
+@media(min-width:1024px){.hero-grid{flex-direction:row;align-items:flex-start}}
+.badge-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.badge-dot{width:8px;height:8px;border-radius:50%;background:#34d399;animation:pulse 2s infinite}
+.cloud-status{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.cloud-status.live{background:rgba(16,185,129,.2);border:1px solid rgba(52,211,153,.4);color:#6ee7b7}
+.cloud-status.local{background:rgba(245,158,11,.2);border:1px solid rgba(251,191,36,.4);color:#fde047}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.hero h1{font-size:26px;font-weight:900;letter-spacing:-.02em;line-height:1.15;margin-top:12px}
+@media(min-width:640px){.hero h1{font-size:34px}}
+.hero .sub{color:#e0f2fe;font-size:14px;font-weight:500;margin-top:4px}
+.hero .range{color:rgba(186,230,253,.75);font-size:12px;margin-top:2px}
+.today{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:5px 11px;border-radius:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);font-size:11px;font-weight:700;color:#e0f2fe}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.chip{padding:5px 11px;border-radius:999px;background:rgba(15,23,42,.35);border:1px solid rgba(255,255,255,.15);font-size:11px;font-weight:700;color:#fff;display:inline-flex;align-items:center;gap:6px}
+.chip.urgent{background:rgba(239,68,68,.25);border-color:rgba(252,165,165,.4)}
+.target-box{background:rgba(15,23,42,.35);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:18px;min-width:220px;backdrop-filter:blur(10px)}
+.target-box .lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#bae6fd}
+.target-box .amt{font-size:28px;font-weight:900;margin-top:4px;letter-spacing:-.02em}
+.target-box .col{font-size:14px;margin-top:6px;color:#bae6fd}
+.target-box .col b{color:#6ee7b7;font-weight:700}
+.progress{margin-top:12px}
+.progress-lbl{display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:#bae6fd;margin-bottom:6px}
+.progress-bar{height:10px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#34d399,#22d3ee);border-radius:999px;transition:width .7s ease}
 
-  .btn-press{transition:all 0.15s ease;-webkit-user-select:none;user-select:none}
-  .btn-press:active{transform:scale(0.96)}
+/* ============ TOOLBAR ============ */
+.toolbar{position:sticky;top:8px;z-index:30;background:rgba(255,255,255,.75);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.6);border-radius:16px;padding:8px;margin-bottom:16px;box-shadow:0 4px 12px rgba(15,23,42,.05);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.rate-wrap{display:flex;align-items:center;gap:8px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:12px;padding:6px 10px}
+.rate-wrap label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase}
+.rate-wrap input{width:52px;text-align:center;font-weight:900;font-size:14px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:8px;background:#fff}
+.rate-wrap input:focus{outline:none;box-shadow:0 0 0 2px #38bdf8}
+.btn{padding:8px 14px;border-radius:12px;font-size:12px;font-weight:700;transition:transform .12s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:active{transform:scale(.95)}
+.btn-primary{background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#fff;box-shadow:0 4px 10px rgba(14,165,233,.35)}
+.btn-em{background:#ecfdf5;border:1px solid #a7f3d0;color:#047857}
+.btn-em:hover{background:#d1fae5}
+.btn-vi{background:#f5f3ff;border:1px solid #ddd6fe;color:#6d28d9}
+.btn-vi:hover{background:#ede9fe}
+.btn-neutral{background:#fff;border:1px solid #e2e8f0;color:#475569}
+.btn-neutral:hover{background:#f8fafc}
+.btn-dark{background:#1e293b;color:#fff}
+.btn-dark:hover{background:#0f172a}
+.btn-danger{background:#fef2f2;border:1px solid #fecaca;color:#dc2626}
+.btn-danger:hover{background:#fee2e2}
+.btn-spacer{flex:1}
+.hist-cnt{margin-left:2px;padding:2px 6px;font-size:9px;font-weight:900;background:#10b981;color:#fff;border-radius:999px}
+.hide-sm{display:none}
+@media(min-width:640px){.hide-sm{display:inline}}
 
-  .modal-panel{max-height:92dvh}
+/* ============ CARDS ============ */
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.03);margin-bottom:16px}
+.gcash{background:linear-gradient(135deg,#1d4ed8,#0284c7 50%,#06b6d4);color:#fff;position:relative;overflow:hidden;border:none}
+.gcash::before{content:"";position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.1)}
+.gcash-body{position:relative;display:flex;flex-direction:column;gap:14px;justify-content:space-between}
+@media(min-width:640px){.gcash-body{flex-direction:row;align-items:center}}
+.gcash-tag{display:inline-block;background:#fff;color:#1d4ed8;font-size:10px;font-weight:900;padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.06em}
+.gcash .lbl{font-size:11px;color:#bae6fd;margin-top:8px;font-weight:500}
+.gcash .name{font-size:17px;font-weight:700;color:#fde047}
+.gcash .num{font-size:22px;font-weight:900;letter-spacing:.03em;color:#fff;background:none;border:none;padding:0;cursor:pointer}
+.gcash .num:hover{color:#e0f7fa}
+.gcash-copy{padding:12px 20px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:12px;color:#fff;font-size:12px;font-weight:700}
+.gcash-copy:hover{background:rgba(255,255,255,.25)}
+.gcash-note{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15);font-size:11px;color:#e0f2fe}
+.gcash-note code{background:rgba(255,255,255,.2);padding:2px 6px;border-radius:4px;color:#fff}
 
-  @media print{
-    .no-print{display:none !important}
-    body{background:white !important}
-    .print-clean{box-shadow:none !important;border:none !important;background:white !important}
-    .hero-bg{background:#0369a1 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  }
+.sec-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sec-title h2{font-size:14px;font-weight:900;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
+.sec-title .dot{width:5px;height:22px;border-radius:999px;background:linear-gradient(180deg,#38bdf8,#06b6d4)}
+.sec-title .dot.em{background:linear-gradient(180deg,#34d399,#14b8a6)}
+.sec-title a{font-size:11px;font-weight:700;color:#0284c7;text-decoration:none}
+.sec-title a:hover{color:#0369a1}
 
-  .sticky-col{position:sticky;left:0;z-index:5}
-  .table-scroll{scrollbar-width:thin}
+.member-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+@media(min-width:1024px){.member-grid{grid-template-columns:repeat(4,1fr)}}
+.mem-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.03);transition:box-shadow .2s}
+.mem-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.06)}
+.mem-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.avatar{width:36px;height:36px;border-radius:12px;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.mem-name{font-size:12px;font-weight:700;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.mem-paid{font-size:22px;font-weight:900;color:#0f172a;letter-spacing:-.02em}
+.mem-of{font-size:10px;color:#64748b;margin-top:2px}
+.mem-bar{height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden;margin-top:8px}
+.mem-bar-fill{height:100%;border-radius:999px;transition:width .5s}
+.mem-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:4px}
+.mem-stat{font-size:10px;font-weight:700}
+.mem-log{padding:4px 8px;border-radius:8px;font-size:10px;font-weight:700;border:1px solid}
+.mem-last{font-size:9px;color:#94a3b8;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-  .shimmer{
-    background:linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
-    background-size:1000px 100%;
-    animation:shimmer 2s linear infinite;
-  }
+.qp{background:linear-gradient(135deg,#f8fafc,#f0f9ff);border:1px solid #e2e8f0;border-radius:16px;padding:14px;margin-bottom:16px}
+.qp-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.qp-hd h3{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:#334155;display:flex;align-items:center;gap:6px}
+.qp-info{font-size:10px;font-weight:700;color:#64748b}
+.qp-btns{display:flex;flex-wrap:wrap;gap:8px}
+.qp-btn{padding:8px 12px;border-radius:12px;font-size:12px;font-weight:700;border:2px solid #e2e8f0;background:#fff;color:#334155;display:inline-flex;align-items:center;gap:6px}
+.qp-btn:hover{border-color:#7dd3fc}
+.qp-btn.done{background:#d1fae5;border-color:#a7f3d0;color:#047857;cursor:default}
+.qp-all{width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#10b981,#14b8a6);color:#fff;display:flex;gap:12px;align-items:center;box-shadow:0 4px 12px rgba(16,185,129,.3)}
+.qp-all .emoji{font-size:28px}
+.qp-all .t{font-size:15px;font-weight:900}
+.qp-all .s{font-size:11px;color:#d1fae5}
 
-  @supports (padding: max(0px)) {
-    .safe-bottom{padding-bottom:max(1rem, env(safe-area-inset-bottom))}
-    .fab-pos{bottom:max(1rem, env(safe-area-inset-bottom))}
-  }
+/* ============ TABLE ============ */
+.tbl-card{background:#fff;border:1px solid #e2e8f0;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.03);margin-bottom:16px}
+.tbl-hd{padding:16px 16px 8px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.tbl-hd h2{font-size:14px;font-weight:900;display:flex;align-items:center;gap:8px}
+.tbl-lock{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;min-width:640px;border-collapse:collapse}
+thead tr{background:rgba(241,245,249,.8);border-bottom:2px solid #e2e8f0}
+th{padding:10px 8px;font-size:10px;font-weight:900;color:#64748b;text-transform:uppercase;letter-spacing:.05em;text-align:center;white-space:nowrap}
+th:first-child{text-align:center;min-width:44px}
+th.left{text-align:left}
+th.right{text-align:right}
+td{padding:8px;font-size:12px;color:#475569;white-space:nowrap}
+td.center{text-align:center}
+td.right{text-align:right}
+tbody tr:nth-child(even){background:rgba(248,250,252,.5)}
+tbody tr:hover{background:rgba(224,242,254,.4)}
+tbody tr.now{background:linear-gradient(90deg,rgba(14,165,233,.1),transparent 70%);border-left:3px solid #0ea5e9}
+tbody tr.past{opacity:.75}
+.sticky-col{position:sticky;left:0;background:inherit;z-index:2}
+.wk-num{font-weight:900;font-size:12px;color:#94a3b8}
+tr.now .wk-num{color:#0284c7}
+.due-cell{font-weight:600;color:#334155}
+.now-badge{display:inline-block;margin-left:6px;padding:2px 6px;background:#0ea5e9;color:#fff;font-size:8px;font-weight:900;border-radius:999px;text-transform:uppercase;letter-spacing:.05em;animation:pulse 2s infinite}
+.past-badge{margin-left:6px;font-size:9px;color:#94a3b8;font-weight:700}
+.chk{width:26px;height:26px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:14px;transition:all .3s cubic-bezier(.34,1.56,.64,1)}
+.chk.paid{background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 10px rgba(16,185,129,.4)}
+.chk.partial{background:linear-gradient(135deg,#fbbf24,#f59e0b);box-shadow:0 4px 10px rgba(251,191,36,.4)}
+.chk.empty{background:#f8fafc;border:2px dashed #cbd5e1;color:transparent}
+.chk.missed{background:#fef2f2;border:2px dashed #fca5a5;color:#ef4444}
+.cell-inner{display:flex;flex-direction:column;align-items:center;gap:2px}
+.cell-amt{font-size:9px;font-weight:900;line-height:1}
+.cell-amt.paid{color:#059669}
+.cell-amt.partial{color:#d97706}
+.cell-dt{font-size:8px;color:#94a3b8;line-height:1}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:900}
+.pill-ok{background:#d1fae5;color:#047857}
+.pill-miss{background:#fee2e2;color:#dc2626}
+.pill-none{background:#f1f5f9;color:#94a3b8}
+.pill-part{background:#fef3c7;color:#b45309}
+.goal-cell{color:#64748b;font-weight:600}
+.pot-cell{color:#059669;font-weight:900}
+tfoot tr{background:#f1f5f9;border-top:2px solid #cbd5e1;font-weight:900}
+tfoot td{padding:12px 8px}
+tfoot .totals-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#334155}
+tfoot .m-tot{color:#0369a1;font-size:12px}
+tfoot .grand{color:#047857;font-size:14px;text-align:right}
 
-  .row-current{
-    background:linear-gradient(90deg, rgba(14,165,233,0.08), rgba(6,182,212,0.04) 60%, transparent) !important;
-    border-left:3px solid #0ea5e9 !important;
-  }
+/* ============ RECENT & MODALS ============ */
+.recent{margin-bottom:16px}
+.recent-list{display:flex;flex-direction:column;gap:8px}
+.recent-item{background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.03)}
+.recent-empty{background:#fff;border:2px dashed #e2e8f0;border-radius:16px;padding:32px;text-align:center;color:#94a3b8}
+.recent-empty .emoji{font-size:36px;margin-bottom:8px}
+.recent-row{display:flex;gap:12px;padding:12px;align-items:flex-start}
+.recent-body{flex:1;min-width:0}
+.recent-name{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.recent-name p{font-size:13px;font-weight:700;color:#1e293b}
+.recent-name span{font-size:12px;color:#94a3b8}
+.recent-dt{display:flex;align-items:center;gap:4px;font-size:11px;color:#64748b;font-weight:600;margin-top:2px}
+.recent-rel{font-size:10px;color:#059669;font-weight:700;margin-top:2px}
+.recent-note{font-size:11px;color:#64748b;font-style:italic;margin-top:2px}
+.recent-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.recent-amt{font-size:14px;font-weight:900;color:#059669}
+.icon-btn{width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;transition:transform .12s;font-size:14px;font-weight:900}
+.icon-btn:active{transform:scale(.9)}
+.icon-btn.edit{background:#fef3c7;color:#b45309}
+.icon-btn.edit:hover{background:#fde68a}
+.icon-btn.del{background:#fee2e2;color:#dc2626}
+.icon-btn.del:hover{background:#fecaca}
+.icon-btn.save{background:#10b981;color:#fff}
+.icon-btn.cancel{background:#e2e8f0;color:#475569}
+.confirm-bar{background:#ef4444;color:#fff;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;font-weight:700}
+.confirm-bar-btns{display:flex;gap:6px}
+.confirm-bar-btns button{padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900}
+.confirm-yes{background:#fff;color:#dc2626}
+.confirm-no{background:#b91c1c;color:#fff}
+
+.two-col{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:16px}
+@media(min-width:768px){.two-col{grid-template-columns:1fr 1fr}}
+.rules-card h3{font-size:14px;font-weight:900;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.rules-card h3 .rd{width:8px;height:8px;border-radius:50%}
+.rules-card h3 .rd.sk{background:#0ea5e9}
+.rules-card h3 .rd.em{background:#10b981}
+.rules-list{display:flex;flex-direction:column;gap:10px}
+.rules-list li{display:flex;gap:10px;font-size:12px;color:#475569;list-style:none;align-items:flex-start}
+.rules-list li b{color:#1e293b}
+.rules-list li code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:11px}
+.rule-icon{flex-shrink:0;width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900}
+.ri-sk{background:#e0f2fe;color:#0284c7}
+.ri-vi{background:#ede9fe;color:#7c3aed}
+.ri-em{background:#d1fae5;color:#059669}
+.ri-am{background:#fef3c7;color:#d97706}
+.ms-list li{display:flex;gap:10px;align-items:flex-start;font-size:12px;color:#475569;list-style:none}
+.ms-list li b{color:#1e293b}
+.ms-check{flex-shrink:0;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+.ms-check.ok{background:#10b981;color:#fff}
+.ms-check.pending{background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0}
+
+.footer{text-align:center;padding:8px 0 16px;font-size:10px;color:#94a3b8;font-weight:500}
+
+.fab{position:fixed;bottom:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#fff;font-size:28px;font-weight:900;box-shadow:0 12px 24px rgba(14,165,233,.4);display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.fab:active{transform:scale(.9)}
+@media(min-width:640px){.fab{display:none}}
+
+.modal{position:fixed;inset:0;z-index:50;display:none}
+.modal.open{display:block}
+.modal-bg{position:absolute;inset:0;background:rgba(2,6,23,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);animation:fadein .2s}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.modal-wrap{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
+@media(min-width:640px){.modal-wrap{align-items:center;padding:24px}}
+.modal-panel{pointer-events:auto;width:100%;max-height:92dvh;background:#fff;border-radius:24px 24px 0 0;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 -20px 40px rgba(0,0,0,.15);animation:slideup .3s cubic-bezier(.16,1,.3,1)}
+@media(min-width:640px){.modal-panel{max-width:480px;border-radius:24px;box-shadow:0 20px 40px rgba(0,0,0,.2)}}
+.modal-panel.lg{max-width:600px}
+.modal-panel.xl{max-width:720px}
+@keyframes slideup{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+.modal-hd{padding:20px;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-shrink:0}
+.modal-hd.sky{background:linear-gradient(90deg,#0ea5e9,#06b6d4)}
+.modal-hd.vi{background:linear-gradient(90deg,#8b5cf6,#a855f7)}
+.modal-hd.em{background:linear-gradient(90deg,#10b981,#14b8a6)}
+.modal-hd.dk{background:linear-gradient(90deg,#1e293b,#0f172a)}
+.modal-hd.rd{background:linear-gradient(90deg,#ef4444,#f97316)}
+.modal-hd h3{font-size:18px;font-weight:900}
+.modal-hd p{font-size:12px;opacity:.85;margin-top:2px}
+.modal-x{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:18px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .12s}
+.modal-x:active{transform:scale(.9)}
+.modal-body{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px}
+.form-group label{display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.form-group select,.form-group input[type=text],.form-group input[type=number]{width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:700;background:#f8fafc}
+.form-group select:focus,.form-group input:focus{outline:none;border-color:#38bdf8;box-shadow:0 0 0 3px rgba(56,189,248,.15)}
+.auto-info{border-radius:12px;padding:12px;display:flex;align-items:center;gap:12px}
+.auto-info.sky{background:linear-gradient(135deg,#f0f9ff,#ecfeff);border:1px solid #bae6fd}
+.auto-info.am{background:linear-gradient(135deg,#fffbeb,#fff7ed);border:1px solid #fed7aa}
+.auto-icon{width:40px;height:40px;border-radius:12px;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.auto-icon.sky{background:#0ea5e9;box-shadow:0 4px 10px rgba(14,165,233,.35)}
+.auto-icon.am{background:#f59e0b;box-shadow:0 4px 10px rgba(245,158,11,.35)}
+.auto-body p:first-child{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+.auto-body .d{font-size:13px;font-weight:900;margin-top:2px}
+.auto-body .w{font-size:10px;font-weight:700;margin-top:1px}
+.auto-info.sky .auto-body p:first-child{color:#0284c7}
+.auto-info.sky .auto-body .d{color:#0c4a6e}
+.auto-info.sky .auto-body .w{color:#0369a1}
+.auto-info.am .auto-body p:first-child{color:#d97706}
+.auto-info.am .auto-body .d{color:#78350f}
+.auto-info.am .auto-body .w{color:#b45309}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip-mini{padding:5px 10px;border-radius:8px;background:#f0f9ff;border:1px solid #bae6fd;color:#0369a1;font-size:11px;font-weight:700}
+.chip-mini:hover{background:#e0f2fe}
+.amount-wrap{position:relative}
+.amount-wrap .peso{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-weight:900;color:#94a3b8;font-size:18px}
+.amount-wrap input{padding-left:32px !important;font-size:16px !important}
+.submit-btn{padding:14px;border-radius:12px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#fff;font-weight:700;font-size:14px;box-shadow:0 8px 16px rgba(14,165,233,.3);display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.submit-btn:active{transform:scale(.98)}
+.submit-btn:disabled{opacity:.6}
+
+.mem-list-mod{display:flex;flex-direction:column;gap:8px}
+.mem-row{display:flex;align-items:center;gap:12px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:14px;padding:10px}
+.mem-row-body{flex:1;min-width:0}
+.mem-row-body p{font-size:13px;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mem-row-body .s{font-size:11px;color:#94a3b8}
+.mem-row-input{width:100%;padding:6px 10px;border:2px solid #c4b5fd;border-radius:8px;font-size:13px;font-weight:700}
+.mem-row-input:focus{outline:none;box-shadow:0 0 0 2px rgba(196,181,253,.4)}
+.mem-actions{display:flex;gap:4px;flex-shrink:0}
+.add-mem{padding-top:12px;border-top:1px solid #f1f5f9}
+.add-mem-row{display:flex;gap:8px}
+.add-mem-row input{flex:1;padding:10px 12px;border:2px solid #e2e8f0;border-radius:12px;font-size:13px;font-weight:700;background:#f8fafc}
+.add-mem-row input:focus{outline:none;border-color:#a78bfa;box-shadow:0 0 0 3px rgba(167,139,250,.15)}
+.add-mem-btn{padding:10px 16px;border-radius:12px;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:#fff;font-weight:700;font-size:13px;box-shadow:0 4px 10px rgba(139,92,246,.35);display:inline-flex;align-items:center;gap:4px}
+.mem-empty{text-align:center;padding:32px 0;color:#94a3b8;font-size:13px}
+.mem-empty .emoji{font-size:32px;margin-bottom:8px}
+
+.hist-filter{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:5px 8px;font-size:11px;font-weight:700;color:#fff}
+.hist-filter option{color:#1e293b}
+.hist-list{padding:16px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px}
+.hist-item{background:rgba(236,253,245,.4);border:1px solid #d1fae5;border-radius:14px;overflow:hidden}
+.tag-auto{font-size:9px;font-weight:900;color:#059669;background:#d1fae5;padding:2px 6px;border-radius:4px}
+.tag-manual{font-size:9px;font-weight:900;color:#d97706;background:#fef3c7;padding:2px 6px;border-radius:4px}
+
+.preview-text{margin:16px;padding:16px;background:#020617;border:1px solid #1e293b;border-radius:12px;font-size:11px;color:#6ee7b7;white-space:pre-wrap;overflow-x:auto;line-height:1.6}
+
+.confirm-panel{max-width:400px}
+.confirm-body{padding:20px}
+.confirm-msg{font-size:14px;color:#334155;margin-bottom:20px}
+.confirm-btns{display:flex;gap:12px}
+.confirm-btns button{flex:1;padding:12px;border-radius:12px;font-weight:700;font-size:14px}
+.confirm-cancel{background:#f1f5f9;color:#475569}
+.confirm-cancel:hover{background:#e2e8f0}
+.confirm-ok{background:#ef4444;color:#fff}
+.confirm-ok:hover{background:#dc2626}
+
+.toast-wrap{position:fixed;z-index:100;bottom:96px;left:50%;transform:translateX(-50%);max-width:90vw;pointer-events:none}
+@media(min-width:640px){.toast-wrap{bottom:24px;right:24px;left:auto;transform:none}}
+.toast{background:#0f172a;color:#fff;padding:12px 16px;border-radius:16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 20px 40px rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.1);pointer-events:auto;animation:slideup .3s cubic-bezier(.16,1,.3,1)}
+.toast.err{background:#dc2626}
+.toast.warn{background:#d97706}
+.toast .ic{font-size:16px;font-weight:900}
+.toast .ic.ok{color:#34d399}
+.toast .ic.err,.toast .ic.warn{color:#fff}
 </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-body min-h-screen">
+<body>
 
-<!-- Decorative background blobs -->
-<div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-  <div class="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-sky-200/40 blur-3xl"></div>
-  <div class="absolute top-1/2 -left-40 h-96 w-96 rounded-full bg-cyan-200/40 blur-3xl"></div>
-  <div class="absolute bottom-0 right-1/4 h-80 w-80 rounded-full bg-emerald-200/30 blur-3xl"></div>
-</div>
+<div id="loader"><div class="logo">🏝️</div><p>Connecting to Cloud…</p></div>
+<div class="toast-wrap" id="toast-wrap"></div>
 
-<!-- Toast -->
-<div id="toast-container" class="fixed z-[95] left-1/2 -translate-x-1/2 sm:left-auto sm:right-6 sm:translate-x-0 bottom-24 sm:bottom-6 max-w-[90vw] sm:max-w-sm pointer-events-none"></div>
+<div id="app">
+<div class="wrap">
 
-<!-- Loading Screen -->
-<div id="loading-screen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-br from-sky-50 to-cyan-50">
-  <div class="text-6xl animate-float">🏝️</div>
-  <p class="mt-4 text-sm font-bold text-slate-500">Loading your tracker…</p>
-</div>
-
-<div class="max-w-6xl mx-auto px-3 sm:px-6 pt-4 pb-32 sm:pb-8 space-y-4">
-
-<!-- ============ HERO ============ -->
-<header class="relative overflow-hidden rounded-[2rem] text-white shadow-2xl shadow-sky-900/20 hero-bg print-clean">
-  <div class="absolute inset-0 hero-pattern"></div>
-  <!-- Decorative circles -->
-  <div class="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/5"></div>
-  <div class="pointer-events-none absolute -bottom-32 -left-16 h-72 w-72 rounded-full bg-cyan-300/10"></div>
-  <div class="pointer-events-none absolute top-1/2 right-1/3 h-40 w-40 rounded-full bg-white/5 blur-2xl"></div>
-
-  <div class="relative p-5 sm:p-8 md:p-10">
-    <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
-      <div class="flex-1 min-w-0 animate-slide-up">
-        <div id="hero-badge" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-dark border border-white/20 text-[11px] font-bold uppercase tracking-wider">
-          <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse-soft"></span>
-          <span id="hero-badge-text">Active Savings Cycle</span>
-        </div>
-        <h1 class="mt-3 font-display font-black text-3xl sm:text-4xl md:text-5xl tracking-tight leading-tight">
-          <span class="inline-block">🏝️</span> Olango Island Trip
-        </h1>
-        <p class="mt-1.5 text-sm sm:text-base text-sky-100 font-medium">Weekly Payment Tracker</p>
-        <p id="date-range" class="mt-1 text-xs text-sky-200/80"></p>
-
-        <!-- Quick stats chips -->
-        <div id="hero-chips" class="mt-5 flex flex-wrap gap-2"></div>
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="badge-row">
+        <div class="badge"><span class="badge-dot"></span><span id="badge-txt">Active cycle</span></div>
+        <div id="cloud-badge" class="cloud-status local">● Local Mode</div>
       </div>
-
-      <!-- Target panel -->
-      <div class="glass-dark rounded-2xl border border-white/15 p-5 min-w-[260px] animate-slide-up" style="animation-delay:0.1s">
-        <p class="text-[10px] font-bold uppercase tracking-widest text-sky-200">Total Fund Target</p>
-        <p id="hero-target" class="mt-1 font-display font-black text-3xl sm:text-4xl">₱0</p>
-        <div class="mt-2 flex items-baseline gap-2">
-          <span class="text-xs text-sky-200">Collected:</span>
-          <span id="hero-collected" class="text-lg font-bold text-emerald-300">₱0</span>
-        </div>
-        <div class="mt-3">
-          <div class="flex justify-between text-[10px] font-bold text-sky-200 mb-1.5">
-            <span>PROGRESS</span>
-            <span id="hero-progress-pct">0%</span>
-          </div>
-          <div class="h-2.5 rounded-full bg-white/15 overflow-hidden">
-            <div id="hero-progress-bar" class="h-full rounded-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 transition-all duration-700 ease-out" style="width:0%"></div>
-          </div>
-        </div>
+      <h1>🏝️ Olango Island Trip</h1>
+      <p class="sub">Weekly Payment Tracker</p>
+      <p class="range" id="date-range"></p>
+      <div class="today" id="today-line"></div>
+      <div class="chips" id="hero-chips"></div>
+    </div>
+    <div class="target-box">
+      <p class="lbl">Total Fund Target</p>
+      <p class="amt" id="stat-target">₱0</p>
+      <p class="col">Collected: <b id="stat-collected">₱0</b></p>
+      <div class="progress">
+        <div class="progress-lbl"><span>PROGRESS</span><span id="stat-pct">0%</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="stat-bar" style="width:0%"></div></div>
       </div>
     </div>
   </div>
 </header>
 
-<!-- ============ TOOLBAR ============ -->
-<div class="no-print sticky top-2 z-30 rounded-2xl glass border border-white/60 p-2 shadow-lg shadow-sky-900/5">
-  <div class="flex flex-wrap items-center gap-1.5">
-    <!-- Rate input -->
-    <div class="flex items-center bg-slate-100/80 rounded-xl px-2.5 py-1.5 gap-2 border border-slate-200/50">
-      <label for="rate-input" class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">₱/wk</label>
-      <input type="number" id="rate-input" min="1" step="1" inputmode="numeric" class="w-14 bg-white rounded-lg px-2 py-1 text-sm font-black text-slate-800 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-400 text-center" />
+<!-- TOOLBAR -->
+<div class="toolbar no-print">
+  <div class="rate-wrap"><label for="rate-inp">₱/wk</label><input type="number" id="rate-inp" min="1" inputmode="numeric"></div>
+  <button class="btn btn-primary" onclick="openPay()">+ Log Payment</button>
+  <button class="btn btn-em" onclick="openHistory()">History <span class="hist-cnt" id="hist-badge" style="display:none">0</span></button>
+  <button class="btn btn-vi" onclick="openMembers()">Members</button>
+  <div class="btn-spacer"></div>
+  <button class="btn btn-neutral" onclick="doCopy()">Copy</button>
+  <button class="btn btn-dark" onclick="openPreview()">Preview</button>
+  <button class="btn btn-neutral hide-sm" onclick="window.print()">Print</button>
+  <button class="btn btn-danger" onclick="doReset()" title="Reset">↺</button>
+</div>
+
+<!-- GCASH -->
+<div class="card gcash">
+  <div class="gcash-body">
+    <div>
+      <span class="gcash-tag">GCash</span>
+      <p class="lbl">Account Name</p>
+      <p class="name">KXI</p>
+      <p class="lbl">Mobile Number</p>
+      <button class="num" onclick="copyGCash()">0993 933 6295</button>
     </div>
-    <div class="hidden sm:block h-8 w-px bg-slate-200"></div>
+    <button class="gcash-copy" onclick="copyGCash()">📋 Copy #</button>
+  </div>
+  <p class="gcash-note">Note format: <code>[Name] - Wk [#]</code></p>
+</div>
 
-    <button onclick="openPaymentModal()" class="btn-press flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-500 text-white text-xs font-bold shadow-md shadow-sky-300/50 hover:shadow-lg hover:shadow-sky-400/50 transition-shadow">
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-      <span class="hidden xs:inline">Log</span> Payment
-    </button>
+<!-- MEMBERS -->
+<div class="sec-title">
+  <h2><span class="dot"></span>Members</h2>
+  <a onclick="openMembers()" class="no-print">Manage →</a>
+</div>
+<div class="member-grid" id="mem-grid"></div>
 
-    <button onclick="openHistoryModal()" class="btn-press flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition-colors">
-      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <span class="hidden sm:inline">History</span>
-      <span id="history-count-badge" class="hidden ml-0.5 px-1.5 py-0.5 text-[9px] font-black bg-emerald-500 text-white rounded-full">0</span>
-    </button>
+<!-- QUICK PAY -->
+<div class="qp no-print" id="qp-sec">
+  <div class="qp-hd">
+    <h3>⚡ Quick Pay — Current Week</h3>
+    <span class="qp-info" id="qp-info"></span>
+  </div>
+  <div class="qp-btns" id="qp-btns"></div>
+</div>
 
-    <button onclick="openMembersModal()" class="btn-press flex items-center gap-1.5 px-3 py-2 rounded-xl bg-violet-50 border border-violet-200 text-violet-700 text-xs font-bold hover:bg-violet-100 transition-colors">
-      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5.13a4 4 0 11-8 0 4 4 0 018 0zM21 8a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      <span class="hidden sm:inline">Members</span>
-    </button>
-
-    <div class="flex-1"></div>
-
-    <button onclick="copySummary()" class="btn-press flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors">
-      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-      <span class="hidden md:inline">Copy</span>
-    </button>
-
-    <button onclick="openPreviewModal()" class="btn-press flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 text-white text-xs font-bold hover:bg-slate-900 transition-colors">
-      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-      <span class="hidden md:inline">Preview</span>
-    </button>
-
-    <button onclick="window.print()" class="btn-press hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors">
-      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-    </button>
-
-    <button onclick="openResetDialog()" class="btn-press flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold hover:bg-red-100 transition-colors" title="Reset all data">
-      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-    </button>
+<!-- TABLE -->
+<div class="tbl-card">
+  <div class="tbl-hd">
+    <h2><span class="dot em"></span>Weekly Tracking</h2>
+    <span class="tbl-lock">🔒 Auto-tracked · Read only</span>
+  </div>
+  <div class="tbl-scroll">
+    <table>
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+      <tfoot id="tfoot"></tfoot>
+    </table>
   </div>
 </div>
 
-<!-- ============ GCASH CARD ============ -->
-<div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-700 via-sky-600 to-cyan-500 text-white shadow-xl shadow-blue-300/30 print-clean">
-  <!-- Decorative -->
-  <div class="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full bg-white/10"></div>
-  <div class="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-white/5"></div>
-  <div class="pointer-events-none absolute top-4 right-6 text-6xl opacity-10 font-black">₱</div>
-
-  <div class="relative p-5 sm:p-6">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div class="space-y-2">
-        <div class="flex items-center gap-2">
-          <span class="bg-white text-blue-700 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider shadow-sm">GCash</span>
-          <span class="text-[11px] font-semibold text-sky-100">Send payments here</span>
-        </div>
-        <div>
-          <p class="text-xs text-sky-200 font-medium">Account Name</p>
-          <p class="text-lg font-bold text-yellow-300 tracking-wide">KXI</p>
-        </div>
-        <div>
-          <p class="text-xs text-sky-200 font-medium">Mobile Number</p>
-          <button onclick="copyGCash()" class="btn-press group flex items-center gap-2 mt-0.5">
-            <span class="font-display font-black text-xl sm:text-2xl tracking-wider group-hover:text-cyan-100 transition-colors">0993 933 6295</span>
-          </button>
-        </div>
-      </div>
-      <div class="flex sm:flex-col gap-2 sm:min-w-[140px]">
-        <button onclick="copyGCash()" class="btn-press flex-1 flex items-center justify-center gap-2 bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-4 py-3 rounded-xl border border-white/25 backdrop-blur-sm transition-all">
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-          Copy #
-        </button>
-      </div>
-    </div>
-    <div class="mt-4 pt-4 border-t border-white/15">
-      <p class="text-[11px] text-sky-100 flex items-center gap-1.5">
-        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span>Include note format: <code class="bg-white/20 px-1.5 py-0.5 rounded text-white font-mono">[Name] - Wk [#]</code> — screenshot proof in GC after payment.</span>
-      </p>
-    </div>
+<!-- RECENT -->
+<div class="recent">
+  <div class="sec-title">
+    <h2><span class="dot em"></span>Recent Payments</h2>
+    <a onclick="openHistory()" class="no-print">View all →</a>
   </div>
+  <div class="recent-list" id="recent"></div>
 </div>
 
-<!-- ============ MEMBER CARDS ============ -->
-<section>
-  <div class="flex items-center justify-between mb-3">
-    <h2 class="text-sm font-black text-slate-900 flex items-center gap-2 font-display">
-      <span class="w-1.5 h-6 rounded-full bg-gradient-to-b from-sky-400 to-cyan-500"></span>
-      Members
-    </h2>
-    <button onclick="openMembersModal()" class="text-[11px] font-bold text-sky-600 hover:text-sky-700 no-print">Manage →</button>
-  </div>
-  <div id="member-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></div>
-</section>
-
-<!-- ============ QUICK PAY ============ -->
-<section id="quickpay-section" class="no-print">
-  <div class="rounded-2xl bg-gradient-to-br from-slate-50 to-sky-50 border border-slate-200/60 p-4 shadow-sm">
-    <div class="flex items-center justify-between mb-3">
-      <h3 class="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-2 font-display">
-        <svg class="h-4 w-4 text-sky-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        Quick Pay — Current Week
-      </h3>
-      <span id="quick-pay-week-info" class="text-[10px] font-bold text-slate-500"></span>
-    </div>
-    <div id="quick-pay-buttons" class="flex flex-wrap gap-2"></div>
-  </div>
-</section>
-
-<!-- ============ TRACKING TABLE ============ -->
-<section>
-  <div class="rounded-3xl bg-white border border-slate-200/80 shadow-sm overflow-hidden print-clean">
-    <div class="px-5 pt-5 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-      <h2 class="text-sm font-black text-slate-900 flex items-center gap-2 font-display">
-        <span class="w-1.5 h-6 rounded-full bg-gradient-to-b from-emerald-400 to-teal-500"></span>
-        Weekly Tracking Schedule
-      </h2>
-      <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider" title="Auto-tracked from payment logs — cannot be toggled manually">
-        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-        Auto-tracked · Read only
-      </div>
-    </div>
-    <div class="table-scroll overflow-x-auto">
-      <table id="tracking-table" class="w-full text-left border-collapse" style="min-width:640px">
-        <thead id="table-head"></thead>
-        <tbody id="table-body"></tbody>
-        <tfoot id="table-foot"></tfoot>
-      </table>
-    </div>
-  </div>
-</section>
-
-<!-- ============ RECENT PAYMENTS ============ -->
-<section>
-  <div class="flex items-center justify-between mb-3">
-    <h2 class="text-sm font-black text-slate-900 flex items-center gap-2 font-display">
-      <span class="w-1.5 h-6 rounded-full bg-gradient-to-b from-emerald-400 to-teal-500"></span>
-      Recent Payments
-    </h2>
-    <button onclick="openHistoryModal()" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 no-print">View all →</button>
-  </div>
-  <div id="recent-payments" class="space-y-2"></div>
-</section>
-
-<!-- ============ GUIDELINES & MILESTONES ============ -->
-<section class="grid md:grid-cols-2 gap-4">
-  <div class="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-sm print-clean">
-    <h3 class="text-sm font-black text-slate-900 mb-3 flex items-center gap-2 font-display">
-      <span class="h-2 w-2 rounded-full bg-sky-500"></span>
-      Payment Rules
-    </h3>
-    <ul class="space-y-2.5 text-xs text-slate-600">
-      <li class="flex gap-2.5"><span class="flex-shrink-0 h-5 w-5 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center"><svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span><span><strong class="text-slate-800">Cut-Off:</strong> Every Friday, 11:59 PM sharp</span></li>
-      <li class="flex gap-2.5"><span class="flex-shrink-0 h-5 w-5 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center"><svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg></span><span><strong class="text-slate-800">GCash Note:</strong> <code class="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono">[Name] - Wk [#]</code></span></li>
-      <li class="flex gap-2.5"><span class="flex-shrink-0 h-5 w-5 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span><span><strong class="text-slate-800">Proof:</strong> Screenshot receipt → drop in GC</span></li>
-      <li class="flex gap-2.5"><span class="flex-shrink-0 h-5 w-5 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center"><svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></span><span><strong class="text-slate-800">Advance Pay:</strong> Paying ahead is welcome!</span></li>
+<!-- RULES & MILESTONES -->
+<div class="two-col">
+  <div class="card rules-card">
+    <h3><span class="rd sk"></span>Payment Rules</h3>
+    <ul class="rules-list">
+      <li><span class="rule-icon ri-sk">⏰</span><span><b>Cut-off:</b> Every Friday 11:59 PM (Manila)</span></li>
+      <li><span class="rule-icon ri-vi">💬</span><span><b>Note:</b> <code>[Name] - Wk [#]</code></span></li>
+      <li><span class="rule-icon ri-em">📸</span><span><b>Proof:</b> Screenshot → drop in GC</span></li>
+      <li><span class="rule-icon ri-am">🚀</span><span><b>Advance:</b> Paying ahead welcome!</span></li>
     </ul>
   </div>
-  <div class="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-sm print-clean">
-    <h3 class="text-sm font-black text-slate-900 mb-3 flex items-center gap-2 font-display">
-      <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-      Milestones
-    </h3>
-    <ul id="milestones-list" class="space-y-2.5 text-xs text-slate-600"></ul>
+  <div class="card rules-card">
+    <h3><span class="rd em"></span>Milestones</h3>
+    <ul class="ms-list" id="ms-list"></ul>
   </div>
-</section>
-
-<footer class="text-center pt-2 pb-4 no-print">
-  <p class="text-[10px] text-slate-400 font-medium">Made for the Olango barkada · Data saved locally on this device</p>
-</footer>
-
 </div>
 
-<!-- ============ FAB (Mobile) ============ -->
-<button onclick="openPaymentModal()" class="fab-pos btn-press sm:hidden fixed bottom-4 right-4 z-40 h-14 w-14 rounded-2xl bg-gradient-to-br from-sky-500 to-cyan-500 text-white shadow-2xl shadow-sky-500/50 flex items-center justify-center no-print" aria-label="Log payment">
-  <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-</button>
+<p class="footer no-print">Olango barkada · Live Cloud Sync · Manila time (UTC+8)</p>
+</div>
+</div>
 
-<!-- ============ MODAL: PAYMENT ============ -->
-<div id="payment-modal" class="hidden fixed inset-0 z-50">
-  <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm animate-fade-in" onclick="closePaymentModal()"></div>
-  <div class="absolute inset-0 flex items-end sm:items-center justify-center sm:p-6">
-    <div class="modal-panel relative w-full sm:max-w-md flex flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl animate-slide-up">
-      <div class="bg-gradient-to-r from-sky-500 to-cyan-500 p-5 text-white">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 id="payment-modal-title" class="text-lg font-black font-display">Log a Payment</h3>
-            <p id="payment-modal-subtitle" class="text-sky-100 text-xs mt-0.5">Record who paid and how much</p>
-          </div>
-          <button onclick="closePaymentModal()" class="btn-press w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-        </div>
+<button class="fab no-print" onclick="openPay()" aria-label="Log payment">+</button>
+
+<!-- PAYMENT MODAL -->
+<div class="modal" id="m-pay">
+  <div class="modal-bg" onclick="closeM('m-pay')"></div>
+  <div class="modal-wrap">
+    <div class="modal-panel">
+      <div class="modal-hd sky">
+        <div><h3 id="pay-title">Log a Payment</h3><p id="pay-sub">Date auto-detected</p></div>
+        <button class="modal-x" onclick="closeM('m-pay')">✕</button>
       </div>
-      <form id="payment-form" onsubmit="submitPayment(event)" class="p-5 space-y-4 overflow-y-auto">
-        <input type="hidden" id="payment-edit-id" />
-        <div>
-          <label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Who Paid?</label>
-          <select id="payment-member" required class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50"></select>
-        </div>
-        <div>
-          <label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">For Which Week?</label>
-          <select id="payment-week" required class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50"></select>
-        </div>
-        <div>
-          <label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Amount Paid (₱)</label>
-          <div class="relative">
-            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg">₱</span>
-            <input type="number" id="payment-amount" min="1" step="1" required inputmode="numeric" class="w-full border-2 border-slate-200 rounded-xl pl-9 pr-4 py-3 text-base font-black focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50" />
+      <form class="modal-body" onsubmit="submitPay(event)">
+        <div class="auto-info sky" id="auto-box">
+          <div class="auto-icon sky" id="auto-ic">📅</div>
+          <div class="auto-body">
+            <p id="auto-lbl">Auto-detected date</p>
+            <p class="d" id="auto-date"></p>
+            <p class="w" id="auto-week"></p>
           </div>
-          <div id="amount-chips" class="mt-2 flex flex-wrap gap-1.5"></div>
         </div>
-        <div>
-          <label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Note (Optional)</label>
-          <input type="text" id="payment-note" maxlength="120" placeholder="e.g. GCash ref #12345" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50" />
+        <input type="hidden" id="pay-id">
+        <div class="form-group">
+          <label>Who Paid?</label>
+          <select id="pay-mem" required></select>
         </div>
-        <button type="submit" id="payment-submit-btn" class="btn-press w-full bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-sky-300/50 text-sm flex items-center justify-center gap-2 transition-all">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-          <span id="payment-submit-text">Confirm Payment</span>
-        </button>
+        <div class="form-group">
+          <label>Week</label>
+          <select id="pay-wk" required></select>
+        </div>
+        <div class="form-group">
+          <label>Amount (₱)</label>
+          <div class="amount-wrap">
+            <span class="peso">₱</span>
+            <input type="number" id="pay-amt" min="1" required inputmode="numeric">
+          </div>
+          <div class="chip-row" id="amt-chips"></div>
+        </div>
+        <div class="form-group">
+          <label>Note (Optional)</label>
+          <input type="text" id="pay-note" maxlength="120" placeholder="e.g. GCash ref #12345">
+        </div>
+        <button type="submit" class="submit-btn" id="pay-submit">✓ <span id="pay-submit-txt">Confirm Payment</span></button>
       </form>
     </div>
   </div>
 </div>
 
-<!-- ============ MODAL: MEMBERS ============ -->
-<div id="members-modal" class="hidden fixed inset-0 z-50">
-  <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm animate-fade-in" onclick="closeMembersModal()"></div>
-  <div class="absolute inset-0 flex items-end sm:items-center justify-center sm:p-6">
-    <div class="modal-panel relative w-full sm:max-w-md flex flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl animate-slide-up">
-      <div class="bg-gradient-to-r from-violet-500 to-purple-500 p-5 text-white flex-shrink-0">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-lg font-black font-display">Manage Members</h3>
-            <p class="text-violet-100 text-xs mt-0.5">Add, rename, or remove members</p>
-          </div>
-          <button onclick="closeMembersModal()" class="btn-press w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-        </div>
+<!-- MEMBERS MODAL -->
+<div class="modal" id="m-mem">
+  <div class="modal-bg" onclick="closeM('m-mem')"></div>
+  <div class="modal-wrap">
+    <div class="modal-panel">
+      <div class="modal-hd vi">
+        <div><h3>Manage Members</h3><p>Add, rename, or remove</p></div>
+        <button class="modal-x" onclick="closeM('m-mem')">✕</button>
       </div>
-      <div class="p-5 flex-1 overflow-y-auto space-y-4">
-        <div id="members-list" class="space-y-2"></div>
-        <div class="pt-3 border-t border-slate-100">
-          <label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Add New Member</label>
-          <div class="flex gap-2">
-            <input type="text" id="new-member-name" maxlength="40" placeholder="Enter name..." class="flex-1 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm font-bold focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition-all bg-slate-50" onkeypress="if(event.key==='Enter'){event.preventDefault();addMember()}" />
-            <button onclick="addMember()" class="btn-press bg-gradient-to-r from-violet-500 to-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-violet-300/50 flex items-center gap-1">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-              Add
-            </button>
+      <div class="modal-body">
+        <div id="mem-list-mod" class="mem-list-mod"></div>
+        <div class="add-mem">
+          <label style="display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:6px">Add New Member</label>
+          <div class="add-mem-row">
+            <input type="text" id="new-mem" maxlength="40" placeholder="Enter name...">
+            <button class="add-mem-btn" onclick="addMember()">+ Add</button>
           </div>
-          <p class="text-[10px] text-slate-400 mt-2">⚠️ Removing a member permanently deletes their payment history.</p>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ============ MODAL: HISTORY ============ -->
-<div id="history-modal" class="hidden fixed inset-0 z-50">
-  <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm animate-fade-in" onclick="closeHistoryModal()"></div>
-  <div class="absolute inset-0 flex items-end sm:items-center justify-center sm:p-6">
-    <div class="modal-panel relative w-full sm:max-w-lg flex flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl animate-slide-up">
-      <div class="bg-gradient-to-r from-emerald-500 to-teal-500 p-5 text-white flex-shrink-0">
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <h3 class="text-lg font-black font-display">Payment History</h3>
-            <p id="history-subtitle" class="text-emerald-100 text-xs mt-0.5">All recorded payments</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <select id="history-filter" onchange="renderHistory()" class="bg-white/25 border border-white/30 rounded-lg px-2 py-1.5 text-xs font-bold text-white focus:outline-none cursor-pointer">
-              <option value="all" class="text-slate-800">All Members</option>
-            </select>
-            <button onclick="closeHistoryModal()" class="btn-press w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-          </div>
+<!-- HISTORY MODAL -->
+<div class="modal" id="m-hist">
+  <div class="modal-bg" onclick="closeM('m-hist')"></div>
+  <div class="modal-wrap">
+    <div class="modal-panel lg">
+      <div class="modal-hd em">
+        <div><h3>Payment History</h3><p id="hist-sub">All payments</p></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="hist-filter" class="hist-filter" onchange="renderHistory()"><option value="all">All Members</option></select>
+          <button class="modal-x" onclick="closeM('m-hist')">✕</button>
         </div>
       </div>
-      <div id="history-list" class="p-5 flex-1 overflow-y-auto space-y-2"></div>
+      <div class="hist-list" id="hist-list"></div>
     </div>
   </div>
 </div>
 
-<!-- ============ MODAL: PREVIEW ============ -->
-<div id="preview-modal" class="hidden fixed inset-0 z-50">
-  <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm animate-fade-in" onclick="closePreviewModal()"></div>
-  <div class="absolute inset-0 flex items-end sm:items-center justify-center sm:p-6">
-    <div class="modal-panel relative w-full sm:max-w-2xl flex flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl animate-slide-up">
-      <div class="bg-gradient-to-r from-slate-800 to-slate-900 p-5 text-white flex-shrink-0">
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <h3 class="text-lg font-black font-display">📋 Preview & Share</h3>
-            <p class="text-slate-300 text-xs mt-0.5">Copy or share this summary anywhere</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="copySummary()" class="btn-press px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-lg text-xs font-bold flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-              Copy
-            </button>
-            <button onclick="sharePreview()" class="btn-press px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-lg text-xs font-bold flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a9 9 0 10-9.032-4.026M15 5.657a3 3 0 100 5.657m0-5.657a3 3 0 100 5.657"/></svg>
-              Share
-            </button>
-            <button onclick="closePreviewModal()" class="btn-press w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-          </div>
+<!-- PREVIEW MODAL -->
+<div class="modal" id="m-prev">
+  <div class="modal-bg" onclick="closeM('m-prev')"></div>
+  <div class="modal-wrap">
+    <div class="modal-panel xl">
+      <div class="modal-hd dk">
+        <div><h3>📋 Preview & Share</h3><p>Copy or share this summary</p></div>
+        <div style="display:flex;gap:8px">
+          <button class="modal-x" style="background:rgba(255,255,255,.15);width:auto;padding:0 12px;font-size:12px;font-weight:700" onclick="doCopy()">Copy</button>
+          <button class="modal-x" onclick="closeM('m-prev')">✕</button>
         </div>
       </div>
-      <div class="p-5 flex-1 overflow-y-auto space-y-4">
-        <div id="preview-visual" class="space-y-3"></div>
-        <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Text Format (for chat/docs)</p>
-          <pre id="preview-text" class="text-[10px] sm:text-xs font-mono text-emerald-300 whitespace-pre-wrap leading-relaxed overflow-x-auto"></pre>
-        </div>
-      </div>
+      <pre id="prev-text" class="preview-text"></pre>
     </div>
   </div>
 </div>
 
-<!-- ============ MODAL: CONFIRM ============ -->
-<div id="confirm-modal" class="hidden fixed inset-0 z-[60]">
-  <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm animate-fade-in" onclick="closeConfirm(false)"></div>
-  <div class="absolute inset-0 flex items-center justify-center p-4">
-    <div class="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden animate-scale-in">
-      <div id="confirm-header" class="bg-gradient-to-r from-red-500 to-orange-500 p-5 text-white">
-        <h3 id="confirm-title" class="text-base font-black font-display">Are you sure?</h3>
-        <p id="confirm-subtitle" class="text-red-100 text-xs mt-0.5">This action cannot be undone</p>
+<!-- CONFIRM MODAL -->
+<div class="modal" id="m-ok" style="z-index:60">
+  <div class="modal-bg" onclick="resolveOk(false)"></div>
+  <div class="modal-wrap" style="align-items:center;padding:16px">
+    <div class="modal-panel confirm-panel">
+      <div class="modal-hd rd">
+        <div><h3 id="ok-title">Are you sure?</h3><p id="ok-sub">Cannot undo</p></div>
       </div>
-      <div class="p-5">
-        <p id="confirm-message" class="text-sm text-slate-700 mb-5"></p>
-        <div class="flex gap-3">
-          <button onclick="closeConfirm(false)" class="btn-press flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-colors">Cancel</button>
-          <button onclick="closeConfirm(true)" id="confirm-ok-btn" class="btn-press flex-1 py-3 px-4 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-bold transition-colors">Confirm</button>
+      <div class="confirm-body">
+        <p class="confirm-msg" id="ok-msg"></p>
+        <div class="confirm-btns">
+          <button class="confirm-cancel" onclick="resolveOk(false)">Cancel</button>
+          <button class="confirm-ok" id="ok-btn" onclick="resolveOk(true)">Confirm</button>
         </div>
       </div>
     </div>
@@ -544,1294 +592,564 @@ tailwind.config = {
 </div>
 
 <script>
-// =====================================================================
-// 🏝️ OLANGO TRIP TRACKER — Multi-Tab Live Sync
-// Storage: IndexedDB (with LocalStorage fallback)
-// Auto-tracked checklist based on payments in DB
-// =====================================================================
-
-// ============ CONSTANTS ============
-const DEFAULT_MEMBERS = ['Fatima', 'Kurt', 'Johnchris', 'Tina'];
-const DEFAULT_RATE = 30;
-const GCASH_NAME = 'KXI';
-const GCASH_NUMBER = '09939336295';
-
-const CYCLE_START = new Date(2025, 7, 29);
-const CYCLE_END = new Date(2025, 11, 19);
-
-const MEMBER_TONES = [
-  { grad: 'from-sky-400 to-cyan-500', soft: 'bg-sky-50 text-sky-700 border-sky-200', accent: 'text-sky-600', bar: 'from-sky-400 to-cyan-500' },
-  { grad: 'from-violet-400 to-purple-500', soft: 'bg-violet-50 text-violet-700 border-violet-200', accent: 'text-violet-600', bar: 'from-violet-400 to-purple-500' },
-  { grad: 'from-amber-400 to-orange-500', soft: 'bg-amber-50 text-amber-700 border-amber-200', accent: 'text-amber-600', bar: 'from-amber-400 to-orange-500' },
-  { grad: 'from-rose-400 to-pink-500', soft: 'bg-rose-50 text-rose-700 border-rose-200', accent: 'text-rose-600', bar: 'from-rose-400 to-pink-500' },
-  { grad: 'from-emerald-400 to-teal-500', soft: 'bg-emerald-50 text-emerald-700 border-emerald-200', accent: 'text-emerald-600', bar: 'from-emerald-400 to-teal-500' },
-  { grad: 'from-indigo-400 to-blue-500', soft: 'bg-indigo-50 text-indigo-700 border-indigo-200', accent: 'text-indigo-600', bar: 'from-indigo-400 to-blue-500' },
-];
-const memberTone = (id) => MEMBER_TONES[Math.abs(id) % MEMBER_TONES.length];
-
-// ============ TAB SYNCHRONIZATION (BROADCAST CHANNEL) ============
-const syncChannel = window.BroadcastChannel ? new BroadcastChannel('olango_sync_channel') : null;
-
-function broadcastUpdate() {
-  if (syncChannel) {
-    syncChannel.postMessage('sync_state');
-  }
-}
-
-if (syncChannel) {
-  syncChannel.onmessage = async (event) => {
-    if (event.data === 'sync_state') {
-      await loadState();
-      renderAll();
-      // Silently refresh details in open modals
-      if (!document.getElementById('members-modal').classList.contains('hidden')) renderMembersList();
-      if (!document.getElementById('history-modal').classList.contains('hidden')) renderHistory();
-    }
-  };
-}
-
-// Fallback listener for older browsers using localstorage events
-window.addEventListener('storage', async (e) => {
-  if (e.key === STORAGE_KEY) {
-    await loadState();
-    renderAll();
-  }
-});
-
-// ============ DATE UTILS ============
-function generateFridays(start, end) {
-  const fridays = [];
-  const d = new Date(start);
-  while (d.getDay() !== 5) d.setDate(d.getDate() + 1);
-  while (d <= end) {
-    fridays.push(new Date(d));
-    d.setDate(d.getDate() + 7);
-  }
-  return fridays;
-}
-const WEEKS = generateFridays(CYCLE_START, CYCLE_END);
-
-const fmtDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-const fmtDateShort = (d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
-const fmtTime = (d) => new Date(d).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-
-function getCurrentWeekIndex() {
-  const now = new Date();
-  for (let i = 0; i < WEEKS.length; i++) {
-    if (now <= WEEKS[i]) return i;
-  }
-  return WEEKS.length - 1;
-}
-
-function getDaysLeft() {
-  const target = WEEKS[WEEKS.length - 1];
-  return Math.ceil((target - new Date()) / (1000 * 60 * 60 * 24));
-}
-
-// ============ DATABASE (IndexedDB with LocalStorage fallback) ============
-const DB_NAME = 'olango-trip-db';
-const DB_VERSION = 1;
-const STORAGE_KEY = 'olango-trip-fallback';
-
-let db = null;
-let useLocalStorage = false;
-
-async function openDB() {
-  return new Promise((resolve, reject) => {
-    if (!window.indexedDB) { useLocalStorage = true; return resolve(null); }
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onerror = () => { useLocalStorage = true; resolve(null); };
-    req.onsuccess = () => resolve(req.result);
-    req.onupgradeneeded = (e) => {
-      const database = e.target.result;
-      if (!database.objectStoreNames.contains('members')) {
-        const ms = database.createObjectStore('members', { keyPath: 'id', autoIncrement: true });
-        ms.createIndex('name', 'name', { unique: false });
-      }
-      if (!database.objectStoreNames.contains('payments')) {
-        const ps = database.createObjectStore('payments', { keyPath: 'id', autoIncrement: true });
-        ps.createIndex('memberId', 'memberId', { unique: false });
-        ps.createIndex('weekIndex', 'weekIndex', { unique: false });
-        ps.createIndex('createdAt', 'createdAt', { unique: false });
-      }
-      if (!database.objectStoreNames.contains('settings')) {
-        database.createObjectStore('settings', { keyPath: 'key' });
-      }
-    };
-  });
-}
-
-function loadFallback() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {}
-  return { members: [], payments: [], settings: { rate: DEFAULT_RATE }, nextMemberId: 1, nextPaymentId: 1 };
-}
-function saveFallback(data) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
-}
-
-// ============ DB API (unified for IndexedDB + fallback) ============
-async function dbGetAll(store) {
-  if (useLocalStorage) {
-    const data = loadFallback();
-    return data[store] || [];
-  }
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readonly');
-    const req = tx.objectStore(store).getAll();
-    req.onsuccess = () => resolve(req.result || []);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function dbAdd(store, obj) {
-  if (useLocalStorage) {
-    const data = loadFallback();
-    if (store === 'members') {
-      obj.id = data.nextMemberId++;
-      data.members.push(obj);
-    } else if (store === 'payments') {
-      obj.id = data.nextPaymentId++;
-      data.payments.push(obj);
-    }
-    saveFallback(data);
-    return obj.id;
-  }
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readwrite');
-    const req = tx.objectStore(store).add(obj);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function dbPut(store, obj) {
-  if (useLocalStorage) {
-    const data = loadFallback();
-    if (store === 'settings') {
-      data.settings[obj.key] = obj.value;
-    } else {
-      const arr = data[store];
-      const idx = arr.findIndex(x => x.id === obj.id);
-      if (idx >= 0) arr[idx] = obj; else arr.push(obj);
-    }
-    saveFallback(data);
-    return obj.id || obj.key;
-  }
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readwrite');
-    const req = tx.objectStore(store).put(obj);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function dbDelete(store, id) {
-  if (useLocalStorage) {
-    const data = loadFallback();
-    data[store] = (data[store] || []).filter(x => x.id !== id);
-    saveFallback(data);
-    return;
-  }
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readwrite');
-    const req = tx.objectStore(store).delete(id);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function dbClear(store) {
-  if (useLocalStorage) {
-    const data = loadFallback();
-    if (store === 'settings') data.settings = { rate: DEFAULT_RATE };
-    else { data[store] = []; if (store === 'members') data.nextMemberId = 1; if (store === 'payments') data.nextPaymentId = 1; }
-    saveFallback(data);
-    return;
-  }
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readwrite');
-    const req = tx.objectStore(store).clear();
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function dbGetSetting(key, defaultVal) {
-  if (useLocalStorage) {
-    const data = loadFallback();
-    return data.settings[key] ?? defaultVal;
-  }
-  return new Promise((resolve) => {
-    const tx = db.transaction('settings', 'readonly');
-    const req = tx.objectStore('settings').get(key);
-    req.onsuccess = () => resolve(req.result?.value ?? defaultVal);
-    req.onerror = () => resolve(defaultVal);
-  });
-}
-
-// ============ STATE ============
-let state = {
-  members: [],
-  payments: [],
-  rate: DEFAULT_RATE,
+/* =========================================================
+   1. FIREBASE CONFIGURATION (REPLACE WITH YOUR KEYS)
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_ID",
+  appId: "YOUR_APP_ID"
 };
 
-// Derived data cache
-let grid = new Map(); // Map<memberId, Map<weekIndex, sumAmount>>
-let memberTotals = new Map(); // Map<memberId, totalPaid>
-let memberPaymentCounts = new Map();
-let grandTotal = 0;
-let confirmResolve = null;
+let dbRef = null;
+let isCloudActive = false;
 
-function recomputeDerived() {
-  grid = new Map();
-  memberTotals = new Map();
-  memberPaymentCounts = new Map();
-  grandTotal = 0;
-  for (const m of state.members) {
-    grid.set(m.id, new Map());
-    memberTotals.set(m.id, 0);
-    memberPaymentCounts.set(m.id, 0);
-  }
-  for (const p of state.payments) {
-    if (!grid.has(p.memberId)) continue;
-    const mMap = grid.get(p.memberId);
-    mMap.set(p.weekIndex, (mMap.get(p.weekIndex) || 0) + p.amount);
-    memberTotals.set(p.memberId, (memberTotals.get(p.memberId) || 0) + p.amount);
-    memberPaymentCounts.set(p.memberId, (memberPaymentCounts.get(p.memberId) || 0) + 1);
-    grandTotal += p.amount;
-  }
-}
-
-// ============ SEED & LOAD ============
-async function ensureSeed() {
-  const members = await dbGetAll('members');
-  if (members.length === 0) {
-    for (const name of DEFAULT_MEMBERS) {
-      await dbAdd('members', { name });
-    }
-  }
-  const rate = await dbGetSetting('rate', null);
-  if (rate === null) {
-    await dbPut('settings', { key: 'rate', value: DEFAULT_RATE });
-  }
-}
-
-async function loadState() {
-  const [members, payments, rate] = await Promise.all([
-    dbGetAll('members'),
-    dbGetAll('payments'),
-    dbGetSetting('rate', DEFAULT_RATE),
-  ]);
-  state.members = members.sort((a, b) => a.id - b.id);
-  state.payments = payments.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  state.rate = Number(rate) || DEFAULT_RATE;
-  recomputeDerived();
-}
-
-// ============ CRUD: MEMBERS ============
-async function addMember() {
-  const input = document.getElementById('new-member-name');
-  const name = input.value.trim();
-  if (!name) return showToast('Enter a name!', 'error');
-  if (name.length > 40) return showToast('Name too long (max 40)', 'error');
-  const dup = state.members.find(m => m.name.toLowerCase() === name.toLowerCase());
-  if (dup) return showToast('Member already exists!', 'error');
+function initFirebase() {
   try {
-    await dbAdd('members', { name });
-    input.value = '';
-    await loadState();
-    renderAll();
-    renderMembersList();
-    broadcastUpdate();
-    showToast(`${name} added to the trip! 🎉`);
-  } catch (e) {
-    showToast('Failed to add member', 'error');
-  }
-}
-
-async function renameMember(id, newName) {
-  const name = newName.trim();
-  if (!name) return showToast('Name cannot be empty', 'error');
-  if (name.length > 40) return showToast('Name too long', 'error');
-  const member = state.members.find(m => m.id === id);
-  if (!member) return;
-  if (name === member.name) { renderMembersList(); return; }
-  const dup = state.members.find(m => m.id !== id && m.name.toLowerCase() === name.toLowerCase());
-  if (dup) return showToast('Name already used', 'error');
-  try {
-    await dbPut('members', { id, name });
-    await loadState();
-    renderAll();
-    renderMembersList();
-    broadcastUpdate();
-    showToast(`Renamed to "${name}"`);
-  } catch (e) {
-    showToast('Failed to rename', 'error');
-  }
-}
-
-async function deleteMember(id) {
-  const member = state.members.find(m => m.id === id);
-  if (!member) return;
-  const paymentCount = state.payments.filter(p => p.memberId === id).length;
-  const ok = await customConfirm({
-    title: `Remove ${member.name}?`,
-    subtitle: 'This deletes their payment history',
-    message: paymentCount > 0
-      ? `${member.name} has ${paymentCount} payment${paymentCount > 1 ? 's' : ''} totaling ₱${(memberTotals.get(id) || 0).toLocaleString()}. All will be permanently deleted.`
-      : `Remove ${member.name} from the trip? They have no payments logged.`,
-    okText: 'Remove Member',
-    tone: 'red',
-  });
-  if (!ok) return;
-  try {
-    const theirPayments = state.payments.filter(p => p.memberId === id);
-    for (const p of theirPayments) await dbDelete('payments', p.id);
-    await dbDelete('members', id);
-    await loadState();
-    renderAll();
-    renderMembersList();
-    broadcastUpdate();
-    showToast(`${member.name} removed`, 'warning');
-  } catch (e) {
-    showToast('Failed to remove', 'error');
-  }
-}
-
-// ============ CRUD: PAYMENTS ============
-async function createPayment({ memberId, weekIndex, amount, note }) {
-  const p = {
-    memberId: Number(memberId),
-    weekIndex: Number(weekIndex),
-    amount: Math.round(Number(amount)),
-    note: (note || '').trim().slice(0, 120),
-    createdAt: Date.now(),
-  };
-  if (!state.members.find(m => m.id === p.memberId)) throw new Error('Invalid member');
-  if (p.weekIndex < 0 || p.weekIndex >= WEEKS.length) throw new Error('Invalid week');
-  if (!isFinite(p.amount) || p.amount <= 0) throw new Error('Invalid amount');
-  await dbAdd('payments', p);
-}
-
-async function updatePayment(id, { memberId, weekIndex, amount, note }) {
-  const existing = state.payments.find(p => p.id === id);
-  if (!existing) throw new Error('Payment not found');
-  const updated = {
-    ...existing,
-    memberId: Number(memberId),
-    weekIndex: Number(weekIndex),
-    amount: Math.round(Number(amount)),
-    note: (note || '').trim().slice(0, 120),
-  };
-  if (!state.members.find(m => m.id === updated.memberId)) throw new Error('Invalid member');
-  if (updated.weekIndex < 0 || updated.weekIndex >= WEEKS.length) throw new Error('Invalid week');
-  if (!isFinite(updated.amount) || updated.amount <= 0) throw new Error('Invalid amount');
-  await dbPut('payments', updated);
-}
-
-async function deletePayment(id) {
-  await dbDelete('payments', id);
-}
-
-// ============ CRUD: SETTINGS ============
-async function saveRate(newRate) {
-  const r = Math.round(Number(newRate));
-  if (!isFinite(r) || r < 1 || r > 100000) return showToast('Invalid rate', 'error');
-  if (r === state.rate) return;
-  try {
-    await dbPut('settings', { key: 'rate', value: r });
-    state.rate = r;
-    await loadState();
-    renderAll();
-    broadcastUpdate();
-    showToast(`Weekly rate set to ₱${r}`);
-  } catch (e) {
-    showToast('Failed to save rate', 'error');
-  }
-}
-
-// ============ RESET ============
-async function resetAll() {
-  const ok1 = await customConfirm({
-    title: '⚠️ Reset All Data',
-    subtitle: 'This will erase everything',
-    message: 'All payment records, members, and settings will be permanently deleted. Are you absolutely sure?',
-    okText: 'Yes, Reset',
-    tone: 'red',
-  });
-  if (!ok1) return;
-  const ok2 = await customConfirm({
-    title: '🚨 Final Warning',
-    subtitle: 'Last chance to cancel',
-    message: 'This cannot be undone. All data will be lost forever.',
-    okText: 'I understand, reset now',
-    tone: 'red',
-  });
-  if (!ok2) return;
-  try {
-    await dbClear('payments');
-    await dbClear('members');
-    await dbClear('settings');
-    await ensureSeed();
-    await loadState();
-    renderAll();
-    broadcastUpdate();
-    showToast('All data has been reset', 'warning');
-  } catch (e) {
-    showToast('Failed to reset', 'error');
-  }
-}
-
-// ============ PAYMENT MODAL ============
-let paymentEditingId = null;
-
-function openPaymentModal(opts = {}) {
-  if (state.members.length === 0) {
-    showToast('Add a member first!', 'error');
-    openMembersModal();
-    return;
-  }
-  paymentEditingId = opts.editing?.id || null;
-  const modal = document.getElementById('payment-modal');
-  const title = document.getElementById('payment-modal-title');
-  const subtitle = document.getElementById('payment-modal-subtitle');
-  const submitText = document.getElementById('payment-submit-text');
-  const memberSel = document.getElementById('payment-member');
-  const weekSel = document.getElementById('payment-week');
-  const amountInput = document.getElementById('payment-amount');
-  const noteInput = document.getElementById('payment-note');
-  const editIdInput = document.getElementById('payment-edit-id');
-
-  editIdInput.value = paymentEditingId || '';
-
-  memberSel.innerHTML = state.members.map(m => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
-
-  const curWeek = getCurrentWeekIndex();
-  weekSel.innerHTML = WEEKS.map((d, i) => {
-    const memId = opts.editing?.memberId ?? opts.presetMemberId ?? state.members[0].id;
-    const sum = grid.get(memId)?.get(i) || 0;
-    let marker = '';
-    if (sum >= state.rate) marker = ' ✓';
-    else if (sum > 0) marker = ` (₱${sum} paid)`;
-    if (i === curWeek) marker += ' — now';
-    return `<option value="${i}">Week ${i + 1} · ${fmtDate(d)}${marker}</option>`;
-  }).join('');
-
-  if (opts.editing) {
-    title.textContent = 'Edit Payment';
-    subtitle.textContent = 'Update payment details';
-    submitText.textContent = 'Save Changes';
-    memberSel.value = opts.editing.memberId;
-    weekSel.value = opts.editing.weekIndex;
-    amountInput.value = opts.editing.amount;
-    noteInput.value = opts.editing.note || '';
-  } else {
-    title.textContent = 'Log a Payment';
-    subtitle.textContent = 'Record who paid and how much';
-    submitText.textContent = 'Confirm Payment';
-    memberSel.value = opts.presetMemberId ?? state.members[0].id;
-    weekSel.value = opts.presetWeek ?? curWeek;
-    amountInput.value = state.rate;
-    noteInput.value = '';
-  }
-
-  const chips = document.getElementById('amount-chips');
-  const chipValues = [...new Set([state.rate, state.rate * 2, state.rate * 3, 50, 100, 500])].filter(v => v >= state.rate).slice(0, 5);
-  chips.innerHTML = chipValues.map(v =>
-    `<button type="button" onclick="document.getElementById('payment-amount').value=${v}" class="btn-press px-2.5 py-1 rounded-lg bg-sky-50 text-sky-700 text-[11px] font-bold border border-sky-200 hover:bg-sky-100 transition-colors">₱${v}</button>`
-  ).join('');
-
-  modal.classList.remove('hidden');
-  setTimeout(() => amountInput.focus(), 100);
-}
-
-function closePaymentModal() {
-  document.getElementById('payment-modal').classList.add('hidden');
-  paymentEditingId = null;
-}
-
-async function submitPayment(event) {
-  event.preventDefault();
-  const btn = document.getElementById('payment-submit-btn');
-  const memberId = document.getElementById('payment-member').value;
-  const weekIndex = document.getElementById('payment-week').value;
-  const amount = document.getElementById('payment-amount').value;
-  const note = document.getElementById('payment-note').value;
-
-  btn.disabled = true;
-  btn.classList.add('opacity-70');
-
-  try {
-    const member = state.members.find(m => m.id === Number(memberId));
-    if (paymentEditingId) {
-      await updatePayment(paymentEditingId, { memberId, weekIndex, amount, note });
-      showToast(`Payment updated for ${member?.name}`);
+    if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      dbRef = db.ref('olango_tracker');
+      
+      // Listen to Realtime Database changes
+      dbRef.on('value', (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+          S = {
+            members: Array.isArray(val.members) ? val.members : [],
+            payments: Array.isArray(val.payments) ? val.payments : [],
+            rate: Number(val.rate) || DEFAULT_RATE,
+            nextMid: Number(val.nextMid) || 1,
+            nextPid: Number(val.nextPid) || 1
+          };
+        } else {
+          // Initialize DB if empty
+          S = defaultData();
+          syncToDatabase();
+        }
+        isCloudActive = true;
+        updateCloudStatusBadge(true);
+        recompute();
+        renderAll();
+        hideLoader();
+      }, (err) => {
+        console.warn("Firebase listener error, fallback to local:", err);
+        fallbackToLocal();
+      });
     } else {
-      await createPayment({ memberId, weekIndex, amount, note });
-      showToast(`${member?.name} paid ₱${amount} for Week ${Number(weekIndex) + 1}! ✓ Checklist updated`);
+      fallbackToLocal();
     }
-    await loadState();
-    renderAll();
-    broadcastUpdate();
-    closePaymentModal();
   } catch (e) {
-    showToast(e.message || 'Failed to save payment', 'error');
-  } finally {
-    btn.disabled = false;
-    btn.classList.remove('opacity-70');
+    console.warn("Firebase init failed, fallback to local:", e);
+    fallbackToLocal();
   }
 }
 
-async function quickPay(memberId, weekIndex) {
-  const member = state.members.find(m => m.id === memberId);
-  const sum = grid.get(memberId)?.get(weekIndex) || 0;
-  const remaining = Math.max(1, state.rate - sum);
-  try {
-    await createPayment({ memberId, weekIndex, amount: remaining, note: 'Quick pay' });
-    await loadState();
-    renderAll();
-    broadcastUpdate();
-    showToast(`⚡ ${member.name} paid ₱${remaining} for Week ${weekIndex + 1}!`);
-  } catch (e) {
-    showToast('Failed to log payment', 'error');
+function fallbackToLocal() {
+  isCloudActive = false;
+  updateCloudStatusBadge(false);
+  bootLocalData();
+  recompute();
+  renderAll();
+  hideLoader();
+}
+
+function updateCloudStatusBadge(active) {
+  const b = document.getElementById('cloud-badge');
+  if (b) {
+    if (active) {
+      b.className = "cloud-status live";
+      b.textContent = "🟢 Cloud Live";
+    } else {
+      b.className = "cloud-status local";
+      b.textContent = "🟡 Local Mode";
+    }
   }
 }
 
-// ============ MEMBERS MODAL ============
-function openMembersModal() {
-  document.getElementById('members-modal').classList.remove('hidden');
-  renderMembersList();
-}
-function closeMembersModal() {
-  document.getElementById('members-modal').classList.add('hidden');
-}
-
-let editingMemberId = null;
-
-function renderMembersList() {
-  const container = document.getElementById('members-list');
-  if (state.members.length === 0) {
-    container.innerHTML = `<div class="text-center py-8 text-sm text-slate-400"><div class="text-4xl mb-2">👥</div>No members yet. Add one below!</div>`;
-    return;
-  }
-  container.innerHTML = state.members.map(m => {
-    const tone = memberTone(m.id);
-    const paid = memberTotals.get(m.id) || 0;
-    const count = memberPaymentCounts.get(m.id) || 0;
-    const isEditing = editingMemberId === m.id;
-    return `
-      <div class="flex items-center gap-3 bg-slate-50 rounded-2xl px-3 py-2.5 border border-slate-100">
-        <div class="h-10 w-10 rounded-xl bg-gradient-to-br ${tone.grad} text-white font-display font-black flex items-center justify-center text-base flex-shrink-0 shadow-sm">${escapeHtml(m.name.charAt(0).toUpperCase())}</div>
-        <div class="flex-1 min-w-0">
-          ${isEditing
-            ? `<input type="text" id="edit-member-input-${m.id}" value="${escapeHtml(m.name)}" maxlength="40" class="w-full border-2 border-violet-300 rounded-lg px-2 py-1 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-violet-200" onblur="commitMemberEdit(${m.id})" onkeypress="if(event.key==='Enter'){event.preventDefault();commitMemberEdit(${m.id})}else if(event.key==='Escape'){cancelMemberEdit()}" />`
-            : `<p class="text-sm font-bold text-slate-800 truncate">${escapeHtml(m.name)}</p>
-               <p class="text-[11px] text-slate-400">₱${paid.toLocaleString()} paid · ${count} payment${count !== 1 ? 's' : ''}</p>`
-          }
-        </div>
-        <div class="flex items-center gap-1 flex-shrink-0">
-          ${isEditing
-            ? `<button onmousedown="commitMemberEdit(${m.id})" class="btn-press w-8 h-8 rounded-lg bg-emerald-50500 hover:bg-emerald-600 text-white flex items-center justify-center" title="Save"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></button>
-               <button onmousedown="cancelMemberEdit()" class="btn-press w-8 h-8 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center" title="Cancel"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>`
-            : `<button onclick="startMemberEdit(${m.id})" class="btn-press w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 flex items-center justify-center" title="Rename"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
-               <button onclick="deleteMember(${m.id})" class="btn-press w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center" title="Remove"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>`
-          }
-        </div>
-      </div>
-    `;
-  }).join('');
-  if (editingMemberId) {
-    setTimeout(() => {
-      const inp = document.getElementById(`edit-member-input-${editingMemberId}`);
-      if (inp) { inp.focus(); inp.select(); }
-    }, 50);
-  }
-}
-
-function startMemberEdit(id) {
-  editingMemberId = id;
-  renderMembersList();
-}
-function cancelMemberEdit() {
-  editingMemberId = null;
-  renderMembersList();
-}
-async function commitMemberEdit(id) {
-  const inp = document.getElementById(`edit-member-input-${id}`);
-  if (!inp) return;
-  const name = inp.value;
-  editingMemberId = null;
-  await renameMember(id, name);
-}
-
-// ============ HISTORY MODAL ============
-function openHistoryModal() {
-  populateHistoryFilter();
-  renderHistory();
-  document.getElementById('history-modal').classList.remove('hidden');
-}
-function closeHistoryModal() {
-  document.getElementById('history-modal').classList.add('hidden');
-}
-
-function populateHistoryFilter() {
-  const filter = document.getElementById('history-filter');
-  const current = filter.value;
-  const options = ['<option value="all" class="text-slate-800">All Members</option>']
-    .concat(state.members.map(m => `<option value="${m.id}" class="text-slate-800">${escapeHtml(m.name)}</option>`));
-  filter.innerHTML = options.join('');
-  if (current && (current === 'all' || state.members.find(m => String(m.id) === current))) {
-    filter.value = current;
-  }
-}
-
-let confirmDeletePaymentId = null;
-
-function renderHistory() {
-  const filter = document.getElementById('history-filter').value;
-  const list = document.getElementById('history-list');
-  const subtitle = document.getElementById('history-subtitle');
-  let payments = [...state.payments];
-  if (filter !== 'all') payments = payments.filter(p => p.memberId === Number(filter));
-  subtitle.textContent = `${payments.length} payment${payments.length !== 1 ? 's' : ''}${filter !== 'all' ? ' · filtered' : ''}`;
-
-  if (payments.length === 0) {
-    list.innerHTML = `<div class="text-center py-12 text-sm text-slate-400"><div class="text-5xl mb-3">📭</div>No payments yet.</div>`;
-    return;
-  }
-
-  list.innerHTML = payments.map(p => {
-    const member = state.members.find(m => m.id === p.memberId);
-    const tone = member ? memberTone(member.id) : MEMBER_TONES[0];
-    const isConfirming = confirmDeletePaymentId === p.id;
-    const dateStr = fmtDate(new Date(p.createdAt)) + ' · ' + fmtTime(new Date(p.createdAt));
-    return `
-      <div class="rounded-2xl bg-emerald-50/40 border border-emerald-100 overflow-hidden">
-        <div class="flex items-center gap-3 p-3">
-          <div class="h-9 w-9 rounded-xl bg-gradient-to-br ${tone.grad} text-white font-display font-black flex items-center justify-center text-sm flex-shrink-0 shadow-sm">${escapeHtml((member?.name || '?').charAt(0).toUpperCase())}</div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-bold text-slate-800 truncate">${escapeHtml(member?.name || 'Unknown')} <span class="text-slate-400 font-normal">→ Wk ${p.weekIndex + 1}</span></p>
-            <p class="text-[11px] text-slate-500">${dateStr}</p>
-            ${p.note ? `<p class="text-[11px] text-slate-500 italic truncate mt-0.5">"${escapeHtml(p.note)}"</p>` : ''}
-          </div>
-          <div class="flex items-center gap-1.5 flex-shrink-0">
-            <span class="text-sm font-black text-emerald-600">+₱${p.amount}</span>
-            <button onclick="openPaymentModal({editing: ${JSON.stringify(p).replace(/"/g,'&quot;')}}); closeHistoryModal();" class="btn-press w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 flex items-center justify-center" title="Edit">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-            </button>
-            <button onclick="askDeletePayment(${p.id})" class="btn-press w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center" title="Delete">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            </button>
-          </div>
-        </div>
-        ${isConfirming ? `
-          <div class="bg-red-500 text-white px-3 py-2.5 flex items-center justify-between gap-2 animate-slide-up">
-            <span class="text-xs font-bold">Delete this payment? Checklist will auto-update.</span>
-            <div class="flex gap-1.5 flex-shrink-0">
-              <button onclick="confirmDeletePayment(${p.id})" class="btn-press px-3 py-1 bg-white text-red-600 rounded-lg text-xs font-black">Delete</button>
-              <button onclick="cancelDeletePayment()" class="btn-press px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold">Cancel</button>
-            </div>
-          </div>
-        ` : ''}
-      </div>
-    `;
-  }).join('');
-}
-
-function askDeletePayment(id) {
-  confirmDeletePaymentId = id;
-  renderHistory();
-  renderRecentPayments();
-}
-function cancelDeletePayment() {
-  confirmDeletePaymentId = null;
-  renderHistory();
-  renderRecentPayments();
-}
-async function confirmDeletePayment(id) {
-  const p = state.payments.find(x => x.id === id);
-  const member = p ? state.members.find(m => m.id === p.memberId) : null;
-  try {
-    await deletePayment(id);
-    confirmDeletePaymentId = null;
-    await loadState();
-    renderAll();
-    broadcastUpdate();
-    if (!document.getElementById('history-modal').classList.contains('hidden')) renderHistory();
-    showToast(`Payment removed${member ? ` for ${member.name}` : ''}`, 'warning');
-  } catch (e) {
-    showToast('Failed to delete', 'error');
-  }
-}
-
-// ============ PREVIEW MODAL ============
-function openPreviewModal() {
-  document.getElementById('preview-modal').classList.remove('hidden');
-  renderPreview();
-}
-function closePreviewModal() {
-  document.getElementById('preview-modal').classList.add('hidden');
-}
-
-function renderPreview() {
-  const text = buildSummaryText();
-  document.getElementById('preview-text').textContent = text;
-
-  const visual = document.getElementById('preview-visual');
-  const target = state.rate * WEEKS.length * state.members.length;
-  const pct = target > 0 ? Math.round((grandTotal / target) * 100) : 0;
-
-  let html = `
-    <div class="rounded-2xl bg-gradient-to-br from-sky-500 to-cyan-500 text-white p-4 shadow-lg shadow-sky-300/30">
-      <div class="flex justify-between items-start gap-3">
-        <div>
-          <p class="text-[10px] font-bold uppercase tracking-wider text-sky-100">Fund Progress</p>
-          <p class="text-2xl font-display font-black mt-1">₱${grandTotal.toLocaleString()}</p>
-          <p class="text-xs text-sky-100">of ₱${target.toLocaleString()}</p>
-        </div>
-        <div class="h-16 w-16 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-          <span class="font-display font-black text-lg">${pct}%</span>
-        </div>
-      </div>
-      <div class="mt-3 h-2 rounded-full bg-white/25 overflow-hidden">
-        <div class="h-full rounded-full bg-white transition-all" style="width:${Math.min(pct, 100)}%"></div>
-      </div>
-    </div>
-    <div class="grid grid-cols-2 gap-2">
-  `;
-  for (const m of state.members) {
-    const tone = memberTone(m.id);
-    const paid = memberTotals.get(m.id) || 0;
-    const mTarget = state.rate * WEEKS.length;
-    const mpct = mTarget > 0 ? Math.round((paid / mTarget) * 100) : 0;
-    const weeks = memberPaymentCounts.get(m.id) || 0;
-    html += `
-      <div class="rounded-2xl bg-white border border-slate-200 p-3">
-        <div class="flex items-center gap-2 mb-1.5">
-          <div class="h-6 w-6 rounded-lg bg-gradient-to-br ${tone.grad} text-white text-[10px] font-black flex items-center justify-center">${escapeHtml(m.name.charAt(0).toUpperCase())}</div>
-          <p class="text-[11px] font-bold text-slate-600 truncate">${escapeHtml(m.name)}</p>
-        </div>
-        <p class="text-lg font-display font-black text-slate-800">₱${paid.toLocaleString()}</p>
-        <p class="text-[10px] text-slate-400">${weeks} pmts · ${mpct}%</p>
-        <div class="mt-1.5 h-1 rounded-full bg-slate-100 overflow-hidden">
-          <div class="h-full rounded-full bg-gradient-to-r ${tone.bar}" style="width:${Math.min(mpct, 100)}%"></div>
-        </div>
-      </div>
-    `;
-  }
-  html += `</div>`;
-  visual.innerHTML = html;
-}
-
-function sharePreview() {
-  const text = buildSummaryText();
-  if (navigator.share) {
-    navigator.share({ title: '🏝️ Olango Trip Tracker', text }).catch(() => copyText(text).then(ok => ok && showToast('Copied instead 📋')));
+function syncToDatabase() {
+  if (isCloudActive && dbRef) {
+    dbRef.set(S);
   } else {
-    copyText(text).then(ok => ok && showToast('Copied to clipboard 📋'));
+    saveLocalRaw(S);
   }
 }
 
-// ============ CONFIRM DIALOG ============
-function customConfirm({ title, subtitle, message, okText = 'Confirm', tone = 'red' }) {
-  return new Promise((resolve) => {
-    confirmResolve = resolve;
-    document.getElementById('confirm-title').textContent = title;
-    document.getElementById('confirm-subtitle').textContent = subtitle;
-    document.getElementById('confirm-message').textContent = message;
-    document.getElementById('confirm-ok-btn').textContent = okText;
-    const header = document.getElementById('confirm-header');
-    const toneMap = {
-      red: 'bg-gradient-to-r from-red-500 to-orange-500',
-      amber: 'bg-gradient-to-r from-amber-500 to-orange-500',
-      sky: 'bg-gradient-to-r from-sky-500 to-cyan-500',
-    };
-    header.className = `p-5 text-white ${toneMap[tone] || toneMap.red}`;
-    const okBtn = document.getElementById('confirm-ok-btn');
-    okBtn.className = 'btn-press flex-1 py-3 px-4 text-white rounded-xl text-sm font-bold transition-colors ' + (tone === 'red' ? 'bg-red-500 hover:bg-red-600' : tone === 'amber' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-sky-500 hover:bg-sky-600');
-    document.getElementById('confirm-modal').classList.remove('hidden');
+/* =========================================================
+   2. LOADER FAILSAFE
+   ========================================================= */
+function hideLoader(){
+  var l=document.getElementById('loader'),a=document.getElementById('app');
+  if(l)l.classList.add('hide');
+  if(a)a.classList.add('ready');
+  setTimeout(function(){try{l&&l.parentNode&&l.parentNode.removeChild(l);}catch(e){}},400);
+}
+setTimeout(hideLoader, 600); // 600ms failsafe timeout
+
+/* =========================================================
+   3. CONSTANTS & DATE HELPERS
+   ========================================================= */
+const LOCAL_KEY = 'olango-trip-cloud-fallback';
+const DEFAULT_MEMBERS = ['Fatima','Kurt','Johnchris','Tina'];
+const DEFAULT_RATE = 30;
+const GCASH = '09939336295';
+const TZ = 'Asia/Manila';
+
+const TONES = [
+  {g:'linear-gradient(135deg,#38bdf8,#06b6d4)',a:'#0284c7',s:'background:#f0f9ff;color:#0369a1;border-color:#bae6fd',b:'linear-gradient(90deg,#38bdf8,#06b6d4)'},
+  {g:'linear-gradient(135deg,#a78bfa,#a855f7)',a:'#7c3aed',s:'background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe',b:'linear-gradient(90deg,#a78bfa,#a855f7)'},
+  {g:'linear-gradient(135deg,#fbbf24,#f59e0b)',a:'#d97706',s:'background:#fffbeb;color:#b45309;border-color:#fed7aa',b:'linear-gradient(90deg,#fbbf24,#f59e0b)'},
+  {g:'linear-gradient(135deg,#fb7185,#ec4899)',a:'#e11d48',s:'background:#fff1f2;color:#be123c;border-color:#fecdd3',b:'linear-gradient(90deg,#fb7185,#ec4899)'},
+  {g:'linear-gradient(135deg,#34d399,#14b8a6)',a:'#059669',s:'background:#ecfdf5;color:#047857;border-color:#a7f3d0',b:'linear-gradient(90deg,#34d399,#14b8a6)'},
+  {g:'linear-gradient(135deg,#818cf8,#3b82f6)',a:'#4f46e5',s:'background:#eef2ff;color:#4338ca;border-color:#c7d2fe',b:'linear-gradient(90deg,#818cf8,#3b82f6)'}
+];
+function tone(id){return TONES[Math.abs(id)%TONES.length];}
+
+function genFridays(){
+  var out=[],t=Date.UTC(2025,7,29,4,0,0),end=Date.UTC(2025,11,19,4,0,0);
+  while(t<=end){out.push(new Date(t));t+=7*86400000;}
+  return out;
+}
+const WEEKS = genFridays();
+
+const fmt = {
+  date: (d) => new Date(d).toLocaleDateString('en-PH', {month:'short',day:'2-digit',year:'numeric',timeZone:TZ}),
+  short: (d) => new Date(d).toLocaleDateString('en-PH', {month:'short',day:'2-digit',timeZone:TZ}),
+  full: (d) => new Date(d).toLocaleDateString('en-PH', {weekday:'long',month:'long',day:'numeric',year:'numeric',timeZone:TZ}),
+  fullS: (d) => new Date(d).toLocaleDateString('en-PH', {weekday:'short',month:'short',day:'2-digit',year:'numeric',timeZone:TZ}),
+  time: (d) => new Date(d).toLocaleTimeString('en-PH', {hour:'numeric',minute:'2-digit',hour12:true,timeZone:TZ}),
+  dt: (d) => fmt.fullS(d) + ' · ' + fmt.time(d),
+  rel: (d) => {
+    const m = Math.floor((Date.now()-new Date(d))/60000);
+    if(m<1)return'Just now';if(m<60)return m+'m ago';
+    const h=Math.floor(m/60);if(h<24)return h+'h ago';
+    const dy=Math.floor(h/24);if(dy===1)return'Yesterday';if(dy<7)return dy+'d ago';
+    return fmt.short(d);
+  }
+};
+
+function weekDeadline(i){var d=new Date(WEEKS[i]);d.setUTCHours(15,59,59,999);return d.getTime();}
+function currentWeek(){var n=Date.now();for(var i=0;i<WEEKS.length;i++)if(n<=weekDeadline(i))return i;return WEEKS.length-1;}
+function isPast(i){return Date.now()>weekDeadline(i);}
+function daysLeft(){return Math.ceil((weekDeadline(WEEKS.length-1)-Date.now())/86400000);}
+function detectWeek(ts){var t=new Date(ts).getTime();for(var i=0;i<WEEKS.length;i++)if(t<=weekDeadline(i))return i;return WEEKS.length-1;}
+
+/* =========================================================
+   4. LOCAL STORAGE FALLBACK
+   ========================================================= */
+function loadLocalRaw(){try{var r=localStorage.getItem(LOCAL_KEY);if(r)return JSON.parse(r);}catch(e){}return null;}
+function saveLocalRaw(d){try{localStorage.setItem(LOCAL_KEY,JSON.stringify(d));}catch(e){}}
+function defaultData(){return{members:DEFAULT_MEMBERS.map((n,i)=>({id:i+1,name:n})),payments:[],rate:DEFAULT_RATE,nextMid:DEFAULT_MEMBERS.length+1,nextPid:1};}
+
+let S = defaultData();
+
+function bootLocalData(){
+  var raw=loadLocalRaw();
+  if(!raw||!Array.isArray(raw.members))S=defaultData();
+  else S={members:raw.members,payments:Array.isArray(raw.payments)?raw.payments:[],rate:Number(raw.rate)||DEFAULT_RATE,nextMid:Number(raw.nextMid)||raw.members.length+1,nextPid:Number(raw.nextPid)||1};
+  if(!loadLocalRaw())saveLocalRaw(S);
+}
+
+/* Derived Calculations */
+let grid=new Map(),totals=new Map(),counts=new Map(),dates=new Map(),grand=0;
+function recompute(){
+  grid=new Map();totals=new Map();counts=new Map();dates=new Map();grand=0;
+  S.members.forEach((m)=>{grid.set(m.id,new Map());totals.set(m.id,0);counts.set(m.id,0);dates.set(m.id,new Map());});
+  var sorted=S.payments.slice().sort((a,b)=>a.createdAt-b.createdAt);
+  sorted.forEach((p)=>{
+    if(!grid.has(p.memberId))return;
+    var w=grid.get(p.memberId);
+    w.set(p.weekIndex,(w.get(p.weekIndex)||0)+p.amount);
+    totals.set(p.memberId,(totals.get(p.memberId)||0)+p.amount);
+    counts.set(p.memberId,(counts.get(p.memberId)||0)+1);
+    var prev=dates.get(p.memberId).get(p.weekIndex);
+    if(!prev||p.createdAt>prev)dates.get(p.memberId).set(p.weekIndex,p.createdAt);
+    grand+=p.amount;
   });
 }
 
-function closeConfirm(result) {
-  document.getElementById('confirm-modal').classList.add('hidden');
-  if (confirmResolve) { confirmResolve(result); confirmResolve = null; }
+/* =========================================================
+   5. UI UTILITIES & TOASTS
+   ========================================================= */
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+var toastT=null;
+function toast(msg,type){
+  var w=document.getElementById('toast-wrap');
+  var cls=type==='err'?'err':type==='warn'?'warn':'';
+  var ic=type==='err'?'✗':type==='warn'?'⚠':'✓';
+  var icCls=type==='err'?'err':type==='warn'?'warn':'ok';
+  w.innerHTML='<div class="toast '+cls+'"><span class="ic '+icCls+'">'+ic+'</span><span>'+esc(msg)+'</span></div>';
+  clearTimeout(toastT);toastT=setTimeout(()=>{w.innerHTML='';},2800);
 }
+function openM(id){document.getElementById(id).classList.add('open');}
+function closeM(id){document.getElementById(id).classList.remove('open');}
 
-function openResetDialog() { resetAll(); }
-
-// ============ TOAST ============
-let toastTimer = null;
-function showToast(msg, tone = 'success') {
-  const container = document.getElementById('toast-container');
-  const toneMap = {
-    success: { bg: 'bg-slate-900', icon: '✓', iconColor: 'text-emerald-400' },
-    error: { bg: 'bg-red-600', icon: '✗', iconColor: 'text-white' },
-    warning: { bg: 'bg-amber-600', icon: '⚠', iconColor: 'text-white' },
-  };
-  const t = toneMap[tone] || toneMap.success;
-  container.innerHTML = `
-    <div class="pointer-events-auto ${t.bg} text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm font-semibold border border-white/10 animate-slide-up">
-      <span class="${t.iconColor} text-lg font-black flex-shrink-0">${t.icon}</span>
-      <span class="flex-1">${escapeHtml(msg)}</span>
-    </div>
-  `;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { container.innerHTML = ''; }, 3200);
+var okFn=null;
+function ask(title,sub,msg,okText){
+  return new Promise((res)=>{
+    okFn=res;
+    document.getElementById('ok-title').textContent=title;
+    document.getElementById('ok-sub').textContent=sub||'';
+    document.getElementById('ok-msg').textContent=msg;
+    document.getElementById('ok-btn').textContent=okText||'Confirm';
+    openM('m-ok');
+  });
 }
+function resolveOk(v){closeM('m-ok');if(okFn){okFn(v);okFn=null;}}
 
-// ============ RENDERING ============
-function renderAll() {
-  renderHero();
-  renderRateInput();
-  renderMemberCards();
-  renderQuickPay();
-  renderTable();
-  renderRecentPayments();
-  renderMilestones();
-  renderHistoryCountBadge();
-}
-
-function renderHero() {
-  const target = state.rate * WEEKS.length * state.members.length;
-  const pct = target > 0 ? Math.round((grandTotal / target) * 100) : 0;
-  const totalSlots = WEEKS.length * state.members.length;
-  let settledSlots = 0;
-  for (const m of state.members) {
-    const mMap = grid.get(m.id) || new Map();
-    for (const [wk, sum] of mMap) if (sum >= state.rate) settledSlots++;
-  }
-  const daysLeft = getDaysLeft();
-  const remaining = Math.max(0, target - grandTotal);
-
-  document.getElementById('date-range').textContent = `${fmtDate(WEEKS[0])} – ${fmtDate(WEEKS[WEEKS.length - 1])} · ${WEEKS.length} Fridays`;
-  document.getElementById('hero-target').textContent = `₱${target.toLocaleString()}`;
-  document.getElementById('hero-collected').textContent = `₱${grandTotal.toLocaleString()}`;
-  document.getElementById('hero-progress-pct').textContent = `${pct}%`;
-  document.getElementById('hero-progress-bar').style.width = `${Math.min(pct, 100)}%`;
-
-  const badge = document.getElementById('hero-badge');
-  const badgeText = document.getElementById('hero-badge-text');
-  if (daysLeft <= 0) {
-    badge.classList.remove('glass-dark');
-    badge.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/30 border border-emerald-300/40 text-[11px] font-bold uppercase tracking-wider';
-    badgeText.textContent = '🎉 Trip Time!';
-  } else {
-    badgeText.textContent = 'Active Savings Cycle';
-  }
-
-  const chips = document.getElementById('hero-chips');
-  const chipData = [
-    { icon: '📊', label: `${settledSlots}/${totalSlots} settled` },
-    { icon: '💰', label: `₱${remaining.toLocaleString()} to go` },
-  ];
-  if (daysLeft > 0) chipData.push({ icon: '⏰', label: `${daysLeft} days left`, urgent: daysLeft <= 14 });
-  chips.innerHTML = chipData.map(c =>
-    `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${c.urgent ? 'bg-red-500/25 border-red-300/40' : 'glass-dark border-white/15'} border text-xs font-bold"><span>${c.icon}</span>${c.label}</span>`
-  ).join('');
-}
-
-function renderRateInput() {
-  const inp = document.getElementById('rate-input');
-  if (document.activeElement !== inp) inp.value = state.rate;
-}
-
-function renderMemberCards() {
-  const container = document.getElementById('member-cards');
-  if (state.members.length === 0) {
-    container.innerHTML = `
-      <div class="col-span-2 lg:col-span-4 rounded-2xl bg-white border-2 border-dashed border-slate-300 p-8 text-center">
-        <div class="text-4xl mb-2">👥</div>
-        <p class="text-sm font-bold text-slate-700">No members yet</p>
-        <p class="text-xs text-slate-500 mt-1">Add members to start tracking payments</p>
-        <button onclick="openMembersModal()" class="mt-3 btn-press px-4 py-2 bg-violet-500 text-white rounded-xl text-xs font-bold no-print">Add Members</button>
-      </div>
-    `;
-    return;
-  }
-  const curWeek = getCurrentWeekIndex();
-  container.innerHTML = state.members.map(m => {
-    const tone = memberTone(m.id);
-    const paid = memberTotals.get(m.id) || 0;
-    const target = state.rate * WEEKS.length;
-    const pct = target > 0 ? Math.round((paid / target) * 100) : 0;
-    const mMap = grid.get(m.id) || new Map();
-    let settledWeeks = 0;
-    for (const [wk, sum] of mMap) if (sum >= state.rate) settledWeeks++;
-    return `
-      <div class="rounded-2xl bg-white border border-slate-200/80 p-3.5 shadow-sm hover:shadow-md transition-shadow group animate-scale-in">
-        <div class="flex items-center gap-2 mb-2">
-          <div class="h-9 w-9 rounded-xl bg-gradient-to-br ${tone.grad} text-white font-display font-black flex items-center justify-center text-sm shadow-sm">${escapeHtml(m.name.charAt(0).toUpperCase())}</div>
-          <p class="text-xs font-bold text-slate-700 truncate flex-1">${escapeHtml(m.name)}</p>
-        </div>
-        <p class="text-xl sm:text-2xl font-display font-black text-slate-900">₱${paid.toLocaleString()}</p>
-        <p class="text-[10px] text-slate-500 mt-0.5">of ₱${target.toLocaleString()}</p>
-        <div class="mt-2 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-          <div class="h-full rounded-full bg-gradient-to-r ${pct >= 100 ? 'from-emerald-400 to-emerald-500' : tone.bar} transition-all duration-500" style="width:${Math.min(pct, 100)}%"></div>
-        </div>
-        <div class="mt-2 flex items-center justify-between gap-1">
-          <span class="text-[10px] font-bold ${tone.accent}">${settledWeeks}/${WEEKS.length} wks · ${pct}%</span>
-          <button onclick="openPaymentModal({presetMemberId: ${m.id}, presetWeek: ${curWeek}})" class="btn-press flex items-center gap-0.5 px-2 py-1 rounded-lg ${tone.soft} border text-[10px] font-bold hover:scale-105 transition-transform no-print">
-            <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Log
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function renderQuickPay() {
-  const section = document.getElementById('quickpay-section');
-  if (state.members.length === 0) { section.classList.add('hidden'); return; }
-  section.classList.remove('hidden');
-  const curWeek = getCurrentWeekIndex();
-  const info = document.getElementById('quick-pay-week-info');
-  info.textContent = `Wk ${curWeek + 1} · Due ${fmtDate(WEEKS[curWeek])}`;
-  const container = document.getElementById('quick-pay-buttons');
-
-  const unsettled = state.members.filter(m => (grid.get(m.id)?.get(curWeek) || 0) < state.rate);
-  if (unsettled.length === 0) {
-    container.innerHTML = `
-      <div class="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-4 flex items-center gap-3 shadow-md shadow-emerald-300/30">
-        <div class="text-3xl">🎉</div>
-        <div>
-          <p class="font-display font-black text-base">Everyone's settled!</p>
-          <p class="text-xs text-emerald-100">Great job, barkada. Week ${curWeek + 1} is done.</p>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = state.members.map(m => {
-    const tone = memberTone(m.id);
-    const sum = grid.get(m.id)?.get(curWeek) || 0;
-    const settled = sum >= state.rate;
-    const remaining = Math.max(1, state.rate - sum);
-    if (settled) {
-      return `<span class="px-3 py-2 rounded-xl bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-200 flex items-center gap-1.5"><span>✓</span>${escapeHtml(m.name)} · ₱${sum}</span>`;
-    }
-    return `
-      <button onclick="quickPay(${m.id}, ${curWeek})" class="btn-press px-3 py-2 rounded-xl bg-white text-slate-700 text-xs font-bold border-2 border-slate-200 hover:${tone.soft.split(' ')[0]} hover:border-current transition-all flex items-center gap-1.5 group">
-        <span class="${tone.accent}">+</span>${escapeHtml(m.name)} · ₱${remaining}${sum > 0 ? ` more` : ''}
-      </button>
-    `;
-  }).join('');
-}
-
-function renderTable() {
-  const head = document.getElementById('table-head');
-  const body = document.getElementById('table-body');
-  const foot = document.getElementById('table-foot');
-
-  if (state.members.length === 0) {
-    head.innerHTML = '';
-    body.innerHTML = `<tr><td class="p-8 text-center text-sm text-slate-400">Add members to see the tracking schedule</td></tr>`;
-    foot.innerHTML = '';
-    return;
-  }
-
-  let headHtml = `<tr class="bg-slate-100/80 text-slate-600 border-b-2 border-slate-200">
-    <th class="sticky-col bg-slate-100/95 py-3 px-3 text-center text-[10px] font-black uppercase tracking-wider w-12">WK</th>
-    <th class="py-3 px-3 text-left text-[10px] font-black uppercase tracking-wider min-w-[110px]">Due Date</th>`;
-  for (const m of state.members) {
-    const shortName = m.name.length > 8 ? m.name.substring(0, 7) + '…' : m.name;
-    headHtml += `<th class="py-3 px-2 text-center text-[10px] font-black uppercase tracking-wider min-w-[70px]" title="${escapeHtml(m.name)}">${escapeHtml(shortName)}</th>`;
-  }
-  headHtml += `
-    <th class="py-3 px-2 text-center text-[10px] font-black uppercase tracking-wider min-w-[80px]">Status</th>
-    <th class="py-3 px-3 text-right text-[10px] font-black uppercase tracking-wider min-w-[70px]">Goal</th>
-    <th class="py-3 px-3 text-right text-[10px] font-black uppercase tracking-wider min-w-[80px]">Pot</th>
-  </tr>`;
-  head.innerHTML = headHtml;
-
-  const curWeek = getCurrentWeekIndex();
-  const now = new Date();
-  let bodyHtml = '';
-  let cumulative = 0;
-  for (let i = 0; i < WEEKS.length; i++) {
-    const date = WEEKS[i];
-    const isCurrent = i === curWeek;
-    const isPast = now > date;
-    const weeklyTarget = state.rate * state.members.length;
-    let weekCollected = 0;
-    let settledCount = 0;
-    let contributedCount = 0;
-    for (const m of state.members) {
-      const sum = grid.get(m.id)?.get(i) || 0;
-      weekCollected += sum;
-      if (sum >= state.rate) settledCount++;
-      if (sum > 0) contributedCount++;
-    }
-    cumulative += weekCollected;
-
-    let rowBg = i % 2 === 1 ? 'bg-slate-50/40' : 'bg-white';
-    let rowClass = '';
-    if (isCurrent) { rowBg = 'bg-sky-50/60'; rowClass = 'row-current'; }
-
-    bodyHtml += `<tr class="${rowClass} hover:bg-sky-50/40 transition-colors">
-      <td class="sticky-col ${rowBg} py-2.5 px-3 text-center font-black ${isCurrent ? 'text-sky-600' : 'text-slate-400'} text-xs">${String(i + 1).padStart(2, '0')}</td>
-      <td class="py-2.5 px-3 font-semibold text-slate-700 text-xs">
-        <span class="hidden sm:inline">${fmtDate(date)}</span>
-        <span class="sm:hidden">${fmtDateShort(date)}</span>
-        ${isCurrent ? `<span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 bg-sky-500 text-white text-[8px] font-black rounded-full uppercase tracking-wider">Now</span>` : ''}
-      </td>`;
-
-    for (const m of state.members) {
-      const sum = grid.get(m.id)?.get(i) || 0;
-      let cellClass = 'empty';
-      let title = `${m.name} · Wk ${i + 1} · No payment`;
-      if (sum >= state.rate) { cellClass = 'paid'; title = `${m.name} · Wk ${i + 1} · ₱${sum} paid`; }
-      else if (sum > 0) { cellClass = 'partial'; title = `${m.name} · Wk ${i + 1} · ₱${sum} of ₱${state.rate}`; }
-      else if (isPast) { cellClass = 'missed'; title = `${m.name} · Wk ${i + 1} · Missed`; }
-      const extraLabel = sum > 0 ? `<span class="block text-[9px] font-black ${sum >= state.rate ? 'text-emerald-600' : 'text-amber-600'} mt-0.5">₱${sum}</span>` : '';
-      bodyHtml += `<td class="py-2.5 px-2 text-center">
-        <div class="flex flex-col items-center gap-0" title="${escapeHtml(title)}">
-          <div class="checkbox-locked ${cellClass}"></div>
-          ${extraLabel}
-        </div>
-      </td>`;
-    }
-
-    let status;
-    if (settledCount === state.members.length && state.members.length > 0) {
-      status = '<span class="inline-flex items-center px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full">✓ COMPLETE</span>';
-    } else if (contributedCount === 0 && isPast) {
-      status = '<span class="inline-flex items-center px-2 py-0.5 bg-red-100 text-red-600 text-[10px] font-black rounded-full">✗ MISSED</span>';
-    } else if (contributedCount === 0) {
-      status = '<span class="inline-flex items-center px-2 py-0.5 bg-slate-100 text-slate-400 text-[10px] font-black rounded-full">—</span>';
-    } else {
-      status = `<span class="inline-flex items-center px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full">${settledCount}/${state.members.length}</span>`;
-    }
-    bodyHtml += `<td class="py-2.5 px-2 text-center">${status}</td>
-      <td class="py-2.5 px-3 text-right font-semibold text-slate-500 text-xs">₱${weeklyTarget.toLocaleString()}</td>
-      <td class="py-2.5 px-3 text-right font-black text-emerald-600 text-xs">₱${cumulative.toLocaleString()}</td>
-    </tr>`;
-  }
-  body.innerHTML = bodyHtml;
-
-  const target = state.rate * WEEKS.length * state.members.length;
-  let footHtml = `<tr class="bg-slate-100 font-black text-slate-900 border-t-2 border-slate-300">
-    <td class="sticky-col bg-slate-100 py-3 px-3"></td>
-    <td class="py-3 px-3 text-left text-[10px] uppercase tracking-wider">TOTALS</td>`;
-  for (const m of state.members) {
-    const total = memberTotals.get(m.id) || 0;
-    footHtml += `<td class="py-3 px-2 text-center text-sky-700 text-xs">₱${total.toLocaleString()}</td>`;
-  }
-  footHtml += `
-    <td class="py-3 px-2"></td>
-    <td colspan="2" class="py-3 px-3 text-right text-emerald-700 text-sm">₱${grandTotal.toLocaleString()} / ₱${target.toLocaleString()}</td>
-  </tr>`;
-  foot.innerHTML = footHtml;
-}
-
-function renderRecentPayments() {
-  const container = document.getElementById('recent-payments');
-  const recent = state.payments.slice(0, 5);
-  if (recent.length === 0) {
-    container.innerHTML = `
-      <div class="rounded-2xl bg-white border-2 border-dashed border-slate-200 p-8 text-center">
-        <div class="text-4xl mb-2">💸</div>
-        <p class="text-sm font-bold text-slate-600">No payments logged yet</p>
-        <p class="text-xs text-slate-400 mt-1">Click "Log Payment" or the ⚡ button to start</p>
-      </div>
-    `;
-    return;
-  }
-  container.innerHTML = recent.map(p => {
-    const member = state.members.find(m => m.id === p.memberId);
-    const tone = member ? memberTone(member.id) : MEMBER_TONES[0];
-    const isConfirming = confirmDeletePaymentId === p.id;
-    const dateStr = fmtDate(new Date(p.createdAt)) + ' · ' + fmtTime(new Date(p.createdAt));
-    return `
-      <div class="rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-sm animate-fade-in">
-        <div class="flex items-center gap-3 p-3">
-          <div class="h-9 w-9 rounded-xl bg-gradient-to-br ${tone.grad} text-white font-display font-black flex items-center justify-center text-sm flex-shrink-0 shadow-sm">${escapeHtml((member?.name || '?').charAt(0).toUpperCase())}</div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-bold text-slate-800 truncate">${escapeHtml(member?.name || 'Unknown')} <span class="text-slate-400 font-normal text-xs">→ Wk ${p.weekIndex + 1}</span></p>
-            <p class="text-[11px] text-slate-500 truncate">${dateStr}${p.note ? ` · "${escapeHtml(p.note)}"` : ''}</p>
-          </div>
-          <div class="flex items-center gap-1.5 flex-shrink-0 no-print">
-            <span class="text-sm font-black text-emerald-600">+₱${p.amount}</span>
-            <button onclick="openPaymentModal({editing: ${JSON.stringify(p).replace(/"/g,'&quot;')}})" class="btn-press w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 flex items-center justify-center" title="Edit">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-            </button>
-            <button onclick="askDeletePayment(${p.id})" class="btn-press w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center" title="Delete">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            </button>
-          </div>
-        </div>
-        ${isConfirming ? `
-          <div class="bg-red-500 text-white px-3 py-2.5 flex items-center justify-between gap-2 animate-slide-up no-print">
-            <span class="text-xs font-bold">Delete? Checklist will auto-update.</span>
-            <div class="flex gap-1.5 flex-shrink-0">
-              <button onclick="confirmDeletePayment(${p.id})" class="btn-press px-3 py-1 bg-white text-red-600 rounded-lg text-xs font-black">Delete</button>
-              <button onclick="cancelDeletePayment()" class="btn-press px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold">Cancel</button>
-            </div>
-          </div>
-        ` : ''}
-      </div>
-    `;
-  }).join('');
-}
-
-function renderMilestones() {
-  const container = document.getElementById('milestones-list');
-  const marks = [0.25, 0.5, 0.75, 1].map(f => Math.max(1, Math.ceil(WEEKS.length * f)));
-  const labels = ['25% Mark', 'Halfway 🎯', '75% — Almost there!', '🎉 Trip Ready!'];
-  container.innerHTML = marks.map((wk, i) => {
-    const target = state.rate * state.members.length * wk;
-    const reached = grandTotal >= target && target > 0;
-    const date = WEEKS[Math.min(wk - 1, WEEKS.length - 1)];
-    return `
-      <li class="flex items-start gap-2.5">
-        <span class="flex-shrink-0 h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-black mt-0.5 ${reached ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400 border border-slate-200'}">${reached ? '✓' : '○'}</span>
-        <span><strong class="text-slate-800">Wk ${wk} (${fmtDateShort(date)}):</strong> ₱${target.toLocaleString()} — ${labels[i]}</span>
-      </li>
-    `;
-  }).join('');
-}
-
-function renderHistoryCountBadge() {
-  const badge = document.getElementById('history-count-badge');
-  const count = state.payments.length;
-  if (count > 0) {
-    badge.textContent = count > 99 ? '99+' : count;
-    badge.classList.remove('hidden');
-    badge.classList.add('inline-flex');
-  } else {
-    badge.classList.add('hidden');
-  }
-}
-
-// ============ SUMMARY TEXT BUILDER ============
-function buildSummaryText() {
-  const target = state.rate * WEEKS.length * state.members.length;
-  const pct = target > 0 ? Math.round((grandTotal / target) * 100) : 0;
-
-  let text = `🏝️ OLANGO ISLAND TRIP — PAYMENT TRACKER\n`;
-  text += `${'='.repeat(44)}\n`;
-  text += `📅 ${fmtDate(WEEKS[0])} – ${fmtDate(WEEKS[WEEKS.length - 1])}\n`;
-  text += `💰 Rate: ₱${state.rate}/week per person\n`;
-  text += `👥 Members: ${state.members.map(m => m.name).join(', ') || '(none)'}\n`;
-  text += `📱 GCash: ${GCASH_NAME} — ${GCASH_NUMBER}\n`;
-  text += `🎯 Target: ₱${target.toLocaleString()} · Collected: ₱${grandTotal.toLocaleString()} (${pct}%)\n`;
-  text += `${'-'.repeat(44)}\n\n`;
-
-  if (state.members.length > 0) {
-    text += `📊 MEMBER STATUS:\n`;
-    for (const m of state.members) {
-      const paid = memberTotals.get(m.id) || 0;
-      const mTarget = state.rate * WEEKS.length;
-      const mpct = mTarget > 0 ? Math.round((paid / mTarget) * 100) : 0;
-      const weeks = memberPaymentCounts.get(m.id) || 0;
-      const barLen = Math.round(mpct / 10);
-      const bar = '█'.repeat(Math.min(barLen, 10)) + '░'.repeat(Math.max(0, 10 - barLen));
-      text += `  ${m.name}: ₱${paid.toLocaleString()}/₱${mTarget.toLocaleString()} [${bar}] ${mpct}% (${weeks} pmts)\n`;
-    }
-    text += `\n📋 WEEKLY BREAKDOWN:\n`;
-    for (let i = 0; i < WEEKS.length; i++) {
-      const wk = String(i + 1).padStart(2, '0');
-      let settled = 0, paidNames = [];
-      for (const m of state.members) {
-        const sum = grid.get(m.id)?.get(i) || 0;
-        if (sum >= state.rate) { settled++; paidNames.push(m.name); }
-        else if (sum > 0) paidNames.push(`${m.name}(₱${sum})`);
-      }
-      const status = settled === state.members.length ? '✅' : settled > 0 || paidNames.length > 0 ? `⏳ ${settled}/${state.members.length}` : '⬜';
-      text += `  Wk ${wk} (${fmtDateShort(WEEKS[i])}): ${status}`;
-      if (paidNames.length > 0 && paidNames.length < state.members.length) text += ` — ${paidNames.join(', ')}`;
-      text += `\n`;
-    }
-  }
-
-  text += `\n${'-'.repeat(44)}\n`;
-  text += `Generated: ${new Date().toLocaleString()}\n`;
-  return text;
-}
-
-async function copySummary() {
-  const text = buildSummaryText();
-  const ok = await copyText(text);
-  if (ok) showToast('Summary copied! 📋');
-  else showToast('Copy failed', 'error');
-}
-
-async function copyGCash() {
-  const ok = await copyText(GCASH_NUMBER);
-  if (ok) showToast('GCash number copied 📱');
-  else showToast('Copy failed', 'error');
-}
-
-async function copyText(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    try {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      return true;
-    } catch {
-      return false;
-    }
-  }
-}
-
-// ============ HELPERS ============
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-// ============ KEYBOARD ============
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    ['payment-modal', 'members-modal', 'history-modal', 'preview-modal'].forEach(id => {
-      const m = document.getElementById(id);
-      if (!m.classList.contains('hidden')) m.classList.add('hidden');
-    });
-    if (!document.getElementById('confirm-modal').classList.contains('hidden')) {
-      closeConfirm(false);
-    }
+document.addEventListener('keydown',(e)=>{
+  if(e.key==='Escape'){
+    if(document.getElementById('m-ok').classList.contains('open')){resolveOk(false);return;}
+    var ids=['m-pay','m-mem','m-hist','m-prev'];
+    for(var i=0;i<ids.length;i++){if(document.getElementById(ids[i]).classList.contains('open')){closeM(ids[i]);return;}}
   }
 });
 
-// ============ INIT ============
-async function init() {
-  try {
-    db = await openDB();
-    await ensureSeed();
-    await loadState();
-    renderAll();
+/* =========================================================
+   6. CRUD OPERATIONS (SYNCED TO CLOUD)
+   ========================================================= */
+function addMember(){
+  var inp=document.getElementById('new-mem');
+  var name=(inp.value||'').trim();
+  if(!name)return toast('Enter a name','err');
+  if(S.members.some(m=>m.name.toLowerCase()===name.toLowerCase()))return toast('Already exists','err');
+  S.members.push({id:S.nextMid++,name:name});
+  syncToDatabase(); recompute(); renderAll(); renderMemList();
+  inp.value=''; toast(name+' added');
+}
 
-    const rateInp = document.getElementById('rate-input');
-    rateInp.addEventListener('change', () => saveRate(rateInp.value));
-    rateInp.addEventListener('blur', () => saveRate(rateInp.value));
+function renameMember(id,name){
+  name=(name||'').trim();if(!name)return toast('Empty name','err');
+  var m=S.members.find(x=>x.id===id);
+  if(!m||m.name===name){renderMemList();return;}
+  if(S.members.some(x=>x.id!==id&&x.name.toLowerCase()===name.toLowerCase()))return toast('Name taken','err');
+  m.name=name; syncToDatabase(); recompute(); renderAll(); renderMemList(); toast('Renamed to '+name);
+}
 
-    document.getElementById('loading-screen').style.opacity = '0';
-    setTimeout(() => document.getElementById('loading-screen').remove(), 300);
-  } catch (e) {
-    console.error(e);
-    document.getElementById('loading-screen').innerHTML = `
-      <div class="text-6xl">⚠️</div>
-      <p class="mt-4 text-sm font-bold text-red-500">Failed to load tracker</p>
-      <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-sky-500 text-white rounded-xl text-sm font-bold">Retry</button>
-    `;
+function removeMember(id){
+  var m=S.members.find(x=>x.id===id);
+  if(!m)return;
+  var n=S.payments.filter(p=>p.memberId===id).length;
+  ask('Remove '+m.name+'?','Deletes their payments',n?m.name+' has '+n+' payment(s). Continue?':'Remove this member?','Remove').then((ok)=>{
+    if(!ok)return;
+    S.payments=S.payments.filter(p=>p.memberId!==id);
+    S.members=S.members.filter(x=>x.id!==id);
+    syncToDatabase(); recompute(); renderAll(); renderMemList(); toast(m.name+' removed','warn');
+  });
+}
+
+function addPayment(o){
+  var p={id:S.nextPid++,memberId:+o.memberId,weekIndex:+o.weekIndex,amount:Math.round(+o.amount),note:(o.note||'').trim().slice(0,120),createdAt:Date.now(),detectedWeek:detectWeek(Date.now())};
+  if(!S.members.some(m=>m.id===p.memberId))throw new Error('Bad member');
+  if(p.weekIndex<0||p.weekIndex>=WEEKS.length)throw new Error('Bad week');
+  if(!(p.amount>0))throw new Error('Bad amount');
+  S.payments.unshift(p);
+  syncToDatabase();
+  return p;
+}
+
+function updatePayment(id,o){
+  var p=S.payments.find(x=>x.id===id);
+  if(!p)throw new Error('Not found');
+  p.memberId=+o.memberId;p.weekIndex=+o.weekIndex;p.amount=Math.round(+o.amount);p.note=(o.note||'').trim().slice(0,120);
+  syncToDatabase();
+}
+
+function delPayment(id){
+  S.payments=S.payments.filter(p=>p.id!==id);
+  syncToDatabase();
+}
+
+function saveRate(v){
+  var r=Math.round(+v);if(!(r>=1&&r<=100000))return toast('Invalid rate','err');
+  if(r===S.rate)return;S.rate=r; syncToDatabase(); recompute(); renderAll(); toast('Rate ₱'+r+'/wk');
+}
+
+function doReset(){
+  ask('Reset all?','Cannot undo','Wipe members, payments, settings?','Reset').then((ok)=>{
+    if(!ok)return;
+    ask('Final warning','Last chance','Really delete everything?','Yes, wipe').then((ok2)=>{
+      if(!ok2)return;
+      S=defaultData(); syncToDatabase(); recompute(); renderAll(); toast('Reset done','warn');
+    });
+  });
+}
+
+/* =========================================================
+   7. MODALS & RENDERING
+   ========================================================= */
+var editPayId=null;
+function openPay(opts={}){
+  if(!S.members.length){toast('Add a member first','err');openMembers();return;}
+  editPayId=opts.editing?opts.editing.id:null;
+  var cur=currentWeek();
+  var ms=document.getElementById('pay-mem'),ws=document.getElementById('pay-wk');
+  ms.innerHTML=S.members.map(m=>'<option value="'+m.id+'">'+esc(m.name)+'</option>').join('');
+  ws.innerHTML=WEEKS.map((d,i)=>'<option value="'+i+'">Week '+(i+1)+' · '+fmt.date(d)+(i===cur?' — NOW':isPast(i)?' — past':'')+'</option>').join('');
+  var box=document.getElementById('auto-box'),ic=document.getElementById('auto-ic'),lbl=document.getElementById('auto-lbl'),dt=document.getElementById('auto-date'),wk=document.getElementById('auto-week');
+  if(opts.editing){
+    document.getElementById('pay-title').textContent='Edit Payment';
+    document.getElementById('pay-sub').textContent='Original: '+fmt.dt(opts.editing.createdAt);
+    document.getElementById('pay-submit-txt').textContent='Save Changes';
+    box.className='auto-info am';ic.className='auto-icon am';ic.textContent='✎';
+    lbl.textContent='Original payment date';
+    dt.textContent=fmt.dt(opts.editing.createdAt);
+    wk.textContent='Timestamp kept as-is';
+    ms.value=opts.editing.memberId;ws.value=opts.editing.weekIndex;
+    document.getElementById('pay-amt').value=opts.editing.amount;
+    document.getElementById('pay-note').value=opts.editing.note||'';
+  }else{
+    document.getElementById('pay-title').textContent='Log a Payment';
+    document.getElementById('pay-sub').textContent='Date & week auto-detected';
+    document.getElementById('pay-submit-txt').textContent='Confirm Payment';
+    box.className='auto-info sky';ic.className='auto-icon sky';ic.textContent='📅';
+    lbl.textContent='Auto-detected payment date';
+    dt.textContent=fmt.dt(new Date());
+    wk.textContent='Detected Week '+(cur+1)+' · Due '+fmt.date(WEEKS[cur]);
+    ms.value=opts.memberId||S.members[0].id;
+    ws.value=opts.weekIndex!=null?opts.weekIndex:cur;
+    document.getElementById('pay-amt').value=S.rate;
+    document.getElementById('pay-note').value='';
+  }
+  var seen={},chips=[];
+  [S.rate,S.rate*2,S.rate*3,50,100,500].forEach(v=>{if(v>=1&&!seen[v]){seen[v]=1;chips.push(v);}});
+  chips=chips.slice(0,5);
+  document.getElementById('amt-chips').innerHTML=chips.map(v=>'<button type="button" class="chip-mini" onclick="document.getElementById(\'pay-amt\').value='+v+'">₱'+v+'</button>').join('');
+  openM('m-pay');
+}
+
+function submitPay(e){
+  e.preventDefault();
+  var btn=document.getElementById('pay-submit');btn.disabled=true;
+  try{
+    var memberId=document.getElementById('pay-mem').value;
+    var weekIndex=document.getElementById('pay-wk').value;
+    var amount=document.getElementById('pay-amt').value;
+    var note=document.getElementById('pay-note').value;
+    var mem=S.members.find(m=>m.id===+memberId);
+    if(editPayId){updatePayment(editPayId,{memberId:memberId,weekIndex:weekIndex,amount:amount,note:note});toast('Updated '+(mem?mem.name:''));}
+    else{var p=addPayment({memberId:memberId,weekIndex:weekIndex,amount:amount,note:note});toast((mem?mem.name:'')+' · ₱'+p.amount+' · Wk '+(+weekIndex+1)+' · '+fmt.short(p.createdAt));}
+    recompute();renderAll();closeM('m-pay');
+  }catch(err){toast(err.message||'Failed','err');}
+  finally{btn.disabled=false;}
+}
+
+function quickPay(memberId,weekIndex){
+  var sum=(grid.get(memberId)&&grid.get(memberId).get(weekIndex))||0;
+  var amt=Math.max(1,S.rate-sum);
+  var mem=S.members.find(m=>m.id===memberId);
+  try{var p=addPayment({memberId:memberId,weekIndex:weekIndex,amount:amt,note:'Quick pay'});recompute();renderAll();toast('⚡ '+mem.name+' · ₱'+amt+' · '+fmt.short(p.createdAt));}
+  catch(e){toast('Failed','err');}
+}
+
+function openMembers(){openM('m-mem');renderMemList();}
+var editMemId=null;
+function renderMemList(){
+  var box=document.getElementById('mem-list-mod');
+  if(!S.members.length){box.innerHTML='<div class="mem-empty"><div class="emoji">👥</div>No members yet. Add below.</div>';return;}
+  box.innerHTML=S.members.map(m=>{
+    var t=tone(m.id),paid=totals.get(m.id)||0,c=counts.get(m.id)||0,ed=editMemId===m.id;
+    return'<div class="mem-row"><div class="avatar" style="background:'+t.g+'">'+esc(m.name.charAt(0).toUpperCase())+'</div><div class="mem-row-body">'+(ed?'<input id="ren-'+m.id+'" class="mem-row-input" value="'+esc(m.name)+'" maxlength="40" onkeydown="if(event.key===\'Enter\'){event.preventDefault();commitRen('+m.id+')}if(event.key===\'Escape\'){editMemId=null;renderMemList()}" onblur="commitRen('+m.id+')">':'<p>'+esc(m.name)+'</p><p class="s">₱'+paid.toLocaleString()+' · '+c+' pmt</p>')+'</div><div class="mem-actions">'+(ed?'<button class="icon-btn save" onmousedown="commitRen('+m.id+')">✓</button>':'<button class="icon-btn edit" onclick="editMemId='+m.id+';renderMemList()">✎</button><button class="icon-btn del" onclick="removeMember('+m.id+')">✕</button>')+'</div></div>';
+  }).join('');
+  if(editMemId)setTimeout(()=>{var i=document.getElementById('ren-'+editMemId);if(i){i.focus();i.select();}},30);
+}
+function commitRen(id){var i=document.getElementById('ren-'+id);if(!i)return;var n=i.value;editMemId=null;renameMember(id,n);}
+
+function openHistory(){
+  var f=document.getElementById('hist-filter'),cur=f.value;
+  f.innerHTML='<option value="all">All Members</option>'+S.members.map(m=>'<option value="'+m.id+'">'+esc(m.name)+'</option>').join('');
+  var found=false;for(var i=0;i<f.options.length;i++)if(f.options[i].value===cur)found=true;
+  if(found)f.value=cur;
+  renderHistory();openM('m-hist');
+}
+var delId=null;
+function renderHistory(){
+  var filter=document.getElementById('hist-filter').value;
+  var list=S.payments.slice();
+  if(filter!=='all')list=list.filter(p=>p.memberId===+filter);
+  document.getElementById('hist-sub').textContent=list.length+' payment'+(list.length!==1?'s':'');
+  var box=document.getElementById('hist-list');
+  if(!list.length){box.innerHTML='<div class="recent-empty"><div class="emoji">📭</div>No payments yet</div>';return;}
+  box.innerHTML=list.map(p=>{
+    var m=S.members.find(x=>x.id===p.memberId);
+    var t=m?tone(m.id):TONES[0],conf=delId===p.id;
+    var dw=p.detectedWeek!=null?p.detectedWeek:detectWeek(p.createdAt);
+    var tag=dw!==p.weekIndex?'<span class="tag-manual">MANUAL</span>':'<span class="tag-auto">AUTO</span>';
+    return'<div class="hist-item recent-item"><div class="recent-row"><div class="avatar" style="background:'+t.g+'">'+esc((m?m.name:'?')[0].toUpperCase())+'</div><div class="recent-body"><div class="recent-name"><p>'+esc(m?m.name:'Unknown')+'</p><span>→ Wk '+(p.weekIndex+1)+' ('+fmt.short(WEEKS[p.weekIndex])+')</span>'+tag+'</div><div class="recent-dt">🕐 '+fmt.dt(p.createdAt)+' · <em>'+fmt.rel(p.createdAt)+'</em></div>'+(p.note?'<div class="recent-note">"'+esc(p.note)+'"</div>':'')+'</div><div class="recent-actions"><span class="recent-amt">+₱'+p.amount+'</span><button class="icon-btn edit" onclick=\'openPay({editing:'+JSON.stringify(p).replace(/'/g,'&#39;').replace(/"/g,'&quot;')+'});closeM("m-hist")\'>✎</button><button class="icon-btn del" onclick="delId='+p.id+';renderHistory();renderRecent()">✕</button></div></div>'+(conf?'<div class="confirm-bar"><span>Delete this payment?</span><div class="confirm-bar-btns"><button class="confirm-yes" onclick="confirmDel('+p.id+')">Delete</button><button class="confirm-no" onclick="delId=null;renderHistory();renderRecent()">Cancel</button></div></div>':'')+'</div>';
+  }).join('');
+}
+function confirmDel(id){
+  var p=S.payments.find(x=>x.id===id);
+  var m=p&&S.members.find(x=>x.id===p.memberId);
+  delPayment(id);delId=null;recompute();renderAll();
+  if(document.getElementById('m-hist').classList.contains('open'))renderHistory();
+  toast('Removed'+(m?' '+m.name:''),'warn');
+}
+
+function openPreview(){document.getElementById('prev-text').textContent=buildSummary();openM('m-prev');}
+function buildSummary(){
+  var target=S.rate*WEEKS.length*S.members.length,pct=target?Math.round(grand/target*100):0;
+  var t='🏝️ OLANGO ISLAND TRIP\n'+Array(41).join('=')+'\n';
+  t+='📅 '+fmt.date(WEEKS[0])+' – '+fmt.date(WEEKS[WEEKS.length-1])+'\n';
+  t+='💰 ₱'+S.rate+'/wk · Members: '+(S.members.map(m=>m.name).join(', ')||'-')+'\n';
+  t+='📱 GCash KXI '+GCASH+'\n🎯 ₱'+grand.toLocaleString()+' / ₱'+target.toLocaleString()+' ('+pct+'%)\n';
+  t+='📆 '+fmt.full(new Date())+'\n'+Array(41).join('-')+'\n';
+  S.members.forEach(m=>{var paid=totals.get(m.id)||0,tgt=S.rate*WEEKS.length,p=tgt?Math.round(paid/tgt*100):0;t+=m.name+': ₱'+paid+'/'+tgt+' ('+p+'%)\n';});
+  t+='\nGenerated '+fmt.dt(new Date())+'\n';
+  return t;
+}
+
+function copyText(text){
+  return new Promise((res)=>{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(()=>res(true),()=>res(fallbackCopy(text)));
+    }else res(fallbackCopy(text));
+  });
+}
+function fallbackCopy(text){
+  try{
+    var ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta);ta.focus();ta.select();
+    var ok=document.execCommand('copy');document.body.removeChild(ta);return ok;
+  }catch(e){return false;}
+}
+function doCopy(){copyText(buildSummary()).then(ok=>toast(ok?'Copied 📋':'Copy failed',ok?'ok':'err'));}
+function copyGCash(){copyText(GCASH).then(ok=>toast(ok?'GCash copied 📱':'Copy failed',ok?'ok':'err'));}
+
+/* =========================================================
+   RENDER ALL
+   ========================================================= */
+function renderAll(){
+  try{renderHero();renderMembers();renderQP();renderTable();renderRecent();renderMiles();renderBadge();
+  var ri=document.getElementById('rate-inp');if(document.activeElement!==ri)ri.value=S.rate;}catch(e){console.error(e);}
+}
+function renderHero(){
+  var target=S.rate*WEEKS.length*S.members.length,pct=target?Math.round(grand/target*100):0;
+  var settled=0;S.members.forEach(m=>{(grid.get(m.id)||new Map()).forEach(s=>{if(s>=S.rate)settled++;});});
+  var slots=WEEKS.length*S.members.length,left=daysLeft(),cur=currentWeek();
+  document.getElementById('date-range').textContent=fmt.date(WEEKS[0])+' – '+fmt.date(WEEKS[WEEKS.length-1])+' · '+WEEKS.length+' Fridays';
+  document.getElementById('today-line').textContent='📅 Today: '+fmt.full(new Date())+' · Week '+(cur+1);
+  document.getElementById('stat-target').textContent='₱'+target.toLocaleString();
+  document.getElementById('stat-collected').textContent='₱'+grand.toLocaleString();
+  document.getElementById('stat-pct').textContent=pct+'%';
+  document.getElementById('stat-bar').style.width=Math.min(pct,100)+'%';
+  document.getElementById('badge-txt').textContent=left<=0?'🎉 Trip time!':'Week '+(cur+1)+' of '+WEEKS.length;
+  var rem=Math.max(0,target-grand);
+  var chips=[{t:'📊 '+settled+'/'+slots+' settled'},{t:'💰 ₱'+rem.toLocaleString()+' to go'}];
+  if(left>0)chips.push({t:'⏰ '+left+' days left',u:left<=14});
+  document.getElementById('hero-chips').innerHTML=chips.map(c=>'<span class="chip'+(c.u?' urgent':'')+'">'+esc(c.t)+'</span>').join('');
+}
+function renderMembers(){
+  var box=document.getElementById('mem-grid');var cur=currentWeek();
+  if(!S.members.length){box.innerHTML='<div style="grid-column:1/-1;background:#fff;border:2px dashed #cbd5e1;border-radius:16px;padding:32px;text-align:center"><div style="font-size:32px;margin-bottom:8px">👥</div><p style="font-weight:700;color:#334155">No members</p><button onclick="openMembers()" class="btn btn-vi no-print" style="margin-top:8px">+ Add Members</button></div>';return;}
+  box.innerHTML=S.members.map(m=>{
+    var t=tone(m.id),paid=totals.get(m.id)||0,tgt=S.rate*WEEKS.length,pct=tgt?Math.round(paid/tgt*100):0;
+    var sw=0;(grid.get(m.id)||new Map()).forEach(s=>{if(s>=S.rate)sw++;});
+    var last=S.payments.find(p=>p.memberId===m.id);
+    var barBg=pct>=100?'linear-gradient(90deg,#34d399,#10b981)':t.b;
+    return'<div class="mem-card"><div class="mem-hd"><div class="avatar" style="background:'+t.g+'">'+esc(m.name.charAt(0).toUpperCase())+'</div><p class="mem-name">'+esc(m.name)+'</p></div><p class="mem-paid">₱'+paid.toLocaleString()+'</p><p class="mem-of">of ₱'+tgt.toLocaleString()+'</p><div class="mem-bar"><div class="mem-bar-fill" style="width:'+Math.min(pct,100)+'%;background:'+barBg+'"></div></div><div class="mem-foot"><span class="mem-stat" style="color:'+t.a+'">'+sw+'/'+WEEKS.length+' · '+pct+'%</span><button class="mem-log no-print" style="'+t.s+'" onclick="openPay({memberId:'+m.id+',weekIndex:'+cur+'})">+ Log</button></div><p class="mem-last">'+(last?'Last: '+fmt.rel(last.createdAt):'No payments yet')+'</p></div>';
+  }).join('');
+}
+function renderQP(){
+  var sec=document.getElementById('qp-sec');
+  if(!S.members.length){sec.style.display='none';return;}sec.style.display='';
+  var cur=currentWeek();
+  document.getElementById('qp-info').textContent='Wk '+(cur+1)+' · Due '+fmt.date(WEEKS[cur]);
+  var box=document.getElementById('qp-btns');
+  var all=S.members.every(m=>((grid.get(m.id)&&grid.get(m.id).get(cur))||0)>=S.rate);
+  if(all){box.innerHTML='<div class="qp-all"><div class="emoji">🎉</div><div><div class="t">Everyone settled!</div><div class="s">Week '+(cur+1)+' is complete</div></div></div>';return;}
+  box.innerHTML=S.members.map(m=>{
+    var sum=(grid.get(m.id)&&grid.get(m.id).get(cur))||0;
+    if(sum>=S.rate)return'<span class="qp-btn done">✓ '+esc(m.name)+' · ₱'+sum+'</span>';
+    var need=Math.max(1,S.rate-sum);
+    return'<button class="qp-btn" onclick="quickPay('+m.id+','+cur+')">+ '+esc(m.name)+' · ₱'+need+(sum?' more':'')+'</button>';
+  }).join('');
+}
+function renderTable(){
+  var thead=document.getElementById('thead'),tbody=document.getElementById('tbody'),tfoot=document.getElementById('tfoot');
+  if(!S.members.length){thead.innerHTML='';tbody.innerHTML='<tr><td style="padding:32px;text-align:center;color:#94a3b8">Add members to see schedule</td></tr>';tfoot.innerHTML='';return;}
+  var h='<tr><th class="sticky-col" style="background:rgba(241,245,249,.95)">WK</th><th class="left">Due Date</th>';
+  S.members.forEach(m=>{var sn=m.name.length>7?m.name.slice(0,6)+'…':m.name;h+='<th title="'+esc(m.name)+'">'+esc(sn)+'</th>';});
+  h+='<th>Status</th><th class="right">Goal</th><th class="right">Pot</th></tr>';
+  thead.innerHTML=h;
+
+  var cur=currentWeek(),body='',pot=0;
+  for(var i=0;i<WEEKS.length;i++){
+    var past=isPast(i),now=i===cur,weekSum=0,settled=0,contrib=0;
+    S.members.forEach(m=>{var s=(grid.get(m.id)&&grid.get(m.id).get(i))||0;weekSum+=s;if(s>=S.rate)settled++;if(s>0)contrib++;});
+    pot+=weekSum;
+    var cls=now?'now':past?'past':'';
+    body+='<tr class="'+cls+'"><td class="sticky-col center wk-num" style="background:'+(now?'#f0f9ff':(i%2?'#fafbfc':'#fff'))+'">'+(i+1<10?'0':'')+(i+1)+'</td><td class="due-cell">'+fmt.date(WEEKS[i])+(now?'<span class="now-badge">Now</span>':past?'<span class="past-badge">Past</span>':'')+'</td>';
+    S.members.forEach(m=>{
+      var s=(grid.get(m.id)&&grid.get(m.id).get(i))||0;
+      var dt=dates.get(m.id)&&dates.get(m.id).get(i);
+      var cc='empty',mark='';
+      if(s>=S.rate){cc='paid';mark='✓';}else if(s>0){cc='partial';mark='~';}else if(past){cc='missed';mark='✗';}
+      var sub=s>0?'<span class="cell-amt '+(s>=S.rate?'paid':'partial')+'">₱'+s+'</span>'+(dt?'<span class="cell-dt">'+fmt.short(dt)+'</span>':''):'';
+      body+='<td class="center"><div class="cell-inner"><div class="chk '+cc+'">'+mark+'</div>'+sub+'</div></td>';
+    });
+    var st;
+    if(S.members.length&&settled===S.members.length)st='<span class="pill pill-ok">✓ DONE</span>';
+    else if(!contrib&&past)st='<span class="pill pill-miss">✗ MISS</span>';
+    else if(!contrib)st='<span class="pill pill-none">—</span>';
+    else st='<span class="pill pill-part">'+settled+'/'+S.members.length+'</span>';
+    var goal=S.rate*S.members.length;
+    body+='<td class="center">'+st+'</td><td class="right goal-cell">₱'+goal.toLocaleString()+'</td><td class="right pot-cell">₱'+pot.toLocaleString()+'</td></tr>';
+  }
+  tbody.innerHTML=body;
+
+  var target=S.rate*WEEKS.length*S.members.length;
+  var f='<tr><td class="sticky-col" style="background:#f1f5f9"></td><td class="totals-lbl">TOTALS</td>';
+  S.members.forEach(m=>{f+='<td class="center m-tot">₱'+(totals.get(m.id)||0).toLocaleString()+'</td>';});
+  f+='<td></td><td colspan="2" class="grand">₱'+grand.toLocaleString()+' / ₱'+target.toLocaleString()+'</td></tr>';
+  tfoot.innerHTML=f;
+}
+function renderRecent(){
+  var box=document.getElementById('recent');
+  var list=S.payments.slice(0,5);
+  if(!list.length){box.innerHTML='<div class="recent-empty"><div class="emoji">💸</div><p style="font-size:14px;font-weight:700;color:#475569">No payments logged yet</p><p style="font-size:12px;margin-top:4px">Click "Log Payment" to start</p></div>';return;}
+  box.innerHTML=list.map(p=>{
+    var m=S.members.find(x=>x.id===p.memberId);
+    var t=m?tone(m.id):TONES[0],conf=delId===p.id;
+    return'<div class="recent-item"><div class="recent-row"><div class="avatar" style="background:'+t.g+'">'+esc((m?m.name:'?')[0].toUpperCase())+'</div><div class="recent-body"><div class="recent-name"><p>'+esc(m?m.name:'Unknown')+'</p><span>→ Wk '+(p.weekIndex+1)+'</span></div><div class="recent-dt">🕐 '+fmt.dt(p.createdAt)+'</div><div class="recent-rel">'+fmt.rel(p.createdAt)+(p.note?' · "'+esc(p.note)+'"':'')+'</div></div><div class="recent-actions no-print"><span class="recent-amt">+₱'+p.amount+'</span><button class="icon-btn edit" onclick=\'openPay({editing:'+JSON.stringify(p).replace(/'/g,'&#39;').replace(/"/g,'&quot;')+'})\'>✎</button><button class="icon-btn del" onclick="delId='+p.id+';renderRecent();renderHistory()">✕</button></div></div>'+(conf?'<div class="confirm-bar no-print"><span>Delete this payment?</span><div class="confirm-bar-btns"><button class="confirm-yes" onclick="confirmDel('+p.id+')">Delete</button><button class="confirm-no" onclick="delId=null;renderRecent();renderHistory()">Cancel</button></div></div>':'')+'</div>';
+  }).join('');
+}
+function renderMiles(){
+  var marks=[0.25,0.5,0.75,1].map(f=>Math.max(1,Math.ceil(WEEKS.length*f)));
+  var labels=['25% Mark','Halfway 🎯','75% — Almost!','🎉 Trip Ready!'];
+  document.getElementById('ms-list').innerHTML=marks.map((wk,i)=>{
+    var tgt=S.rate*S.members.length*wk,ok=grand>=tgt&&tgt>0;
+    return'<li><span class="ms-check '+(ok?'ok':'pending')+'">'+(ok?'✓':'○')+'</span><span><b>Wk '+wk+' ('+fmt.short(WEEKS[Math.min(wk-1,WEEKS.length-1)])+'):</b> ₱'+tgt.toLocaleString()+' — '+labels[i]+'</span></li>';
+  }).join('');
+}
+function renderBadge(){
+  var b=document.getElementById('hist-badge'),n=S.payments.length;
+  if(n>0){b.textContent=n>99?'99+':n;b.style.display='inline';}else b.style.display='none';
+}
+
+/* =========================================================
+   8. STARTUP & EVENT LISTENERS
+   ========================================================= */
+function init(){
+  try{
+    initFirebase();
+    var ri=document.getElementById('rate-inp');
+    ri.addEventListener('change',()=>{saveRate(ri.value);});
+    ri.addEventListener('blur',()=>{saveRate(ri.value);});
+  }catch(e){
+    console.error('Init error:',e);
+    fallbackToLocal();
   }
 }
 
-document.getElementById('loading-screen').style.transition = 'opacity 0.3s ease';
-init();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+else init();
+
+setInterval(()=>{try{renderHero();renderTable();renderQP();renderRecent();}catch(e){}},60000);
 </script>
 </body>
 </html>
