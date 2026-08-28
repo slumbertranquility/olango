@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>🏝️ Olango Trip - Weekly Payment Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overscroll-behavior: none;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background-color: #fff;
+                padding: 0;
+            }
+
+            .doc-shadow {
+                box-shadow: none !important;
+                border: none !important;
+            }
+        }
+
+        .custom-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            height: 22px;
+            width: 22px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+            cursor: not-allowed;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            background-color: #f1f5f9;
+            flex-shrink: 0;
+            pointer-events: none;
+        }
+
+        .custom-checkbox:checked {
+            background-color: #0ea5e9;
+            border-color: #0ea5e9;
+        }
+
+        .custom-checkbox:checked::after {
+            content: '✓';
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .modal-overlay {
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-content {
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+
+        .modal-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .modal-overlay.hidden .modal-content {
+            transform: scale(0.95) translateY(10px);
+            opacity: 0;
+        }
+
+        .pulse-dot {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .week-row:hover {
+            background-color: rgba(14, 165, 233, 0.04);
+        }
+
+        .payment-log-item {
+            animation: fadeIn 0.25s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .btn-interactive {
+            transition: all 0.15s ease;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .btn-interactive:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 640px) {
+            .responsive-table {
+                font-size: 11px;
+            }
+
+            .responsive-table th,
+            .responsive-table td {
+                padding: 6px 4px !important;
+            }
+
+            .mobile-stack {
+                flex-direction: column;
+            }
+
+            .mobile-full {
+                width: 100%;
+            }
+
+            .mobile-text-xs {
+                font-size: 10px;
+            }
+
+            .mobile-hide {
+                display: none;
+            }
+
+            .mobile-scroll {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .xs-text {
+                font-size: 9px;
+            }
+
+            .xs-padding {
+                padding: 12px !important;
+            }
+        }
+
+        .edit-input {
+            transition: all 0.2s ease;
+        }
+
+        .edit-input:focus {
+            transform: scale(1.02);
+        }
+
+        .delete-btn-hover:hover {
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        .confirm-overlay {
+            animation: fadeInBg 0.2s ease;
+        }
+
+        @keyframes fadeInBg {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .confirm-box {
+            animation: bounceIn 0.3s ease;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.8) translateY(20px); opacity: 0; }
+            60% { transform: scale(1.02) translateY(-5px); }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .swipe-item {
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .swipe-item.removing {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-sky-50 via-slate-50 to-cyan-50 text-slate-800 antialiased min-h-screen py-3 px-2 sm:py-4 sm:px-6 md:px-10">
+
+    <!-- Toast -->
+    <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-5 z-[100] transform translate-y-[-150%] opacity-0 transition-all duration-300 bg-slate-900 text-white px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl shadow-2xl flex items-center space-x-3 text-xs sm:text-sm font-medium border border-slate-700 max-w-[90vw] sm:max-w-sm">
+        <span id="toast-icon" class="text-emerald-400 font-bold text-base">✓</span>
+        <span id="toast-msg">Done!</span>
+    </div>
+
+    <!-- Custom Confirm Dialog -->
+    <div id="confirm-dialog" class="confirm-overlay hidden fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="confirm-box bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 overflow-hidden">
+            <div id="confirm-header" class="bg-gradient-to-r from-red-500 to-orange-500 p-4 text-white">
+                <h3 id="confirm-title" class="text-base font-bold">Confirm Action</h3>
+                <p id="confirm-subtitle" class="text-red-100 text-xs mt-0.5">This action cannot be undone</p>
+            </div>
+            <div class="p-5">
+                <p id="confirm-message" class="text-sm text-slate-700 mb-5">Are you sure?</p>
+                <div class="flex gap-3">
+                    <button id="confirm-cancel" class="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-colors btn-interactive">Cancel</button>
+                    <button id="confirm-ok" class="flex-1 py-2.5 px-4 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-bold transition-colors btn-interactive">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Log Modal -->
+    <div id="payment-modal" class="modal-overlay hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm">
+        <div class="modal-content bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md border border-slate-200 overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div class="bg-gradient-to-r from-sky-500 to-cyan-500 p-4 sm:p-5 text-white sticky top-0 z-10">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base sm:text-lg font-bold">Log a Payment</h3>
+                        <p class="text-sky-100 text-[11px] sm:text-xs mt-0.5">Record who paid and how much</p>
+                    </div>
+                    <button onclick="closeModal()" class="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors btn-interactive">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 sm:p-5 space-y-4">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">Who Paid?</label>
+                    <select id="modal-member" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50"></select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">For Which Week?</label>
+                    <select id="modal-week" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50"></select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">Amount Paid (₱)</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₱</span>
+                        <input type="number" id="modal-amount" placeholder="30" min="1" step="1" inputmode="numeric" class="w-full border-2 border-slate-200 rounded-xl pl-9 pr-4 py-3 text-sm font-bold focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50 edit-input" />
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1">Default is your weekly rate. You can type any amount.</p>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">Note (Optional)</label>
+                    <input type="text" id="modal-note" placeholder="e.g. GCash ref #12345" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50 edit-input" />
+                </div>
+                <button onclick="submitPayment()" class="w-full bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-sky-200 text-sm flex items-center justify-center gap-2 btn-interactive">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Confirm Payment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Payment Modal -->
+    <div id="edit-modal" class="modal-overlay hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm">
+        <div class="modal-content bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md border border-slate-200 overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div class="bg-gradient-to-r from-amber-500 to-orange-500 p-4 sm:p-5 text-white sticky top-0 z-10">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base sm:text-lg font-bold">Edit Payment</h3>
+                        <p class="text-amber-100 text-[11px] sm:text-xs mt-0.5" id="edit-info">Modify payment details</p>
+                    </div>
+                    <button onclick="closeEditModal()" class="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors btn-interactive">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 sm:p-5 space-y-4">
+                <input type="hidden" id="edit-log-id" />
+                <input type="hidden" id="edit-member" />
+                <input type="hidden" id="edit-week-index" />
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">Amount (₱)</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₱</span>
+                        <input type="number" id="edit-amount" min="1" step="1" inputmode="numeric" class="w-full border-2 border-slate-200 rounded-xl pl-9 pr-4 py-3 text-sm font-bold focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all bg-slate-50 edit-input" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wider">Note</label>
+                    <input type="text" id="edit-note" placeholder="e.g. Updated amount" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all bg-slate-50 edit-input" />
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="deleteFromEdit()" class="flex-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2 btn-interactive border border-red-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        Delete
+                    </button>
+                    <button onclick="saveEdit()" class="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-amber-200 text-sm flex items-center justify-center gap-2 btn-interactive">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Members Modal -->
+    <div id="members-modal" class="modal-overlay hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm">
+        <div class="modal-content bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md border border-slate-200 overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="bg-gradient-to-r from-violet-500 to-purple-500 p-4 sm:p-5 text-white flex-shrink-0">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base sm:text-lg font-bold">Manage Members</h3>
+                        <p class="text-violet-100 text-[11px] sm:text-xs mt-0.5">Add, edit, or remove trip members</p>
+                    </div>
+                    <button onclick="closeMembersModal()" class="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors btn-interactive">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 sm:p-5 space-y-3 overflow-y-auto flex-1">
+                <div id="members-list" class="space-y-2"></div>
+                <div class="flex gap-2">
+                    <input type="text" id="new-member-name" placeholder="New member name..." class="flex-1 border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition-all bg-slate-50 edit-input" onkeypress="if(event.key==='Enter')addMember()" />
+                    <button onclick="addMember()" class="bg-violet-500 hover:bg-violet-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-colors flex items-center gap-1 btn-interactive">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Add
+                    </button>
+                </div>
+                <p class="text-[10px] text-slate-400">⚠️ Removing a member deletes their payment history.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment History Modal -->
+    <div id="history-modal" class="modal-overlay hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm">
+        <div class="modal-content bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-lg border border-slate-200 overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="bg-gradient-to-r from-emerald-500 to-teal-500 p-4 sm:p-5 text-white flex-shrink-0">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base sm:text-lg font-bold">Payment History</h3>
+                        <p class="text-emerald-100 text-[11px] sm:text-xs mt-0.5" id="history-count">All recorded payments</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="history-filter" onchange="openHistoryModal()" class="bg-white/20 border border-white/30 rounded-lg px-2 py-1 text-xs font-bold text-white focus:outline-none">
+                            <option value="all">All</option>
+                        </select>
+                        <button onclick="closeHistoryModal()" class="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors btn-interactive">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 sm:p-5 overflow-y-auto flex-1" id="history-list">
+                <p class="text-sm text-slate-400 text-center py-8">No payments recorded yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal (for all devices) -->
+    <div id="preview-modal" class="modal-overlay hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm">
+        <div class="modal-content bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-2xl border border-slate-200 overflow-hidden max-h-[95vh] flex flex-col">
+            <div class="bg-gradient-to-r from-slate-700 to-slate-900 p-4 sm:p-5 text-white flex-shrink-0">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base sm:text-lg font-bold">📋 Preview & Share</h3>
+                        <p class="text-slate-300 text-[11px] sm:text-xs mt-0.5">Copy or share this summary</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyPreviewText()" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-bold transition-colors btn-interactive flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            Copy
+                        </button>
+                        <button onclick="sharePreview()" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-bold transition-colors btn-interactive flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                            Share
+                        </button>
+                        <button onclick="closePreviewModal()" class="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors btn-interactive">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 sm:p-5 overflow-y-auto flex-1">
+                <div id="preview-content" class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <pre id="preview-text" class="text-[10px] sm:text-xs font-mono text-slate-700 whitespace-pre-wrap leading-relaxed overflow-x-auto"></pre>
+                </div>
+                <div id="preview-visual" class="mt-4 space-y-3">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto">
+
+        <!-- Top Action Bar -->
+        <div class="no-print bg-white rounded-2xl p-3 sm:p-4 mb-3 sm:mb-4 shadow-sm border border-slate-200/80">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-sky-400 to-cyan-500 text-white flex items-center justify-center font-bold text-lg sm:text-xl shadow-lg shadow-sky-200">
+                        🏝️
+                    </div>
+                    <div>
+                        <h2 class="text-xs sm:text-sm font-extrabold text-slate-800">Olango Island Trip Fund</h2>
+                        <p class="text-[10px] sm:text-xs text-slate-500">Every Friday until Dec 18 • GCash</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
+                    <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-[11px] sm:text-xs font-semibold text-slate-600">
+                        <label for="weekly-rate" class="mr-1.5">₱/wk:</label>
+                        <input type="number" id="weekly-rate" value="30" step="5" min="5" inputmode="numeric" class="w-12 bg-white border border-slate-300 rounded-lg px-1.5 py-0.5 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-sky-300 text-center text-xs" onchange="onRateChange()" />
+                    </div>
+
+                    <button onclick="openModal()" class="px-3 py-2 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 transition-all shadow-md shadow-sky-200 btn-interactive">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span class="hidden xs:inline">Log</span> Pay
+                    </button>
+
+                    <button onclick="openHistoryModal()" class="px-2.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 transition-colors btn-interactive">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span class="hidden sm:inline">History</span>
+                    </button>
+
+                    <button onclick="openMembersModal()" class="px-2.5 py-2 bg-violet-500 hover:bg-violet-600 text-white rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 transition-colors btn-interactive">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        <span class="hidden sm:inline">Members</span>
+                    </button>
+
+                    <button onclick="openPreviewModal()" class="px-2.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-[11px] sm:text-xs font-semibold flex items-center gap-1 transition-colors btn-interactive">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span class="hidden sm:inline">Preview</span>
+                    </button>
+
+                    <button onclick="window.print()" class="px-2.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-[11px] sm:text-xs font-semibold flex items-center gap-1 transition-colors btn-interactive mobile-hide">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                        Print
+                    </button>
+
+                    <button onclick="resetAll()" class="px-2.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-[11px] sm:text-xs font-semibold flex items-center gap-1 transition-colors border border-red-200 btn-interactive">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <span class="hidden sm:inline">Reset</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Document -->
+        <div id="doc-content" class="doc-shadow bg-white rounded-2xl p-4 sm:p-6 md:p-8 lg:p-10 border border-slate-200/90 shadow-sm">
+
+            <!-- Header -->
+            <div class="border-b border-slate-200 pb-5 sm:pb-6 mb-5 sm:mb-7">
+                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 bg-sky-50 text-sky-700 text-[10px] sm:text-xs font-bold rounded-full mb-2 sm:mb-3 border border-sky-200/60">
+                            <span class="w-2 h-2 rounded-full bg-sky-500 pulse-dot"></span> Active Savings Cycle
+                        </div>
+                        <h1 class="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight">🏝️ Olango Island Trip</h1>
+                        <p class="text-xs sm:text-sm text-slate-500 mt-1">Weekly Payment Tracker</p>
+                        <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5" id="date-range-text">Loading dates...</p>
+                    </div>
+
+                    <div class="flex flex-col gap-2 items-stretch sm:items-end">
+                        <div class="bg-gradient-to-br from-sky-50 to-cyan-50 rounded-xl p-3 sm:p-4 border border-sky-200 text-right">
+                            <span class="text-[9px] sm:text-[10px] text-sky-600 font-bold uppercase tracking-widest block">Total Fund Target</span>
+                            <span id="stat-group-target" class="text-xl sm:text-2xl font-black text-sky-700 tracking-tight">₱0</span>
+                            <div class="text-[11px] sm:text-xs text-slate-500 mt-1">
+                                Collected: <span id="stat-collected" class="font-extrabold text-emerald-600">₱0</span>
+                            </div>
+                        </div>
+                        <div id="countdown-box" class="bg-amber-50 border border-amber-200 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-right">
+                            <span class="text-[9px] sm:text-[10px] text-amber-600 font-bold uppercase tracking-widest block">Countdown</span>
+                            <span id="countdown-text" class="text-sm sm:text-base font-extrabold text-amber-700">-- days left</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div class="mt-4 sm:mt-5">
+                    <div class="flex justify-between text-[11px] sm:text-xs font-semibold text-slate-600 mb-1.5">
+                        <span>Progress: <span id="progress-percent" class="text-sky-600 font-extrabold">0%</span></span>
+                        <span><span id="paid-count" class="font-extrabold">0</span> / <span id="total-slots">0</span> payments</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 sm:h-3 overflow-hidden">
+                        <div id="progress-bar-fill" class="bg-gradient-to-r from-sky-400 to-cyan-500 h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GCash Info -->
+            <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 rounded-2xl p-4 sm:p-5 text-white mb-5 sm:mb-7 shadow-lg shadow-blue-200/50">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                    <div class="space-y-1.5">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-white text-blue-700 text-[9px] sm:text-[10px] font-black uppercase px-2 sm:px-2.5 py-0.5 rounded-full tracking-wider">GCash</span>
+                            <span class="text-[11px] sm:text-xs font-semibold text-blue-200">Send payments here</span>
+                        </div>
+                        <div class="text-base sm:text-lg font-bold">Account: <span class="text-yellow-300">KXI</span></div>
+                        <div class="text-xs sm:text-sm text-blue-100 font-mono tracking-wide flex items-center gap-2">
+                            Number: <span class="font-extrabold text-white text-base sm:text-lg tracking-wider">0993 933 6295</span>
+                        </div>
+                    </div>
+                    <button onclick="copyGCashNumber()" class="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl border border-white/30 backdrop-blur-sm transition-all flex items-center gap-2 w-full sm:w-auto justify-center btn-interactive">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                        Copy Number
+                    </button>
+                </div>
+            </div>
+
+            <!-- Member Cards -->
+            <div id="member-cards" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-5 sm:mb-7"></div>
+
+            <!-- Quick Pay Buttons -->
+            <div class="no-print mb-5 sm:mb-7 bg-gradient-to-r from-slate-50 to-sky-50 rounded-2xl p-3 sm:p-4 border border-slate-200">
+                <h3 class="text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 sm:mb-3 flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Quick Pay — Current Week
+                </h3>
+                <div id="quick-pay-buttons" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <!-- Schedule Table -->
+            <div class="mb-5 sm:mb-7">
+                <div class="flex items-center justify-between mb-2 sm:mb-3">
+                    <h2 class="text-xs sm:text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                        <span class="w-1.5 h-5 rounded-full bg-sky-500"></span> Weekly Tracking Schedule
+                    </h2>
+                    <span class="text-[9px] sm:text-[11px] text-slate-400 font-medium no-print">✓ auto-checks on payment</span>
+                </div>
+
+                <div class="mobile-scroll overflow-x-auto rounded-xl border border-slate-200">
+                    <table id="tracking-table" class="w-full text-left text-[11px] sm:text-xs border-collapse responsive-table min-w-[600px]">
+                        <thead>
+                            <tr id="table-header" class="bg-slate-100/80 text-slate-600 font-bold border-b-2 border-slate-200">
+                                <th class="py-2.5 sm:py-3 px-2 sm:px-3 text-center w-10">Wk</th>
+                                <th class="py-2.5 sm:py-3 px-2 sm:px-3 text-left min-w-[100px]">Due Date</th>
+                                <th class="py-2.5 sm:py-3 px-2 text-center min-w-[60px]">Status</th>
+                                <th class="py-2.5 sm:py-3 px-2 sm:px-3 text-right min-w-[70px]">Week $</th>
+                                <th class="py-2.5 sm:py-3 px-2 sm:px-3 text-right min-w-[80px]">Running</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
+                        <tfoot id="table-foot"></tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recent Payments Preview -->
+            <div class="mb-5 sm:mb-7" id="recent-payments-section">
+                <h3 class="text-xs sm:text-sm font-extrabold text-slate-900 flex items-center gap-2 mb-2 sm:mb-3">
+                    <span class="w-1.5 h-5 rounded-full bg-emerald-500"></span> Recent Payments
+                </h3>
+                <div id="recent-payments" class="space-y-2">
+                    <p class="text-xs sm:text-sm text-slate-400 text-center py-4">No payments yet. Click "Log Payment" to start!</p>
+                </div>
+            </div>
+
+            <!-- Guidelines -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 pt-4 sm:pt-5 border-t border-slate-200">
+                <div>
+                    <h3 class="text-xs sm:text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-sky-500"></span> Payment Rules
+                    </h3>
+                    <ul class="text-[11px] sm:text-xs text-slate-600 space-y-1.5 leading-relaxed">
+                        <li>• <strong>Cut-Off:</strong> Every Friday, 11:59 PM</li>
+                        <li>• <strong>GCash Note:</strong> <code class="bg-slate-100 px-1 py-0.5 rounded text-[10px]">[Name] - Wk [#]</code></li>
+                        <li>• <strong>Proof:</strong> Screenshot your receipt → drop in GC</li>
+                        <li>• <strong>Advance Pay:</strong> Paying ahead is welcome!</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xs sm:text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Milestones
+                    </h3>
+                    <div id="milestones-list" class="text-[11px] sm:text-xs text-slate-600 space-y-1.5 leading-relaxed"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center py-4 no-print">
+            <p class="text-[10px] text-slate-400">Built with ❤️ for the Olango Trip Squad • Data saved locally on this device</p>
+        </div>
+    </div>
+
+    <script>
+        // ============================
+        //  STATE MANAGEMENT
+        // ============================
+        const STORAGE_KEY = 'olango-trip-tracker';
+        const DEFAULT_MEMBERS = ['Fatima', 'Kurt', 'Johnchris', 'Tina'];
+
+        const FRIDAY_DATES = generateFridays(new Date(2025, 7, 29), new Date(2025, 11, 19));
+
+        function generateFridays(start, end) {
+            const fridays = [];
+            const d = new Date(start);
+            while (d.getDay() !== 5) d.setDate(d.getDate() + 1);
+            while (d <= end) {
+                fridays.push(new Date(d));
+                d.setDate(d.getDate() + 7);
+            }
+            return fridays;
+        }
+
+        function formatDate(d) {
+            return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        }
+
+        function formatDateShort(d) {
+            return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+        }
+
+        function getDefaultState() {
+            return {
+                members: [...DEFAULT_MEMBERS],
+                rate: 30,
+                payments: {},
+                paymentLog: []
+            };
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const s = JSON.parse(raw);
+                    if (!s.paymentLog) s.paymentLog = [];
+                    if (!s.payments) s.payments = {};
+                    return s;
+                }
+            } catch (e) { }
+            return getDefaultState();
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        let state = loadState();
+
+        // ============================
+        //  CUSTOM CONFIRM DIALOG
+        // ============================
+        function customConfirm(title, subtitle, message, okText = 'Confirm', headerColor = 'from-red-500 to-orange-500') {
+            return new Promise((resolve) => {
+                const dialog = document.getElementById('confirm-dialog');
+                const header = document.getElementById('confirm-header');
+                document.getElementById('confirm-title').textContent = title;
+                document.getElementById('confirm-subtitle').textContent = subtitle;
+                document.getElementById('confirm-message').textContent = message;
+                document.getElementById('confirm-ok').textContent = okText;
+                header.className = `bg-gradient-to-r ${headerColor} p-4 text-white`;
+
+                dialog.classList.remove('hidden');
+
+                const onOk = () => {
+                    dialog.classList.add('hidden');
+                    cleanup();
+                    resolve(true);
+                };
+                const onCancel = () => {
+                    dialog.classList.add('hidden');
+                    cleanup();
+                    resolve(false);
+                };
+                const cleanup = () => {
+                    document.getElementById('confirm-ok').removeEventListener('click', onOk);
+                    document.getElementById('confirm-cancel').removeEventListener('click', onCancel);
+                };
+
+                document.getElementById('confirm-ok').addEventListener('click', onOk);
+                document.getElementById('confirm-cancel').addEventListener('click', onCancel);
+            });
+        }
+
+        // ============================
+        //  INIT
+        // ============================
+        function init() {
+            document.getElementById('weekly-rate').value = state.rate;
+            updateCountdown();
+            updateDateRange();
+            buildMemberCards();
+            buildTableHeader();
+            buildTableBody();
+            buildTableFooter();
+            updateAllCalculations();
+            buildQuickPayButtons();
+            buildRecentPayments();
+            buildMilestones();
+            populateHistoryFilter();
+        }
+
+        function updateCountdown() {
+            const target = FRIDAY_DATES[FRIDAY_DATES.length - 1];
+            const now = new Date();
+            const diff = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+            const el = document.getElementById('countdown-text');
+            const box = document.getElementById('countdown-box');
+            if (diff <= 0) {
+                el.textContent = "Trip time! 🎉";
+                box.className = "bg-emerald-50 border border-emerald-200 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-right";
+                el.className = "text-sm sm:text-base font-extrabold text-emerald-700";
+            } else {
+                el.textContent = `${diff} days left`;
+                if (diff <= 14) {
+                    box.className = "bg-red-50 border border-red-200 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-right";
+                    el.className = "text-sm sm:text-base font-extrabold text-red-700";
+                }
+            }
+        }
+
+        function updateDateRange() {
+            const first = formatDate(FRIDAY_DATES[0]);
+            const last = formatDate(FRIDAY_DATES[FRIDAY_DATES.length - 1]);
+            document.getElementById('date-range-text').textContent = `${first} – ${last} (${FRIDAY_DATES.length} Fridays)`;
+        }
+
+        function getCurrentWeekIndex() {
+            const now = new Date();
+            for (let i = 0; i < FRIDAY_DATES.length; i++) {
+                if (now <= FRIDAY_DATES[i]) return i;
+            }
+            return FRIDAY_DATES.length - 1;
+        }
+
+        // ============================
+        //  MEMBER CARDS
+        // ============================
+        function buildMemberCards() {
+            const container = document.getElementById('member-cards');
+            const len = state.members.length;
+            const cols = len <= 4 ? 'grid-cols-2 sm:grid-cols-4' :
+                len <= 6 ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-6' :
+                    'grid-cols-2 sm:grid-cols-4';
+            container.className = `grid ${cols} gap-2 sm:gap-3 mb-5 sm:mb-7`;
+            container.innerHTML = '';
+
+            const colors = [
+                { bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-800', accent: 'text-sky-500', bar: 'bg-sky-400' },
+                { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-800', accent: 'text-violet-500', bar: 'bg-violet-400' },
+                { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', accent: 'text-amber-500', bar: 'bg-amber-400' },
+                { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-800', accent: 'text-rose-500', bar: 'bg-rose-400' },
+                { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-800', accent: 'text-emerald-500', bar: 'bg-emerald-400' },
+                { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-800', accent: 'text-indigo-500', bar: 'bg-indigo-400' },
+            ];
+
+            state.members.forEach((name, i) => {
+                const c = colors[i % colors.length];
+                const paid = getMemberPaidTotal(name);
+                const target = state.rate * FRIDAY_DATES.length;
+                const pct = target > 0 ? Math.round((paid / target) * 100) : 0;
+                const weeks = getMemberPaidWeeks(name);
+
+                const div = document.createElement('div');
+                div.className = `${c.bg} border ${c.border} rounded-xl p-2.5 sm:p-3.5 text-center transition-all hover:shadow-md cursor-pointer btn-interactive`;
+                div.onclick = () => openMemberDetail(name);
+                div.innerHTML = `
+                    <p class="text-[10px] sm:text-xs font-bold ${c.accent} uppercase tracking-wider truncate">${name}</p>
+                    <p class="text-lg sm:text-xl font-black ${c.text} mt-0.5 sm:mt-1">₱${paid.toLocaleString()}</p>
+                    <p class="text-[9px] sm:text-[11px] text-slate-500 mt-0.5">${weeks}/${FRIDAY_DATES.length} wks • ₱${target.toLocaleString()}</p>
+                    <div class="w-full bg-white/60 rounded-full h-1.5 mt-1.5 sm:mt-2 overflow-hidden">
+                        <div class="h-1.5 rounded-full transition-all duration-500 ${pct >= 100 ? 'bg-emerald-500' : c.bar}" style="width: ${Math.min(pct, 100)}%"></div>
+                    </div>
+                    <p class="text-[9px] sm:text-[10px] text-slate-400 mt-0.5 sm:mt-1">${pct}%</p>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function openMemberDetail(name) {
+            // Filter history to this member
+            const filter = document.getElementById('history-filter');
+            filter.value = name;
+            openHistoryModal();
+        }
+
+        function getMemberPaidTotal(name) {
+            if (!state.payments[name]) return 0;
+            let total = 0;
+            for (const wk in state.payments[name]) {
+                total += state.payments[name][wk].amount || 0;
+            }
+            return total;
+        }
+
+        function getMemberPaidWeeks(name) {
+            if (!state.payments[name]) return 0;
+            return Object.keys(state.payments[name]).length;
+        }
+
+        // ============================
+        //  TABLE — Checkboxes are READ-ONLY / automatic
+        // ============================
+        function buildTableHeader() {
+            const tr = document.getElementById('table-header');
+            tr.innerHTML = `
+                <th class="py-2.5 sm:py-3 px-2 sm:px-3 text-center w-10 text-[10px] sm:text-[11px]">WK</th>
+                <th class="py-2.5 sm:py-3 px-2 sm:px-3 text-left min-w-[90px] text-[10px] sm:text-[11px]">DUE DATE</th>
+            `;
+            state.members.forEach(name => {
+                const shortName = name.length > 6 ? name.substring(0, 5) + '.' : name;
+                tr.innerHTML += `<th class="py-2.5 sm:py-3 px-1 sm:px-2 text-center min-w-[55px] text-[10px] sm:text-[11px]">${shortName.toUpperCase()}</th>`;
+            });
+            tr.innerHTML += `
+                <th class="py-2.5 sm:py-3 px-1 sm:px-2 text-center min-w-[60px] text-[10px] sm:text-[11px]">STATUS</th>
+                <th class="py-2.5 sm:py-3 px-2 sm:px-3 text-right min-w-[65px] text-[10px] sm:text-[11px]">WEEK $</th>
+                <th class="py-2.5 sm:py-3 px-2 sm:px-3 text-right min-w-[75px] text-[10px] sm:text-[11px]">RUNNING</th>
+            `;
+        }
+
+        function buildTableBody() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            const currentWeek = getCurrentWeekIndex();
+
+            FRIDAY_DATES.forEach((date, idx) => {
+                const weekNum = String(idx + 1).padStart(2, '0');
+                const weeklyTarget = state.rate * state.members.length;
+                const runningTarget = weeklyTarget * (idx + 1);
+                const isCurrentWeek = idx === currentWeek;
+                const isPast = new Date() > date;
+
+                const tr = document.createElement('tr');
+                let rowClass = 'week-row transition-colors ';
+                if (isCurrentWeek) rowClass += 'bg-sky-50/70 border-l-4 border-l-sky-400 ';
+                else if (idx % 2 === 1) rowClass += 'bg-slate-50/40 ';
+                tr.className = rowClass;
+
+                let cells = `
+                    <td class="py-2 sm:py-2.5 px-2 sm:px-3 text-center font-extrabold ${isCurrentWeek ? 'text-sky-600' : 'text-slate-400'} text-[10px] sm:text-xs">${weekNum}</td>
+                    <td class="py-2 sm:py-2.5 px-2 sm:px-3 font-medium text-slate-700 text-[10px] sm:text-xs">
+                        <span class="hidden sm:inline">${formatDate(date)}</span>
+                        <span class="sm:hidden">${formatDateShort(date)}</span>
+                        ${isCurrentWeek ? '<span class="ml-1 inline-flex items-center px-1 py-0.5 bg-sky-100 text-sky-700 text-[8px] sm:text-[9px] font-black rounded-full uppercase">Now</span>' : ''}
+                    </td>
+                `;
+
+                // Member checkboxes — READ ONLY, auto-checked by payments
+                state.members.forEach(name => {
+                    const isPaid = state.payments[name] && state.payments[name][idx];
+                    const amt = isPaid ? state.payments[name][idx].amount : 0;
+                    cells += `
+                        <td class="py-2 sm:py-2.5 px-1 sm:px-2 text-center">
+                            <div class="flex flex-col items-center gap-0.5">
+                                <input type="checkbox" 
+                                    class="custom-checkbox" 
+                                    ${isPaid ? 'checked' : ''} 
+                                    disabled 
+                                    tabindex="-1" />
+                                ${isPaid ? `<span class="text-[8px] sm:text-[9px] font-bold text-emerald-600">₱${amt}</span>` : ''}
+                            </div>
+                        </td>
+                    `;
+                });
+
+                // Status
+                const paidInWeek = state.members.filter(n => state.payments[n] && state.payments[n][idx]).length;
+                const allPaid = paidInWeek === state.members.length;
+                const nonePaid = paidInWeek === 0;
+                let statusBadge;
+                if (allPaid) {
+                    statusBadge = '<span class="inline-flex items-center px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] sm:text-[10px] font-bold rounded-full">✓ Done</span>';
+                } else if (nonePaid && isPast) {
+                    statusBadge = '<span class="inline-flex items-center px-1.5 py-0.5 bg-red-100 text-red-600 text-[9px] sm:text-[10px] font-bold rounded-full">✗ Miss</span>';
+                } else if (nonePaid) {
+                    statusBadge = '<span class="inline-flex items-center px-1.5 py-0.5 bg-slate-100 text-slate-400 text-[9px] sm:text-[10px] font-bold rounded-full">—</span>';
+                } else {
+                    statusBadge = `<span class="inline-flex items-center px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[9px] sm:text-[10px] font-bold rounded-full">${paidInWeek}/${state.members.length}</span>`;
+                }
+
+                cells += `<td class="py-2 sm:py-2.5 px-1 sm:px-2 text-center">${statusBadge}</td>`;
+                cells += `<td class="py-2 sm:py-2.5 px-2 sm:px-3 text-right font-medium text-slate-500 text-[10px] sm:text-xs">₱${weeklyTarget.toLocaleString()}</td>`;
+                cells += `<td class="py-2 sm:py-2.5 px-2 sm:px-3 text-right font-bold text-slate-700 text-[10px] sm:text-xs">₱${runningTarget.toLocaleString()}</td>`;
+
+                tr.innerHTML = cells;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function buildTableFooter() {
+            const tfoot = document.getElementById('table-foot');
+            const groupTarget = state.rate * FRIDAY_DATES.length * state.members.length;
+            let totalCollected = 0;
+
+            let html = `<tr class="bg-slate-100/80 font-bold text-slate-900 border-t-2 border-slate-300">
+                <td colspan="2" class="py-2.5 sm:py-3 px-2 sm:px-3 text-center uppercase tracking-wider text-[9px] sm:text-[11px]">TOTALS</td>`;
+
+            state.members.forEach(name => {
+                const paid = getMemberPaidTotal(name);
+                totalCollected += paid;
+                html += `<td class="py-2.5 sm:py-3 px-1 sm:px-2 text-center text-sky-700 font-extrabold text-[10px] sm:text-xs">₱${paid.toLocaleString()}</td>`;
+            });
+
+            html += `
+                <td class="py-2.5 sm:py-3 px-1 sm:px-2 text-center"></td>
+                <td colspan="2" class="py-2.5 sm:py-3 px-2 sm:px-3 text-right text-emerald-700 font-extrabold text-[11px] sm:text-sm">
+                    ₱${totalCollected.toLocaleString()} / ₱${groupTarget.toLocaleString()}
+                </td>
+            </tr>`;
+
+            tfoot.innerHTML = html;
+        }
+
+        // ============================
+        //  CALCULATIONS
+        // ============================
+        function updateAllCalculations() {
+            const groupTarget = state.rate * FRIDAY_DATES.length * state.members.length;
+            let totalCollected = 0;
+            let totalPaidSlots = 0;
+
+            state.members.forEach(name => {
+                totalCollected += getMemberPaidTotal(name);
+                totalPaidSlots += getMemberPaidWeeks(name);
+            });
+
+            const totalSlots = FRIDAY_DATES.length * state.members.length;
+            const pct = totalSlots > 0 ? Math.round((totalPaidSlots / totalSlots) * 100) : 0;
+
+            document.getElementById('stat-group-target').textContent = `₱${groupTarget.toLocaleString()}`;
+            document.getElementById('stat-collected').textContent = `₱${totalCollected.toLocaleString()}`;
+            document.getElementById('progress-percent').textContent = `${pct}%`;
+            document.getElementById('paid-count').textContent = totalPaidSlots;
+            document.getElementById('total-slots').textContent = totalSlots;
+            document.getElementById('progress-bar-fill').style.width = `${pct}%`;
+        }
+
+        // ============================
+        //  PAYMENT MODAL
+        // ============================
+        function openModal() {
+            const modal = document.getElementById('payment-modal');
+            modal.classList.remove('hidden');
+
+            const sel = document.getElementById('modal-member');
+            sel.innerHTML = '';
+            state.members.forEach(name => {
+                sel.innerHTML += `<option value="${name}">${name}</option>`;
+            });
+
+            const weekSel = document.getElementById('modal-week');
+            weekSel.innerHTML = '';
+            const curWeek = getCurrentWeekIndex();
+            FRIDAY_DATES.forEach((date, idx) => {
+                const isPaid = checkAllPaidForWeek(idx);
+                const label = `Week ${idx + 1} — ${formatDate(date)}${isPaid ? ' ✓' : ''}`;
+                weekSel.innerHTML += `<option value="${idx}" ${idx === curWeek ? 'selected' : ''}>${label}</option>`;
+            });
+
+            document.getElementById('modal-amount').value = state.rate;
+            document.getElementById('modal-note').value = '';
+        }
+
+        function checkAllPaidForWeek(idx) {
+            return state.members.every(n => state.payments[n] && state.payments[n][idx]);
+        }
+
+        function closeModal() {
+            document.getElementById('payment-modal').classList.add('hidden');
+        }
+
+        function submitPayment() {
+            const member = document.getElementById('modal-member').value;
+            const weekIndex = parseInt(document.getElementById('modal-week').value);
+            const amount = parseFloat(document.getElementById('modal-amount').value);
+            const note = document.getElementById('modal-note').value.trim();
+
+            if (!member || isNaN(amount) || amount <= 0) {
+                showToast('Please fill in all fields correctly!', 'error');
+                return;
+            }
+
+            if (!state.payments[member]) state.payments[member] = {};
+
+            // Check if already paid — offer to update
+            if (state.payments[member][weekIndex]) {
+                const existing = state.payments[member][weekIndex];
+                customConfirm(
+                    'Already Paid',
+                    `${member} already paid ₱${existing.amount} for Week ${weekIndex + 1}`,
+                    `Do you want to update this payment to ₱${amount}?`,
+                    'Update Payment',
+                    'from-amber-500 to-orange-500'
+                ).then(ok => {
+                    if (ok) {
+                        doSubmitPayment(member, weekIndex, amount, note, true);
+                    }
+                });
+                return;
+            }
+
+            doSubmitPayment(member, weekIndex, amount, note, false);
+        }
+
+        function doSubmitPayment(member, weekIndex, amount, note, isUpdate) {
+            if (!state.payments[member]) state.payments[member] = {};
+            state.payments[member][weekIndex] = {
+                amount,
+                date: new Date().toISOString(),
+                note: note || `Paid ₱${amount}`
+            };
+
+            state.paymentLog.push({
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                member,
+                weekIndex,
+                amount,
+                note: note || (isUpdate ? `Updated to ₱${amount}` : `Paid ₱${amount}`),
+                timestamp: new Date().toISOString()
+            });
+
+            saveState();
+            closeModal();
+            refreshUI();
+            showToast(`₱${amount} ${isUpdate ? 'updated' : 'logged'} for ${member} (Week ${weekIndex + 1})! 🎉`);
+        }
+
+        // ============================
+        //  QUICK PAY
+        // ============================
+        function buildQuickPayButtons() {
+            const container = document.getElementById('quick-pay-buttons');
+            container.innerHTML = '';
+            const curWeek = getCurrentWeekIndex();
+
+            state.members.forEach(name => {
+                const isPaid = state.payments[name] && state.payments[name][curWeek];
+                const btn = document.createElement('button');
+                if (isPaid) {
+                    btn.className = 'px-3 sm:px-4 py-2 sm:py-2.5 bg-emerald-100 text-emerald-700 rounded-xl text-[11px] sm:text-xs font-bold border border-emerald-200 cursor-default flex items-center gap-1.5 sm:gap-2';
+                    btn.innerHTML = `<span>✓</span> ${name} — ₱${isPaid.amount}`;
+                    btn.disabled = true;
+                } else {
+                    btn.className = 'px-3 sm:px-4 py-2 sm:py-2.5 bg-white hover:bg-sky-50 text-slate-700 rounded-xl text-[11px] sm:text-xs font-bold border-2 border-slate-200 hover:border-sky-300 transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer btn-interactive';
+                    btn.innerHTML = `<span class="text-sky-500">+</span> ${name} — ₱${state.rate}`;
+                    btn.onclick = () => quickPay(name, curWeek);
+                }
+                container.appendChild(btn);
+            });
+
+            const info = document.createElement('div');
+            info.className = 'w-full mt-2 text-[10px] sm:text-[11px] text-slate-400 font-medium';
+            info.textContent = `📅 Current: Week ${curWeek + 1} — Due ${formatDate(FRIDAY_DATES[curWeek])}`;
+            container.appendChild(info);
+        }
+
+        function quickPay(member, weekIndex) {
+            if (!state.payments[member]) state.payments[member] = {};
+            state.payments[member][weekIndex] = {
+                amount: state.rate,
+                date: new Date().toISOString(),
+                note: 'Quick pay'
+            };
+            state.paymentLog.push({
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                member,
+                weekIndex,
+                amount: state.rate,
+                note: 'Quick pay',
+                timestamp: new Date().toISOString()
+            });
+            saveState();
+            refreshUI();
+            showToast(`${member} paid ₱${state.rate} for Week ${weekIndex + 1}! ⚡`);
+        }
+
+        // ============================
+        //  RECENT PAYMENTS
+        // ============================
+        function buildRecentPayments() {
+            const container = document.getElementById('recent-payments');
+            const logs = state.paymentLog.filter(l => l.amount > 0).slice(-5).reverse();
+
+            if (logs.length === 0) {
+                container.innerHTML = '<p class="text-xs sm:text-sm text-slate-400 text-center py-4">No payments yet. Click "Log Payment" to start! 🏝️</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            logs.forEach(log => {
+                const div = document.createElement('div');
+                div.className = 'payment-log-item flex items-center justify-between bg-slate-50 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors btn-interactive';
+                const d = new Date(log.timestamp);
+                const timeStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] sm:text-xs font-black flex-shrink-0">₱</div>
+                        <div class="min-w-0">
+                            <p class="text-xs sm:text-sm font-bold text-slate-800 truncate">${log.member} <span class="text-slate-400 font-normal">→ Wk ${log.weekIndex + 1}</span></p>
+                            <p class="text-[9px] sm:text-[11px] text-slate-400 truncate">${timeStr}${log.note ? ' • ' + log.note : ''}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                        <span class="text-xs sm:text-sm font-extrabold text-emerald-600">+₱${log.amount}</span>
+                        <button onclick="event.stopPropagation(); openEditPayment('${log.id}')" class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-200 hover:bg-amber-100 text-slate-500 hover:text-amber-600 flex items-center justify-center transition-colors text-[10px] sm:text-xs btn-interactive" title="Edit">✎</button>
+                    </div>
+                `;
+                div.onclick = () => openEditPayment(log.id);
+                container.appendChild(div);
+            });
+        }
+
+        // ============================
+        //  EDIT PAYMENT
+        // ============================
+        function openEditPayment(logId) {
+            const log = state.paymentLog.find(l => l.id == logId && l.amount > 0);
+            if (!log) {
+                showToast('Payment not found', 'error');
+                return;
+            }
+
+            document.getElementById('edit-log-id').value = log.id;
+            document.getElementById('edit-member').value = log.member;
+            document.getElementById('edit-week-index').value = log.weekIndex;
+            document.getElementById('edit-amount').value = log.amount;
+            document.getElementById('edit-note').value = log.note || '';
+            document.getElementById('edit-info').textContent = `${log.member} — Week ${log.weekIndex + 1}`;
+
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        function saveEdit() {
+            const logId = document.getElementById('edit-log-id').value;
+            const member = document.getElementById('edit-member').value;
+            const weekIndex = parseInt(document.getElementById('edit-week-index').value);
+            const newAmount = parseFloat(document.getElementById('edit-amount').value);
+            const newNote = document.getElementById('edit-note').value.trim();
+
+            if (isNaN(newAmount) || newAmount <= 0) {
+                showToast('Enter a valid amount!', 'error');
+                return;
+            }
+
+            // Update the payment
+            if (state.payments[member] && state.payments[member][weekIndex] !== undefined) {
+                state.payments[member][weekIndex] = {
+                    amount: newAmount,
+                    date: new Date().toISOString(),
+                    note: newNote || `Updated to ₱${newAmount}`
+                };
+            }
+
+            // Add edit log entry
+            state.paymentLog.push({
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                member,
+                weekIndex,
+                amount: newAmount,
+                note: `✏️ Edited: ${newNote || 'Amount updated to ₱' + newAmount}`,
+                timestamp: new Date().toISOString()
+            });
+
+            saveState();
+            closeEditModal();
+            refreshUI();
+            showToast(`Payment updated: ${member} Wk ${weekIndex + 1} → ₱${newAmount}`);
+        }
+
+        function deleteFromEdit() {
+            const member = document.getElementById('edit-member').value;
+            const weekIndex = parseInt(document.getElementById('edit-week-index').value);
+
+            customConfirm(
+                'Delete Payment',
+                `Remove ${member}'s payment for Week ${weekIndex + 1}?`,
+                'This will uncheck their payment for this week. This action is logged.',
+                'Delete Payment'
+            ).then(ok => {
+                if (ok) {
+                    if (state.payments[member]) {
+                        delete state.payments[member][weekIndex];
+                    }
+                    state.paymentLog.push({
+                        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                        member,
+                        weekIndex,
+                        amount: 0,
+                        note: '🗑️ Payment deleted',
+                        timestamp: new Date().toISOString()
+                    });
+                    saveState();
+                    closeEditModal();
+                    refreshUI();
+                    showToast(`Payment deleted: ${member} Wk ${weekIndex + 1}`, 'warning');
+                }
+            });
+        }
+
+        // ============================
+        //  PAYMENT HISTORY MODAL
+        // ============================
+        function populateHistoryFilter() {
+            const filter = document.getElementById('history-filter');
+            const currentVal = filter.value;
+            filter.innerHTML = '<option value="all">All Members</option>';
+            state.members.forEach(name => {
+                filter.innerHTML += `<option value="${name}" ${currentVal === name ? 'selected' : ''}>${name}</option>`;
+            });
+        }
+
+        function openHistoryModal() {
+            const modal = document.getElementById('history-modal');
+            modal.classList.remove('hidden');
+            populateHistoryFilter();
+
+            const filterVal = document.getElementById('history-filter').value;
+            const container = document.getElementById('history-list');
+
+            let logs = [...state.paymentLog].reverse();
+            if (filterVal !== 'all') {
+                logs = logs.filter(l => l.member === filterVal);
+            }
+
+            const activeLogs = logs.filter(l => l.amount > 0);
+            document.getElementById('history-count').textContent = `${activeLogs.length} payments${filterVal !== 'all' ? ' by ' + filterVal : ''}`;
+
+            if (logs.length === 0) {
+                container.innerHTML = '<p class="text-xs sm:text-sm text-slate-400 text-center py-8">No payment history yet.</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            logs.forEach(log => {
+                const d = new Date(log.timestamp);
+                const timeStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+                const div = document.createElement('div');
+                div.className = `payment-log-item swipe-item flex items-center justify-between rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 border mb-2 ${log.amount > 0 ? 'bg-emerald-50/50 border-emerald-100' : 'bg-red-50/50 border-red-100'}`;
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full ${log.amount > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-500'} flex items-center justify-center text-[10px] sm:text-xs font-black flex-shrink-0">
+                            ${log.amount > 0 ? '₱' : '✗'}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs sm:text-sm font-bold text-slate-800 truncate">${log.member} <span class="text-slate-400 font-normal">→ Wk ${log.weekIndex + 1}</span></p>
+                            <p class="text-[9px] sm:text-[11px] text-slate-400">${timeStr}</p>
+                            ${log.note ? `<p class="text-[9px] sm:text-[11px] text-slate-500 italic truncate">${log.note}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                        <span class="text-xs sm:text-sm font-extrabold ${log.amount > 0 ? 'text-emerald-600' : 'text-red-500'}">
+                            ${log.amount > 0 ? '+₱' + log.amount : 'Removed'}
+                        </span>
+                        ${log.amount > 0 ? `
+                            <button onclick="openEditPayment('${log.id}')" class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-500 hover:text-amber-600 flex items-center justify-center transition-colors text-[10px] sm:text-xs btn-interactive" title="Edit">✎</button>
+                            <button onclick="deletePaymentFromHistory('${log.member}', ${log.weekIndex})" class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 flex items-center justify-center transition-colors text-[10px] sm:text-xs btn-interactive delete-btn-hover" title="Delete">✗</button>
+                        ` : ''}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('history-modal').classList.add('hidden');
+        }
+
+        function deletePaymentFromHistory(member, weekIndex) {
+            customConfirm(
+                'Delete Payment',
+                `Remove ${member}'s payment for Week ${weekIndex + 1}?`,
+                'The checklist will automatically uncheck. This is logged in history.',
+                'Delete'
+            ).then(ok => {
+                if (!ok) return;
+
+                if (state.payments[member]) {
+                    delete state.payments[member][weekIndex];
+                }
+
+                state.paymentLog.push({
+                    id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                    member,
+                    weekIndex,
+                    amount: 0,
+                    note: '🗑️ Deleted from history',
+                    timestamp: new Date().toISOString()
+                });
+
+                saveState();
+                refreshUI();
+                showToast(`Payment removed: ${member} Wk ${weekIndex + 1}`, 'warning');
+                setTimeout(() => openHistoryModal(), 150);
+            });
+        }
+
+        // ============================
+        //  MANAGE MEMBERS MODAL
+        // ============================
+        function openMembersModal() {
+            const modal = document.getElementById('members-modal');
+            modal.classList.remove('hidden');
+            renderMembersList();
+        }
+
+        function closeMembersModal() {
+            document.getElementById('members-modal').classList.add('hidden');
+        }
+
+        function renderMembersList() {
+            const container = document.getElementById('members-list');
+            container.innerHTML = '';
+            state.members.forEach((name, i) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between bg-slate-50 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-100';
+                const paidTotal = getMemberPaidTotal(name);
+                const weeks = getMemberPaidWeeks(name);
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                        <div class="w-8 h-8 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-xs font-black flex-shrink-0">${name.charAt(0).toUpperCase()}</div>
+                        <div class="min-w-0" id="member-display-${i}">
+                            <p class="text-xs sm:text-sm font-bold text-slate-800 truncate">${name}</p>
+                            <p class="text-[9px] sm:text-[11px] text-slate-400">₱${paidTotal.toLocaleString()} paid • ${weeks} weeks</p>
+                        </div>
+                        <div class="min-w-0 hidden" id="member-edit-${i}">
+                            <input type="text" value="${name}" class="border-2 border-violet-300 rounded-lg px-2 py-1 text-xs sm:text-sm font-bold w-full focus:outline-none focus:ring-2 focus:ring-violet-200 edit-input" id="member-input-${i}" onkeypress="if(event.key==='Enter')saveMemberEdit(${i})" />
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        <button onclick="toggleMemberEdit(${i})" id="edit-btn-${i}" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-500 hover:text-amber-600 flex items-center justify-center transition-colors text-[10px] sm:text-sm btn-interactive" title="Edit name">✎</button>
+                        <button onclick="saveMemberEdit(${i})" id="save-btn-${i}" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-500 hover:text-emerald-600 items-center justify-center transition-colors text-[10px] sm:text-sm btn-interactive hidden" title="Save">✓</button>
+                        <button onclick="removeMember(${i})" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 flex items-center justify-center transition-colors text-[10px] sm:text-sm btn-interactive delete-btn-hover" title="Remove">✗</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function toggleMemberEdit(idx) {
+            const display = document.getElementById(`member-display-${idx}`);
+            const edit = document.getElementById(`member-edit-${idx}`);
+            const editBtn = document.getElementById(`edit-btn-${idx}`);
+            const saveBtn = document.getElementById(`save-btn-${idx}`);
+
+            display.classList.toggle('hidden');
+            edit.classList.toggle('hidden');
+            editBtn.classList.toggle('hidden');
+            saveBtn.classList.toggle('hidden');
+            saveBtn.style.display = saveBtn.classList.contains('hidden') ? 'none' : 'flex';
+
+            if (!edit.classList.contains('hidden')) {
+                const input = document.getElementById(`member-input-${idx}`);
+                input.focus();
+                input.select();
+            }
+        }
+
+        function saveMemberEdit(idx) {
+            const input = document.getElementById(`member-input-${idx}`);
+            const newName = input.value.trim();
+            const oldName = state.members[idx];
+
+            if (!newName) {
+                showToast('Name cannot be empty!', 'error');
+                return;
+            }
+
+            if (newName === oldName) {
+                toggleMemberEdit(idx);
+                return;
+            }
+
+            if (state.members.find((m, i) => i !== idx && m.toLowerCase() === newName.toLowerCase())) {
+                showToast('Name already exists!', 'error');
+                return;
+            }
+
+            // Transfer payment data
+            if (state.payments[oldName]) {
+                state.payments[newName] = state.payments[oldName];
+                delete state.payments[oldName];
+            }
+
+            // Update log entries
+            state.paymentLog.forEach(log => {
+                if (log.member === oldName) {
+                    log.member = newName;
+                }
+            });
+
+            state.members[idx] = newName;
+            saveState();
+            renderMembersList();
+            refreshUI();
+            showToast(`Renamed "${oldName}" to "${newName}" ✏️`);
+        }
+
+        function addMember() {
+            const input = document.getElementById('new-member-name');
+            const name = input.value.trim();
+            if (!name) return showToast('Enter a name!', 'error');
+            if (state.members.find(m => m.toLowerCase() === name.toLowerCase())) {
+                return showToast('Member already exists!', 'error');
+            }
+            state.members.push(name);
+            state.payments[name] = {};
+            saveState();
+            input.value = '';
+            renderMembersList();
+            refreshUI();
+            populateHistoryFilter();
+            showToast(`${name} added to the trip! 🎉`);
+        }
+
+        function removeMember(idx) {
+            const name = state.members[idx];
+            customConfirm(
+                'Remove Member',
+                `Remove ${name} from the trip?`,
+                `All of ${name}'s payment data (₱${getMemberPaidTotal(name).toLocaleString()}) will be deleted. This cannot be undone.`,
+                'Remove Member'
+            ).then(ok => {
+                if (!ok) return;
+                state.members.splice(idx, 1);
+                delete state.payments[name];
+                saveState();
+                renderMembersList();
+                refreshUI();
+                populateHistoryFilter();
+                showToast(`${name} removed.`, 'warning');
+            });
+        }
+
+        // ============================
+        //  MILESTONES
+        // ============================
+        function buildMilestones() {
+            const container = document.getElementById('milestones-list');
+            const totalWeeks = FRIDAY_DATES.length;
+            const milestones = [
+                { week: Math.ceil(totalWeeks * 0.25), label: '25% Mark' },
+                { week: Math.ceil(totalWeeks * 0.5), label: 'Halfway! 🎯' },
+                { week: Math.ceil(totalWeeks * 0.75), label: '75% — Almost!' },
+                { week: totalWeeks, label: '🎉 Trip Ready!' },
+            ];
+
+            container.innerHTML = '';
+            milestones.forEach(m => {
+                const target = state.rate * state.members.length * m.week;
+                const date = formatDateShort(FRIDAY_DATES[Math.min(m.week - 1, FRIDAY_DATES.length - 1)]);
+                const totalCollected = getTotalCollected();
+                const reached = totalCollected >= target;
+                container.innerHTML += `
+                    <li class="flex items-start gap-2">
+                        <span class="w-4 h-4 rounded-full flex items-center justify-center text-[8px] sm:text-[9px] font-bold flex-shrink-0 mt-0.5 ${reached ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}">${reached ? '✓' : '○'}</span>
+                        <span><strong>Wk ${m.week} (${date}):</strong> ₱${target.toLocaleString()} — ${m.label}</span>
+                    </li>
+                `;
+            });
+        }
+
+        function getTotalCollected() {
+            let total = 0;
+            state.members.forEach(name => { total += getMemberPaidTotal(name); });
+            return total;
+        }
+
+        // ============================
+        //  PREVIEW MODAL
+        // ============================
+        function openPreviewModal() {
+            const modal = document.getElementById('preview-modal');
+            modal.classList.remove('hidden');
+            buildPreview();
+        }
+
+        function closePreviewModal() {
+            document.getElementById('preview-modal').classList.add('hidden');
+        }
+
+        function buildPreview() {
+            const text = generatePreviewText();
+            document.getElementById('preview-text').textContent = text;
+
+            // Visual summary cards
+            const visual = document.getElementById('preview-visual');
+            visual.innerHTML = '';
+
+            // Summary card
+            const totalCollected = getTotalCollected();
+            const groupTarget = state.rate * FRIDAY_DATES.length * state.members.length;
+            const pct = groupTarget > 0 ? Math.round((totalCollected / groupTarget) * 100) : 0;
+
+            visual.innerHTML += `
+                <div class="bg-gradient-to-r from-sky-500 to-cyan-500 rounded-xl p-4 text-white">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-bold text-sky-100 uppercase">Fund Progress</p>
+                            <p class="text-2xl font-black">₱${totalCollected.toLocaleString()} <span class="text-sm font-normal text-sky-200">/ ₱${groupTarget.toLocaleString()}</span></p>
+                        </div>
+                        <div class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
+                            <span class="text-lg font-black">${pct}%</span>
+                        </div>
+                    </div>
+                    <div class="w-full bg-white/30 rounded-full h-2 mt-3 overflow-hidden">
+                        <div class="h-2 rounded-full bg-white transition-all" style="width: ${pct}%"></div>
+                    </div>
+                </div>
+            `;
+
+            // Per member summary
+            const memberGrid = document.createElement('div');
+            memberGrid.className = 'grid grid-cols-2 gap-2';
+            state.members.forEach(name => {
+                const paid = getMemberPaidTotal(name);
+                const target = state.rate * FRIDAY_DATES.length;
+                const mpct = target > 0 ? Math.round((paid / target) * 100) : 0;
+                const weeks = getMemberPaidWeeks(name);
+                memberGrid.innerHTML += `
+                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-200">
+                        <p class="text-[11px] font-bold text-slate-500 uppercase">${name}</p>
+                        <p class="text-lg font-black text-slate-800">₱${paid.toLocaleString()}</p>
+                        <p class="text-[10px] text-slate-400">${weeks}/${FRIDAY_DATES.length} weeks • ${mpct}%</p>
+                        <div class="w-full bg-slate-200 rounded-full h-1.5 mt-1.5">
+                            <div class="h-1.5 rounded-full ${mpct >= 100 ? 'bg-emerald-500' : 'bg-sky-400'}" style="width: ${Math.min(mpct, 100)}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            visual.appendChild(memberGrid);
+        }
+
+        function generatePreviewText() {
+            let text = `🏝️ OLANGO ISLAND TRIP — PAYMENT TRACKER\n`;
+            text += `${'═'.repeat(42)}\n`;
+            text += `📅 ${formatDate(FRIDAY_DATES[0])} – ${formatDate(FRIDAY_DATES[FRIDAY_DATES.length - 1])}\n`;
+            text += `💰 Rate: ₱${state.rate}/week per person\n`;
+            text += `👥 Members: ${state.members.join(', ')}\n`;
+            text += `📱 GCash: KXI — 09939336295\n`;
+            text += `🎯 Target: ₱${(state.rate * FRIDAY_DATES.length * state.members.length).toLocaleString()}\n`;
+            text += `${'─'.repeat(42)}\n\n`;
+
+            // Member summaries
+            text += `📊 MEMBER STATUS:\n`;
+            state.members.forEach(name => {
+                const paid = getMemberPaidTotal(name);
+                const target = state.rate * FRIDAY_DATES.length;
+                const pct = target > 0 ? Math.round((paid / target) * 100) : 0;
+                const weeks = getMemberPaidWeeks(name);
+                const bar = '█'.repeat(Math.round(pct / 10)) + '░'.repeat(10 - Math.round(pct / 10));
+                text += `  ${name}: ₱${paid.toLocaleString()} / ₱${target.toLocaleString()} [${bar}] ${pct}% (${weeks} wks)\n`;
+            });
+
+            text += `\n📋 WEEKLY BREAKDOWN:\n`;
+            FRIDAY_DATES.forEach((date, idx) => {
+                const wk = String(idx + 1).padStart(2, '0');
+                const paidMembers = state.members.filter(n => state.payments[n] && state.payments[n][idx]);
+                const status = paidMembers.length === state.members.length ? '✅' :
+                    paidMembers.length > 0 ? `⏳ ${paidMembers.length}/${state.members.length}` : '⬜';
+                text += `  Wk ${wk} (${formatDateShort(date)}): ${status}`;
+                if (paidMembers.length > 0 && paidMembers.length < state.members.length) {
+                    text += ` — Paid: ${paidMembers.join(', ')}`;
+                }
+                text += '\n';
+            });
+
+            text += `\n${'─'.repeat(42)}\n`;
+            text += `💵 TOTAL COLLECTED: ₱${getTotalCollected().toLocaleString()} / ₱${(state.rate * FRIDAY_DATES.length * state.members.length).toLocaleString()}\n`;
+            text += `Generated: ${new Date().toLocaleString()}\n`;
+
+            return text;
+        }
+
+        function copyPreviewText() {
+            const text = generatePreviewText();
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Preview text copied! 📋');
+            }).catch(() => {
+                const temp = document.createElement('textarea');
+                temp.value = text;
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                document.body.removeChild(temp);
+                showToast('Copied! 📋');
+            });
+        }
+
+        function sharePreview() {
+            const text = generatePreviewText();
+            if (navigator.share) {
+                navigator.share({
+                    title: '🏝️ Olango Trip Payment Tracker',
+                    text: text
+                }).catch(() => { });
+            } else {
+                copyPreviewText();
+            }
+        }
+
+        // ============================
+        //  RATE CHANGE
+        // ============================
+        function onRateChange() {
+            state.rate = parseFloat(document.getElementById('weekly-rate').value) || 30;
+            saveState();
+            refreshUI();
+            showToast(`Weekly rate updated to ₱${state.rate}`);
+        }
+
+        // ============================
+        //  REFRESH ALL UI
+        // ============================
+        function refreshUI() {
+            buildMemberCards();
+            buildTableHeader();
+            buildTableBody();
+            buildTableFooter();
+            updateAllCalculations();
+            buildQuickPayButtons();
+            buildRecentPayments();
+            buildMilestones();
+        }
+
+        // ============================
+        //  RESET
+        // ============================
+        async function resetAll() {
+            const ok1 = await customConfirm(
+                '⚠️ Reset All Data',
+                'This will erase everything',
+                'All payment records, member data, and history will be permanently deleted. Are you sure?',
+                'Yes, Reset Everything',
+                'from-red-600 to-red-700'
+            );
+            if (!ok1) return;
+
+            const ok2 = await customConfirm(
+                '🚨 Final Warning',
+                'Last chance to cancel',
+                'This CANNOT be undone. All data will be lost forever.',
+                'I understand, reset now',
+                'from-red-700 to-red-900'
+            );
+            if (!ok2) return;
+
+            localStorage.removeItem(STORAGE_KEY);
+            state = getDefaultState();
+            saveState();
+            refreshUI();
+            populateHistoryFilter();
+            showToast('All data has been reset.', 'warning');
+        }
+
+        // ============================
+        //  COPY GCASH
+        // ============================
+        function copyGCashNumber() {
+            navigator.clipboard.writeText('09939336295').then(() => {
+                showToast('GCash number copied! 📱');
+            }).catch(() => {
+                const temp = document.createElement('textarea');
+                temp.value = '09939336295';
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                document.body.removeChild(temp);
+                showToast('GCash number copied! 📱');
+            });
+        }
+
+        // ============================
+        //  TOAST
+        // ============================
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            document.getElementById('toast-msg').textContent = msg;
+
+            if (type === 'error') {
+                icon.textContent = '✗';
+                icon.className = 'text-red-400 font-bold text-base';
+            } else if (type === 'warning') {
+                icon.textContent = '⚠';
+                icon.className = 'text-amber-400 font-bold text-base';
+            } else {
+                icon.textContent = '✓';
+                icon.className = 'text-emerald-400 font-bold text-base';
+            }
+
+            toast.classList.remove('translate-y-[-150%]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => {
+                toast.classList.add('translate-y-[-150%]', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 2800);
+        }
+
+        // ============================
+        //  CLOSE MODALS ON BACKDROP CLICK
+        // ============================
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.add('hidden');
+                }
+            });
+        });
+
+        // ============================
+        //  KEYBOARD SUPPORT
+        // ============================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+                document.getElementById('confirm-dialog').classList.add('hidden');
+            }
+        });
+
+        // ============================
+        //  BOOT
+        // ============================
+        window.onload = init;
+    </script>
+</body>
+
+</html>
