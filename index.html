@@ -1,1155 +1,714 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0284c7">
-<title>🏝️ Olango Trip — Live Cloud Tracker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0284c7">
+    <title>🏝️ Olango Trip — Live Cloud Tracker</title>
 
-<!-- Firebase SDKs (Compat version for single-file html) -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-<style>
-/* ============ RESET & NATIVE STYLES ============ */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:#f8fafc;color:#1e293b;line-height:1.5;overscroll-behavior:none;-webkit-font-smoothing:antialiased}
-button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
-input,select{font:inherit;color:inherit}
-input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-input[type=number]{-moz-appearance:textfield;appearance:textfield}
-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em}
-pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-::selection{background:#0ea5e9;color:#fff}
-::-webkit-scrollbar{width:8px;height:8px}
-::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px}
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+        :root{--primary:#0284c7;--radius-lg:20px;--radius-md:14px}
+        html,body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f1f5f9;color:#1e293b;line-height:1.5;-webkit-font-smoothing:antialiased}
+        button{font:inherit;cursor:pointer;border:none;background:none;color:inherit;transition:all .15s ease}
+        input,select{font:inherit;color:inherit}
+        input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+        input[type=number]{-moz-appearance:textfield}
+        ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px}
 
-/* ============ LOADER ============ */
-#loader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#f0f9ff,#ecfeff);transition:opacity .3s ease,visibility .3s ease}
-#loader.hide{opacity:0;visibility:hidden;pointer-events:none}
-#loader .logo{font-size:56px;animation:float 2s ease-in-out infinite}
-#loader p{margin-top:12px;font-size:13px;font-weight:600;color:#64748b}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-#app{opacity:0;transition:opacity .35s ease}
-#app.ready{opacity:1}
+        #loader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);transition:opacity .35s ease,visibility .35s ease}
+        #loader.hide{opacity:0;visibility:hidden;pointer-events:none}
+        #loader .logo{font-size:52px;animation:bounce 1.6s infinite}
+        @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 
-/* ============ LAYOUT ============ */
-.wrap{max-width:1120px;margin:0 auto;padding:16px 12px 120px}
-@media(min-width:640px){.wrap{padding:16px 24px 40px}}
+        .wrap{max-width:1140px;margin:0 auto;padding:16px 12px 120px}
+        @media(min-width:640px){.wrap{padding:24px 20px 60px}}
 
-/* ============ HERO ============ */
-.hero{position:relative;overflow:hidden;border-radius:24px;background:linear-gradient(135deg,#0c4a6e,#164e63 50%,#0e7490);color:#fff;padding:20px;box-shadow:0 20px 40px -12px rgba(14,116,144,.3);margin-bottom:16px}
-@media(min-width:640px){.hero{padding:32px}}
-.hero::before{content:"";position:absolute;top:-80px;right:-80px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.05)}
-.hero::after{content:"";position:absolute;bottom:-120px;left:-40px;width:280px;height:280px;border-radius:50%;background:rgba(103,232,249,.08)}
-.hero-grid{position:relative;display:flex;flex-direction:column;gap:20px;justify-content:space-between}
-@media(min-width:1024px){.hero-grid{flex-direction:row;align-items:flex-start}}
-.badge-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
-.badge-dot{width:8px;height:8px;border-radius:50%;background:#34d399;animation:pulse 2s infinite}
-.cloud-status{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
-.cloud-status.live{background:rgba(16,185,129,.2);border:1px solid rgba(52,211,153,.4);color:#6ee7b7}
-.cloud-status.local{background:rgba(245,158,11,.2);border:1px solid rgba(251,191,36,.4);color:#fde047}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
-.hero h1{font-size:26px;font-weight:900;letter-spacing:-.02em;line-height:1.15;margin-top:12px}
-@media(min-width:640px){.hero h1{font-size:34px}}
-.hero .sub{color:#e0f2fe;font-size:14px;font-weight:500;margin-top:4px}
-.hero .range{color:rgba(186,230,253,.75);font-size:12px;margin-top:2px}
-.today{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:5px 11px;border-radius:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);font-size:11px;font-weight:700;color:#e0f2fe}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
-.chip{padding:5px 11px;border-radius:999px;background:rgba(15,23,42,.35);border:1px solid rgba(255,255,255,.15);font-size:11px;font-weight:700;color:#fff;display:inline-flex;align-items:center;gap:6px}
-.chip.urgent{background:rgba(239,68,68,.25);border-color:rgba(252,165,165,.4)}
-.target-box{background:rgba(15,23,42,.35);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:18px;min-width:220px;backdrop-filter:blur(10px)}
-.target-box .lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#bae6fd}
-.target-box .amt{font-size:28px;font-weight:900;margin-top:4px;letter-spacing:-.02em}
-.target-box .col{font-size:14px;margin-top:6px;color:#bae6fd}
-.target-box .col b{color:#6ee7b7;font-weight:700}
-.progress{margin-top:12px}
-.progress-lbl{display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:#bae6fd;margin-bottom:6px}
-.progress-bar{height:10px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(90deg,#34d399,#22d3ee);border-radius:999px;transition:width .7s ease}
+        .hero{position:relative;overflow:hidden;border-radius:var(--radius-lg);background:linear-gradient(135deg,#0369a1 0%,#0e7490 50%,#047857 100%);color:#fff;padding:22px 20px;box-shadow:0 16px 36px -10px rgba(14,116,144,.35);margin-bottom:16px}
+        @media(min-width:640px){.hero{padding:32px 28px}}
+        .hero::before{content:"";position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.08)}
+        .hero-grid{position:relative;display:flex;flex-direction:column;gap:20px;justify-content:space-between}
+        @media(min-width:900px){.hero-grid{flex-direction:row;align-items:center}}
+        .badge-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+        .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+        .cloud-badge{font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em;display:inline-flex;align-items:center;gap:5px}
+        .cloud-badge.live{background:rgba(16,185,129,.25);border:1px solid rgba(52,211,153,.5);color:#a7f3d0}
+        .cloud-badge.local{background:rgba(245,158,11,.25);border:1px solid rgba(251,191,36,.5);color:#fde68a}
+        .hero h1{font-size:26px;font-weight:900;line-height:1.2;margin-top:10px;letter-spacing:-.02em}
+        @media(min-width:640px){.hero h1{font-size:32px}}
+        .hero .sub{color:#e0f2fe;font-size:13px;font-weight:500;margin-top:4px}
+        .target-box{background:rgba(15,23,42,.38);border:1px solid rgba(255,255,255,.2);border-radius:18px;padding:20px;min-width:260px;backdrop-filter:blur(12px)}
+        .target-box .lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#bae6fd}
+        .target-box .amt{font-size:30px;font-weight:900;margin-top:2px;letter-spacing:-.02em}
+        .target-box .col{font-size:13px;margin-top:4px;color:#e0f2fe}
+        .target-box .col b{color:#6ee7b7;font-weight:800}
+        .progress-bar-wrap{height:10px;background:rgba(255,255,255,.18);border-radius:999px;overflow:hidden;margin-top:10px}
+        .progress-bar-fill{height:100%;background:linear-gradient(90deg,#34d399,#22d3ee);border-radius:999px;transition:width .6s ease}
 
-/* ============ TOOLBAR ============ */
-.toolbar{position:sticky;top:8px;z-index:30;background:rgba(255,255,255,.75);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.6);border-radius:16px;padding:8px;margin-bottom:16px;box-shadow:0 4px 12px rgba(15,23,42,.05);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.rate-wrap{display:flex;align-items:center;gap:8px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:12px;padding:6px 10px}
-.rate-wrap label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase}
-.rate-wrap input{width:52px;text-align:center;font-weight:900;font-size:14px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:8px;background:#fff}
-.rate-wrap input:focus{outline:none;box-shadow:0 0 0 2px #38bdf8}
-.btn{padding:8px 14px;border-radius:12px;font-size:12px;font-weight:700;transition:transform .12s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.btn:active{transform:scale(.95)}
-.btn-primary{background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#fff;box-shadow:0 4px 10px rgba(14,165,233,.35)}
-.btn-em{background:#ecfdf5;border:1px solid #a7f3d0;color:#047857}
-.btn-em:hover{background:#d1fae5}
-.btn-vi{background:#f5f3ff;border:1px solid #ddd6fe;color:#6d28d9}
-.btn-vi:hover{background:#ede9fe}
-.btn-neutral{background:#fff;border:1px solid #e2e8f0;color:#475569}
-.btn-neutral:hover{background:#f8fafc}
-.btn-dark{background:#1e293b;color:#fff}
-.btn-dark:hover{background:#0f172a}
-.btn-danger{background:#fef2f2;border:1px solid #fecaca;color:#dc2626}
-.btn-danger:hover{background:#fee2e2}
-.btn-spacer{flex:1}
-.hist-cnt{margin-left:2px;padding:2px 6px;font-size:9px;font-weight:900;background:#10b981;color:#fff;border-radius:999px}
-.hide-sm{display:none}
-@media(min-width:640px){.hide-sm{display:inline}}
+        .toolbar{position:sticky;top:10px;z-index:30;background:rgba(255,255,255,.85);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.7);border-radius:var(--radius-md);padding:8px;margin-bottom:16px;box-shadow:0 4px 14px rgba(15,23,42,.06);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+        .btn{padding:8px 14px;border-radius:10px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+        .btn:active{transform:scale(.96)}
+        .btn-primary{background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;box-shadow:0 3px 10px rgba(14,165,233,.35)}
+        .btn-secondary{background:#fff;border:1px solid #cbd5e1;color:#334155}
+        .btn-success{background:#ecfdf5;border:1px solid #a7f3d0;color:#047857}
+        .btn-danger{background:#fef2f2;border:1px solid #fecaca;color:#dc2626}
+        .spacer{flex:1}
 
-/* ============ CARDS ============ */
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.03);margin-bottom:16px}
-.gcash{background:linear-gradient(135deg,#1d4ed8,#0284c7 50%,#06b6d4);color:#fff;position:relative;overflow:hidden;border:none}
-.gcash::before{content:"";position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.1)}
-.gcash-body{position:relative;display:flex;flex-direction:column;gap:14px;justify-content:space-between}
-@media(min-width:640px){.gcash-body{flex-direction:row;align-items:center}}
-.gcash-tag{display:inline-block;background:#fff;color:#1d4ed8;font-size:10px;font-weight:900;padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.06em}
-.gcash .lbl{font-size:11px;color:#bae6fd;margin-top:8px;font-weight:500}
-.gcash .name{font-size:17px;font-weight:700;color:#fde047}
-.gcash .num{font-size:22px;font-weight:900;letter-spacing:.03em;color:#fff;background:none;border:none;padding:0;cursor:pointer}
-.gcash .num:hover{color:#e0f7fa}
-.gcash-copy{padding:12px 20px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:12px;color:#fff;font-size:12px;font-weight:700}
-.gcash-copy:hover{background:rgba(255,255,255,.25)}
-.gcash-note{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15);font-size:11px;color:#e0f2fe}
-.gcash-note code{background:rgba(255,255,255,.2);padding:2px 6px;border-radius:4px;color:#fff}
+        .payments-channel-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:16px}
+        @media(min-width:640px){.payments-channel-grid{grid-template-columns:1fr 1fr}}
+        .pay-card{color:#fff;border-radius:var(--radius-lg);padding:16px 18px;position:relative;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);display:flex;flex-direction:column;justify-content:space-between}
+        .pay-card.gcash{background:linear-gradient(135deg,#0056b3 0%,#0077ff 60%,#00b4d8 100%)}
+        .pay-card.maribank{background:linear-gradient(135deg,#ea580c 0%,#f97316 50%,#fb923c 100%)}
+        .pay-tag{background:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;display:inline-block}
+        .pay-card.gcash .pay-tag{color:#0056b3}.pay-card.maribank .pay-tag{color:#ea580c}
+        .pay-acc-lbl{font-size:11px;margin-top:6px;color:rgba(255,255,255,.8)}
+        .pay-acc-name{font-weight:800;font-size:13px;color:#fff}
+        .pay-num-btn{font-size:21px;font-weight:900;letter-spacing:.03em;color:#fff;text-align:left;margin:4px 0 10px;word-break:break-all}
+        .pay-copy-btn{padding:6px 12px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:8px;font-size:11px;font-weight:800;color:#fff;align-self:flex-start}
 
-.sec-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.sec-title h2{font-size:14px;font-weight:900;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
-.sec-title .dot{width:5px;height:22px;border-radius:999px;background:linear-gradient(180deg,#38bdf8,#06b6d4)}
-.sec-title .dot.em{background:linear-gradient(180deg,#34d399,#14b8a6)}
-.sec-title a{font-size:11px;font-weight:700;color:#0284c7;text-decoration:none}
-.sec-title a:hover{color:#0369a1}
+        .card{background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-lg);padding:20px;box-shadow:0 2px 6px rgba(0,0,0,.02);margin-bottom:16px}
+        .sec-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+        .sec-title h2{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
+        .sec-title h2::before{content:"";width:4px;height:18px;border-radius:99px;background:#0284c7}
+        .member-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+        @media(min-width:768px){.member-grid{grid-template-columns:repeat(4,1fr)}}
+        .mem-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .15s,box-shadow .15s}
+        .mem-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.05)}
+        .mem-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+        .avatar{width:34px;height:34px;border-radius:10px;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+        .mem-name{font-size:13px;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .mem-amt{font-size:20px;font-weight:900;color:#0f172a}
+        .mem-sub{font-size:10px;font-weight:600;color:#64748b}
 
-.member-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
-@media(min-width:1024px){.member-grid{grid-template-columns:repeat(4,1fr)}}
-.mem-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.03);transition:box-shadow .2s}
-.mem-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.06)}
-.mem-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.avatar{width:36px;height:36px;border-radius:12px;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.1)}
-.mem-name{font-size:12px;font-weight:700;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
-.mem-paid{font-size:22px;font-weight:900;color:#0f172a;letter-spacing:-.02em}
-.mem-of{font-size:10px;color:#64748b;margin-top:2px}
-.mem-bar{height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden;margin-top:8px}
-.mem-bar-fill{height:100%;border-radius:999px;transition:width .5s}
-.mem-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:4px}
-.mem-stat{font-size:10px;font-weight:700}
-.mem-log{padding:4px 8px;border-radius:8px;font-size:10px;font-weight:700;border:1px solid}
-.mem-last{font-size:9px;color:#94a3b8;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .tbl-card{background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px}
+        .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+        table{width:100%;min-width:620px;border-collapse:collapse}
+        th{background:#f8fafc;padding:10px 8px;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #e2e8f0;text-align:center}
+        td{padding:10px 8px;font-size:12px;border-bottom:1px solid #f1f5f9;text-align:center}
+        tr.now-row{background:rgba(2,132,199,.06);border-left:3px solid #0284c7}
+        .chk-pill{display:inline-flex;align-items:center;justify-content:center;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:800}
+        .chk-pill.paid{background:#d1fae5;color:#047857}.chk-pill.part{background:#fef3c7;color:#b45309}.chk-pill.none{background:#f1f5f9;color:#94a3b8}
 
-.qp{background:linear-gradient(135deg,#f8fafc,#f0f9ff);border:1px solid #e2e8f0;border-radius:16px;padding:14px;margin-bottom:16px}
-.qp-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.qp-hd h3{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:#334155;display:flex;align-items:center;gap:6px}
-.qp-info{font-size:10px;font-weight:700;color:#64748b}
-.qp-btns{display:flex;flex-wrap:wrap;gap:8px}
-.qp-btn{padding:8px 12px;border-radius:12px;font-size:12px;font-weight:700;border:2px solid #e2e8f0;background:#fff;color:#334155;display:inline-flex;align-items:center;gap:6px}
-.qp-btn:hover{border-color:#7dd3fc}
-.qp-btn.done{background:#d1fae5;border-color:#a7f3d0;color:#047857;cursor:default}
-.qp-all{width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#10b981,#14b8a6);color:#fff;display:flex;gap:12px;align-items:center;box-shadow:0 4px 12px rgba(16,185,129,.3)}
-.qp-all .emoji{font-size:28px}
-.qp-all .t{font-size:15px;font-weight:900}
-.qp-all .s{font-size:11px;color:#d1fae5}
+        .recent-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:8px}
+        .recent-meta{font-size:11px;color:#64748b}
 
-/* ============ TABLE ============ */
-.tbl-card{background:#fff;border:1px solid #e2e8f0;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.03);margin-bottom:16px}
-.tbl-hd{padding:16px 16px 8px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
-.tbl-hd h2{font-size:14px;font-weight:900;display:flex;align-items:center;gap:8px}
-.tbl-lock{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
-.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table{width:100%;min-width:640px;border-collapse:collapse}
-thead tr{background:rgba(241,245,249,.8);border-bottom:2px solid #e2e8f0}
-th{padding:10px 8px;font-size:10px;font-weight:900;color:#64748b;text-transform:uppercase;letter-spacing:.05em;text-align:center;white-space:nowrap}
-th:first-child{text-align:center;min-width:44px}
-th.left{text-align:left}
-th.right{text-align:right}
-td{padding:8px;font-size:12px;color:#475569;white-space:nowrap}
-td.center{text-align:center}
-td.right{text-align:right}
-tbody tr:nth-child(even){background:rgba(248,250,252,.5)}
-tbody tr:hover{background:rgba(224,242,254,.4)}
-tbody tr.now{background:linear-gradient(90deg,rgba(14,165,233,.1),transparent 70%);border-left:3px solid #0ea5e9}
-tbody tr.past{opacity:.75}
-.sticky-col{position:sticky;left:0;background:inherit;z-index:2}
-.wk-num{font-weight:900;font-size:12px;color:#94a3b8}
-tr.now .wk-num{color:#0284c7}
-.due-cell{font-weight:600;color:#334155}
-.now-badge{display:inline-block;margin-left:6px;padding:2px 6px;background:#0ea5e9;color:#fff;font-size:8px;font-weight:900;border-radius:999px;text-transform:uppercase;letter-spacing:.05em;animation:pulse 2s infinite}
-.past-badge{margin-left:6px;font-size:9px;color:#94a3b8;font-weight:700}
-.chk{width:26px;height:26px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:14px;transition:all .3s cubic-bezier(.34,1.56,.64,1)}
-.chk.paid{background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 10px rgba(16,185,129,.4)}
-.chk.partial{background:linear-gradient(135deg,#fbbf24,#f59e0b);box-shadow:0 4px 10px rgba(251,191,36,.4)}
-.chk.empty{background:#f8fafc;border:2px dashed #cbd5e1;color:transparent}
-.chk.missed{background:#fef2f2;border:2px dashed #fca5a5;color:#ef4444}
-.cell-inner{display:flex;flex-direction:column;align-items:center;gap:2px}
-.cell-amt{font-size:9px;font-weight:900;line-height:1}
-.cell-amt.paid{color:#059669}
-.cell-amt.partial{color:#d97706}
-.cell-dt{font-size:8px;color:#94a3b8;line-height:1}
-.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:900}
-.pill-ok{background:#d1fae5;color:#047857}
-.pill-miss{background:#fee2e2;color:#dc2626}
-.pill-none{background:#f1f5f9;color:#94a3b8}
-.pill-part{background:#fef3c7;color:#b45309}
-.goal-cell{color:#64748b;font-weight:600}
-.pot-cell{color:#059669;font-weight:900}
-tfoot tr{background:#f1f5f9;border-top:2px solid #cbd5e1;font-weight:900}
-tfoot td{padding:12px 8px}
-tfoot .totals-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#334155}
-tfoot .m-tot{color:#0369a1;font-size:12px}
-tfoot .grand{color:#047857;font-size:14px;text-align:right}
+        .modal{position:fixed;inset:0;z-index:100;display:none}.modal.open{display:block}
+        .modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px)}
+        .modal-box{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
+        @media(min-width:640px){.modal-box{align-items:center;padding:20px}}
+        .modal-content{pointer-events:auto;width:100%;max-width:480px;max-height:90vh;background:#fff;border-radius:20px 20px 0 0;overflow-y:auto;display:flex;flex-direction:column;box-shadow:0 -10px 30px rgba(0,0,0,.2);animation:slideUp .2s ease}
+        @media(min-width:640px){.modal-content{border-radius:20px}}
+        @keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+        .modal-head{padding:16px 20px;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:space-between}
+        .modal-body{padding:20px;display:flex;flex-direction:column;gap:14px}
+        .form-group label{display:block;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;margin-bottom:5px}
+        .form-group input,.form-group select{width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;font-weight:600;background:#f8fafc}
+        .form-group input:focus,.form-group select:focus{border-color:#0284c7;outline:none;background:#fff}
 
-/* ============ RECENT & MODALS ============ */
-.recent{margin-bottom:16px}
-.recent-list{display:flex;flex-direction:column;gap:8px}
-.recent-item{background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.03)}
-.recent-empty{background:#fff;border:2px dashed #e2e8f0;border-radius:16px;padding:32px;text-align:center;color:#94a3b8}
-.recent-empty .emoji{font-size:36px;margin-bottom:8px}
-.recent-row{display:flex;gap:12px;padding:12px;align-items:flex-start}
-.recent-body{flex:1;min-width:0}
-.recent-name{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.recent-name p{font-size:13px;font-weight:700;color:#1e293b}
-.recent-name span{font-size:12px;color:#94a3b8}
-.recent-dt{display:flex;align-items:center;gap:4px;font-size:11px;color:#64748b;font-weight:600;margin-top:2px}
-.recent-rel{font-size:10px;color:#059669;font-weight:700;margin-top:2px}
-.recent-note{font-size:11px;color:#64748b;font-style:italic;margin-top:2px}
-.recent-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.recent-amt{font-size:14px;font-weight:900;color:#059669}
-.icon-btn{width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;transition:transform .12s;font-size:14px;font-weight:900}
-.icon-btn:active{transform:scale(.9)}
-.icon-btn.edit{background:#fef3c7;color:#b45309}
-.icon-btn.edit:hover{background:#fde68a}
-.icon-btn.del{background:#fee2e2;color:#dc2626}
-.icon-btn.del:hover{background:#fecaca}
-.icon-btn.save{background:#10b981;color:#fff}
-.icon-btn.cancel{background:#e2e8f0;color:#475569}
-.confirm-bar{background:#ef4444;color:#fff;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;font-weight:700}
-.confirm-bar-btns{display:flex;gap:6px}
-.confirm-bar-btns button{padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900}
-.confirm-yes{background:#fff;color:#dc2626}
-.confirm-no{background:#b91c1c;color:#fff}
-
-.two-col{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:16px}
-@media(min-width:768px){.two-col{grid-template-columns:1fr 1fr}}
-.rules-card h3{font-size:14px;font-weight:900;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.rules-card h3 .rd{width:8px;height:8px;border-radius:50%}
-.rules-card h3 .rd.sk{background:#0ea5e9}
-.rules-card h3 .rd.em{background:#10b981}
-.rules-list{display:flex;flex-direction:column;gap:10px}
-.rules-list li{display:flex;gap:10px;font-size:12px;color:#475569;list-style:none;align-items:flex-start}
-.rules-list li b{color:#1e293b}
-.rules-list li code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:11px}
-.rule-icon{flex-shrink:0;width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900}
-.ri-sk{background:#e0f2fe;color:#0284c7}
-.ri-vi{background:#ede9fe;color:#7c3aed}
-.ri-em{background:#d1fae5;color:#059669}
-.ri-am{background:#fef3c7;color:#d97706}
-.ms-list li{display:flex;gap:10px;align-items:flex-start;font-size:12px;color:#475569;list-style:none}
-.ms-list li b{color:#1e293b}
-.ms-check{flex-shrink:0;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}
-.ms-check.ok{background:#10b981;color:#fff}
-.ms-check.pending{background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0}
-
-.footer{text-align:center;padding:8px 0 16px;font-size:10px;color:#94a3b8;font-weight:500}
-
-.fab{position:fixed;bottom:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#fff;font-size:28px;font-weight:900;box-shadow:0 12px 24px rgba(14,165,233,.4);display:flex;align-items:center;justify-content:center;transition:transform .15s}
-.fab:active{transform:scale(.9)}
-@media(min-width:640px){.fab{display:none}}
-
-.modal{position:fixed;inset:0;z-index:50;display:none}
-.modal.open{display:block}
-.modal-bg{position:absolute;inset:0;background:rgba(2,6,23,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);animation:fadein .2s}
-@keyframes fadein{from{opacity:0}to{opacity:1}}
-.modal-wrap{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
-@media(min-width:640px){.modal-wrap{align-items:center;padding:24px}}
-.modal-panel{pointer-events:auto;width:100%;max-height:92dvh;background:#fff;border-radius:24px 24px 0 0;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 -20px 40px rgba(0,0,0,.15);animation:slideup .3s cubic-bezier(.16,1,.3,1)}
-@media(min-width:640px){.modal-panel{max-width:480px;border-radius:24px;box-shadow:0 20px 40px rgba(0,0,0,.2)}}
-.modal-panel.lg{max-width:600px}
-.modal-panel.xl{max-width:720px}
-@keyframes slideup{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
-.modal-hd{padding:20px;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-shrink:0}
-.modal-hd.sky{background:linear-gradient(90deg,#0ea5e9,#06b6d4)}
-.modal-hd.vi{background:linear-gradient(90deg,#8b5cf6,#a855f7)}
-.modal-hd.em{background:linear-gradient(90deg,#10b981,#14b8a6)}
-.modal-hd.dk{background:linear-gradient(90deg,#1e293b,#0f172a)}
-.modal-hd.rd{background:linear-gradient(90deg,#ef4444,#f97316)}
-.modal-hd h3{font-size:18px;font-weight:900}
-.modal-hd p{font-size:12px;opacity:.85;margin-top:2px}
-.modal-x{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:18px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .12s}
-.modal-x:active{transform:scale(.9)}
-.modal-body{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px}
-.form-group label{display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
-.form-group select,.form-group input[type=text],.form-group input[type=number]{width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:700;background:#f8fafc}
-.form-group select:focus,.form-group input:focus{outline:none;border-color:#38bdf8;box-shadow:0 0 0 3px rgba(56,189,248,.15)}
-.auto-info{border-radius:12px;padding:12px;display:flex;align-items:center;gap:12px}
-.auto-info.sky{background:linear-gradient(135deg,#f0f9ff,#ecfeff);border:1px solid #bae6fd}
-.auto-info.am{background:linear-gradient(135deg,#fffbeb,#fff7ed);border:1px solid #fed7aa}
-.auto-icon{width:40px;height:40px;border-radius:12px;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.auto-icon.sky{background:#0ea5e9;box-shadow:0 4px 10px rgba(14,165,233,.35)}
-.auto-icon.am{background:#f59e0b;box-shadow:0 4px 10px rgba(245,158,11,.35)}
-.auto-body p:first-child{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
-.auto-body .d{font-size:13px;font-weight:900;margin-top:2px}
-.auto-body .w{font-size:10px;font-weight:700;margin-top:1px}
-.auto-info.sky .auto-body p:first-child{color:#0284c7}
-.auto-info.sky .auto-body .d{color:#0c4a6e}
-.auto-info.sky .auto-body .w{color:#0369a1}
-.auto-info.am .auto-body p:first-child{color:#d97706}
-.auto-info.am .auto-body .d{color:#78350f}
-.auto-info.am .auto-body .w{color:#b45309}
-.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.chip-mini{padding:5px 10px;border-radius:8px;background:#f0f9ff;border:1px solid #bae6fd;color:#0369a1;font-size:11px;font-weight:700}
-.chip-mini:hover{background:#e0f2fe}
-.amount-wrap{position:relative}
-.amount-wrap .peso{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-weight:900;color:#94a3b8;font-size:18px}
-.amount-wrap input{padding-left:32px !important;font-size:16px !important}
-.submit-btn{padding:14px;border-radius:12px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#fff;font-weight:700;font-size:14px;box-shadow:0 8px 16px rgba(14,165,233,.3);display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
-.submit-btn:active{transform:scale(.98)}
-.submit-btn:disabled{opacity:.6}
-
-.mem-list-mod{display:flex;flex-direction:column;gap:8px}
-.mem-row{display:flex;align-items:center;gap:12px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:14px;padding:10px}
-.mem-row-body{flex:1;min-width:0}
-.mem-row-body p{font-size:13px;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mem-row-body .s{font-size:11px;color:#94a3b8}
-.mem-row-input{width:100%;padding:6px 10px;border:2px solid #c4b5fd;border-radius:8px;font-size:13px;font-weight:700}
-.mem-row-input:focus{outline:none;box-shadow:0 0 0 2px rgba(196,181,253,.4)}
-.mem-actions{display:flex;gap:4px;flex-shrink:0}
-.add-mem{padding-top:12px;border-top:1px solid #f1f5f9}
-.add-mem-row{display:flex;gap:8px}
-.add-mem-row input{flex:1;padding:10px 12px;border:2px solid #e2e8f0;border-radius:12px;font-size:13px;font-weight:700;background:#f8fafc}
-.add-mem-row input:focus{outline:none;border-color:#a78bfa;box-shadow:0 0 0 3px rgba(167,139,250,.15)}
-.add-mem-btn{padding:10px 16px;border-radius:12px;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:#fff;font-weight:700;font-size:13px;box-shadow:0 4px 10px rgba(139,92,246,.35);display:inline-flex;align-items:center;gap:4px}
-.mem-empty{text-align:center;padding:32px 0;color:#94a3b8;font-size:13px}
-.mem-empty .emoji{font-size:32px;margin-bottom:8px}
-
-.hist-filter{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:5px 8px;font-size:11px;font-weight:700;color:#fff}
-.hist-filter option{color:#1e293b}
-.hist-list{padding:16px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px}
-.hist-item{background:rgba(236,253,245,.4);border:1px solid #d1fae5;border-radius:14px;overflow:hidden}
-.tag-auto{font-size:9px;font-weight:900;color:#059669;background:#d1fae5;padding:2px 6px;border-radius:4px}
-.tag-manual{font-size:9px;font-weight:900;color:#d97706;background:#fef3c7;padding:2px 6px;border-radius:4px}
-
-.preview-text{margin:16px;padding:16px;background:#020617;border:1px solid #1e293b;border-radius:12px;font-size:11px;color:#6ee7b7;white-space:pre-wrap;overflow-x:auto;line-height:1.6}
-
-.confirm-panel{max-width:400px}
-.confirm-body{padding:20px}
-.confirm-msg{font-size:14px;color:#334155;margin-bottom:20px}
-.confirm-btns{display:flex;gap:12px}
-.confirm-btns button{flex:1;padding:12px;border-radius:12px;font-weight:700;font-size:14px}
-.confirm-cancel{background:#f1f5f9;color:#475569}
-.confirm-cancel:hover{background:#e2e8f0}
-.confirm-ok{background:#ef4444;color:#fff}
-.confirm-ok:hover{background:#dc2626}
-
-.toast-wrap{position:fixed;z-index:100;bottom:96px;left:50%;transform:translateX(-50%);max-width:90vw;pointer-events:none}
-@media(min-width:640px){.toast-wrap{bottom:24px;right:24px;left:auto;transform:none}}
-.toast{background:#0f172a;color:#fff;padding:12px 16px;border-radius:16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 20px 40px rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.1);pointer-events:auto;animation:slideup .3s cubic-bezier(.16,1,.3,1)}
-.toast.err{background:#dc2626}
-.toast.warn{background:#d97706}
-.toast .ic{font-size:16px;font-weight:900}
-.toast .ic.ok{color:#34d399}
-.toast .ic.err,.toast .ic.warn{color:#fff}
-</style>
+        .toast-box{position:fixed;bottom:24px;right:24px;z-index:9999;pointer-events:none}
+        .toast{background:#0f172a;color:#fff;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 10px 24px rgba(0,0,0,.3);margin-top:8px;animation:slideUp .2s ease}
+        .fab{position:fixed;bottom:20px;right:20px;z-index:50;width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,#0284c7,#06b6d4);color:#fff;font-size:26px;font-weight:900;box-shadow:0 10px 20px rgba(2,132,199,.4);display:flex;align-items:center;justify-content:center}
+        @media(min-width:640px){.fab{display:none}}
+    </style>
 </head>
 <body>
-
-<div id="loader"><div class="logo">🏝️</div><p>Connecting to Cloud…</p></div>
-<div class="toast-wrap" id="toast-wrap"></div>
-
-<div id="app">
-<div class="wrap">
-
-<!-- HERO -->
-<header class="hero">
-  <div class="hero-grid">
-    <div>
-      <div class="badge-row">
-        <div class="badge"><span class="badge-dot"></span><span id="badge-txt">Active cycle</span></div>
-        <div id="cloud-badge" class="cloud-status local">● Local Mode</div>
-      </div>
-      <h1>🏝️ Olango Island Trip</h1>
-      <p class="sub">Weekly Payment Tracker</p>
-      <p class="range" id="date-range"></p>
-      <div class="today" id="today-line"></div>
-      <div class="chips" id="hero-chips"></div>
+    <div id="loader">
+        <div class="logo">🏝️</div>
+        <p style="margin-top:12px;font-weight:700;color:#475569;">Connecting to Realtime Cloud…</p>
+        <p style="margin-top:6px;font-size:12px;color:#94a3b8;">If this takes too long, Local Mode will start automatically</p>
     </div>
-    <div class="target-box">
-      <p class="lbl">Total Fund Target</p>
-      <p class="amt" id="stat-target">₱0</p>
-      <p class="col">Collected: <b id="stat-collected">₱0</b></p>
-      <div class="progress">
-        <div class="progress-lbl"><span>PROGRESS</span><span id="stat-pct">0%</span></div>
-        <div class="progress-bar"><div class="progress-fill" id="stat-bar" style="width:0%"></div></div>
-      </div>
+    <div class="toast-box" id="toast-box"></div>
+
+    <div class="wrap">
+        <header class="hero">
+            <div class="hero-grid">
+                <div>
+                    <div class="badge-row">
+                        <div class="badge"><span id="badge-txt">Active Cycle</span></div>
+                        <div id="cloud-badge" class="cloud-badge local">● Connecting...</div>
+                    </div>
+                    <h1 id="trip-title-display">🏝️ Olango Island Trip</h1>
+                    <p class="sub" id="trip-date-range">Calculating dates...</p>
+                </div>
+                <div class="target-box">
+                    <p class="lbl">Trip Target Fund</p>
+                    <p class="amt" id="stat-target">₱0</p>
+                    <p class="col">Collected: <b id="stat-collected">₱0</b> (<span id="stat-pct">0%</span>)</p>
+                    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="stat-bar" style="width:0%"></div></div>
+                </div>
+            </div>
+        </header>
+
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="openPaymentModal()">+ Log Payment</button>
+            <button class="btn btn-secondary" onclick="openModal('m-members')">👥 Members</button>
+            <button class="btn btn-secondary" onclick="openModal('m-settings')">⚙️ Settings</button>
+            <button class="btn btn-success" onclick="copyMessengerSummary()">📋 Copy for GC</button>
+            <div class="spacer"></div>
+            <button class="btn btn-secondary" onclick="exportBackup()" title="Download Backup">💾 Backup</button>
+            <button class="btn btn-danger" onclick="promptReset()" title="Reset All Data">↺</button>
+        </div>
+
+        <div class="payments-channel-grid">
+            <div class="pay-card gcash">
+                <div>
+                    <span class="pay-tag">GCash</span>
+                    <p class="pay-acc-lbl">Account Name: <span class="pay-acc-name" id="gcash-name">KXI</span></p>
+                    <button class="pay-num-btn" id="gcash-num" onclick="copyGCash()">0993 933 6295</button>
+                </div>
+                <button class="pay-copy-btn" onclick="copyGCash()">📋 Copy GCash</button>
+            </div>
+            <div class="pay-card maribank">
+                <div>
+                    <span class="pay-tag">MariBank</span>
+                    <p class="pay-acc-lbl">Account Name: <span class="pay-acc-name" id="maribank-name">KXI</span></p>
+                    <button class="pay-num-btn" id="maribank-num" onclick="copyMariBank()">13397715774</button>
+                </div>
+                <button class="pay-copy-btn" onclick="copyMariBank()">📋 Copy MariBank</button>
+            </div>
+        </div>
+
+        <div class="sec-title">
+            <h2>Member Balances</h2>
+            <button class="btn btn-secondary" style="padding:4px 10px;font-size:11px" onclick="openModal('m-members')">Manage →</button>
+        </div>
+        <div class="member-grid" id="member-grid"></div>
+
+        <div class="tbl-card">
+            <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">
+                <h2 style="font-size:14px;font-weight:800;">📅 Weekly Schedule & Matrix</h2>
+                <span style="font-size:11px;color:#64748b;font-weight:700;">Live Auto Sync</span>
+            </div>
+            <div class="tbl-scroll">
+                <table>
+                    <thead id="tbl-head"></thead>
+                    <tbody id="tbl-body"></tbody>
+                    <tfoot id="tbl-foot"></tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="sec-title">
+                <h2>Recent Payments</h2>
+                <span id="recent-count" style="font-size:11px;color:#64748b;font-weight:700;">0 payments</span>
+            </div>
+            <div id="recent-list"></div>
+        </div>
     </div>
-  </div>
-</header>
 
-<!-- TOOLBAR -->
-<div class="toolbar no-print">
-  <div class="rate-wrap"><label for="rate-inp">₱/wk</label><input type="number" id="rate-inp" min="1" inputmode="numeric"></div>
-  <button class="btn btn-primary" onclick="openPay()">+ Log Payment</button>
-  <button class="btn btn-em" onclick="openHistory()">History <span class="hist-cnt" id="hist-badge" style="display:none">0</span></button>
-  <button class="btn btn-vi" onclick="openMembers()">Members</button>
-  <div class="btn-spacer"></div>
-  <button class="btn btn-neutral" onclick="doCopy()">Copy</button>
-  <button class="btn btn-dark" onclick="openPreview()">Preview</button>
-  <button class="btn btn-neutral hide-sm" onclick="window.print()">Print</button>
-  <button class="btn btn-danger" onclick="doReset()" title="Reset">↺</button>
-</div>
+    <button class="fab" onclick="openPaymentModal()">+</button>
 
-<!-- GCASH -->
-<div class="card gcash">
-  <div class="gcash-body">
-    <div>
-      <span class="gcash-tag">GCash</span>
-      <p class="lbl">Account Name</p>
-      <p class="name">KXI</p>
-      <p class="lbl">Mobile Number</p>
-      <button class="num" onclick="copyGCash()">0993 933 6295</button>
+    <!-- PAYMENT MODAL -->
+    <div class="modal" id="m-payment">
+        <div class="modal-backdrop" onclick="closeModal('m-payment')"></div>
+        <div class="modal-box">
+            <div class="modal-content">
+                <div class="modal-head"><h3>Log a Payment</h3><button onclick="closeModal('m-payment')">✕</button></div>
+                <form class="modal-body" onsubmit="handlePaymentSubmit(event)">
+                    <div class="form-group"><label>Member</label><select id="pay-member" required></select></div>
+                    <div class="form-group"><label>Week To Credit</label><select id="pay-week" required></select></div>
+                    <div class="form-group"><label>Amount (₱)</label><input type="number" id="pay-amount" min="1" required></div>
+                    <div class="form-group"><label>Note / Ref (Optional)</label><input type="text" id="pay-note" placeholder="e.g. GCash #1234 or MariBank"></div>
+                    <button type="submit" class="btn btn-primary" style="padding:12px;font-size:14px;justify-content:center;">Save Payment</button>
+                </form>
+            </div>
+        </div>
     </div>
-    <button class="gcash-copy" onclick="copyGCash()">📋 Copy #</button>
-  </div>
-  <p class="gcash-note">Note format: <code>[Name] - Wk [#]</code></p>
-</div>
 
-<!-- MEMBERS -->
-<div class="sec-title">
-  <h2><span class="dot"></span>Members</h2>
-  <a onclick="openMembers()" class="no-print">Manage →</a>
-</div>
-<div class="member-grid" id="mem-grid"></div>
-
-<!-- QUICK PAY -->
-<div class="qp no-print" id="qp-sec">
-  <div class="qp-hd">
-    <h3>⚡ Quick Pay — Current Week</h3>
-    <span class="qp-info" id="qp-info"></span>
-  </div>
-  <div class="qp-btns" id="qp-btns"></div>
-</div>
-
-<!-- TABLE -->
-<div class="tbl-card">
-  <div class="tbl-hd">
-    <h2><span class="dot em"></span>Weekly Tracking</h2>
-    <span class="tbl-lock">🔒 Auto-tracked · Read only</span>
-  </div>
-  <div class="tbl-scroll">
-    <table>
-      <thead id="thead"></thead>
-      <tbody id="tbody"></tbody>
-      <tfoot id="tfoot"></tfoot>
-    </table>
-  </div>
-</div>
-
-<!-- RECENT -->
-<div class="recent">
-  <div class="sec-title">
-    <h2><span class="dot em"></span>Recent Payments</h2>
-    <a onclick="openHistory()" class="no-print">View all →</a>
-  </div>
-  <div class="recent-list" id="recent"></div>
-</div>
-
-<!-- RULES & MILESTONES -->
-<div class="two-col">
-  <div class="card rules-card">
-    <h3><span class="rd sk"></span>Payment Rules</h3>
-    <ul class="rules-list">
-      <li><span class="rule-icon ri-sk">⏰</span><span><b>Cut-off:</b> Every Friday 11:59 PM (Manila)</span></li>
-      <li><span class="rule-icon ri-vi">💬</span><span><b>Note:</b> <code>[Name] - Wk [#]</code></span></li>
-      <li><span class="rule-icon ri-em">📸</span><span><b>Proof:</b> Screenshot → drop in GC</span></li>
-      <li><span class="rule-icon ri-am">🚀</span><span><b>Advance:</b> Paying ahead welcome!</span></li>
-    </ul>
-  </div>
-  <div class="card rules-card">
-    <h3><span class="rd em"></span>Milestones</h3>
-    <ul class="ms-list" id="ms-list"></ul>
-  </div>
-</div>
-
-<p class="footer no-print">Olango barkada · Live Cloud Sync · Manila time (UTC+8)</p>
-</div>
-</div>
-
-<button class="fab no-print" onclick="openPay()" aria-label="Log payment">+</button>
-
-<!-- PAYMENT MODAL -->
-<div class="modal" id="m-pay">
-  <div class="modal-bg" onclick="closeM('m-pay')"></div>
-  <div class="modal-wrap">
-    <div class="modal-panel">
-      <div class="modal-hd sky">
-        <div><h3 id="pay-title">Log a Payment</h3><p id="pay-sub">Date auto-detected</p></div>
-        <button class="modal-x" onclick="closeM('m-pay')">✕</button>
-      </div>
-      <form class="modal-body" onsubmit="submitPay(event)">
-        <div class="auto-info sky" id="auto-box">
-          <div class="auto-icon sky" id="auto-ic">📅</div>
-          <div class="auto-body">
-            <p id="auto-lbl">Auto-detected date</p>
-            <p class="d" id="auto-date"></p>
-            <p class="w" id="auto-week"></p>
-          </div>
+    <!-- MEMBERS MODAL -->
+    <div class="modal" id="m-members">
+        <div class="modal-backdrop" onclick="closeModal('m-members')"></div>
+        <div class="modal-box">
+            <div class="modal-content">
+                <div class="modal-head"><h3>Manage Members</h3><button onclick="closeModal('m-members')">✕</button></div>
+                <div class="modal-body">
+                    <div id="members-list-ui"></div>
+                    <div style="display:flex;gap:8px;margin-top:10px;">
+                        <input type="text" id="new-member-name" placeholder="New member name..." style="flex:1;padding:8px 12px;border:2px solid #cbd5e1;border-radius:10px;">
+                        <button class="btn btn-primary" onclick="handleAddMember()">Add</button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <input type="hidden" id="pay-id">
-        <div class="form-group">
-          <label>Who Paid?</label>
-          <select id="pay-mem" required></select>
-        </div>
-        <div class="form-group">
-          <label>Week</label>
-          <select id="pay-wk" required></select>
-        </div>
-        <div class="form-group">
-          <label>Amount (₱)</label>
-          <div class="amount-wrap">
-            <span class="peso">₱</span>
-            <input type="number" id="pay-amt" min="1" required inputmode="numeric">
-          </div>
-          <div class="chip-row" id="amt-chips"></div>
-        </div>
-        <div class="form-group">
-          <label>Note (Optional)</label>
-          <input type="text" id="pay-note" maxlength="120" placeholder="e.g. GCash ref #12345">
-        </div>
-        <button type="submit" class="submit-btn" id="pay-submit">✓ <span id="pay-submit-txt">Confirm Payment</span></button>
-      </form>
     </div>
-  </div>
-</div>
 
-<!-- MEMBERS MODAL -->
-<div class="modal" id="m-mem">
-  <div class="modal-bg" onclick="closeM('m-mem')"></div>
-  <div class="modal-wrap">
-    <div class="modal-panel">
-      <div class="modal-hd vi">
-        <div><h3>Manage Members</h3><p>Add, rename, or remove</p></div>
-        <button class="modal-x" onclick="closeM('m-mem')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div id="mem-list-mod" class="mem-list-mod"></div>
-        <div class="add-mem">
-          <label style="display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:6px">Add New Member</label>
-          <div class="add-mem-row">
-            <input type="text" id="new-mem" maxlength="40" placeholder="Enter name...">
-            <button class="add-mem-btn" onclick="addMember()">+ Add</button>
-          </div>
+    <!-- SETTINGS MODAL -->
+    <div class="modal" id="m-settings">
+        <div class="modal-backdrop" onclick="closeModal('m-settings')"></div>
+        <div class="modal-box">
+            <div class="modal-content">
+                <div class="modal-head"><h3>Trip & Payment Settings</h3><button onclick="closeModal('m-settings')">✕</button></div>
+                <form class="modal-body" onsubmit="handleSettingsSubmit(event)">
+                    <div class="form-group"><label>Trip Name</label><input type="text" id="set-trip-name" required></div>
+                    <div class="form-group"><label>Weekly Rate (₱)</label><input type="number" id="set-rate" min="1" required></div>
+                    <div class="form-group"><label>Start Date (First Friday)</label><input type="date" id="set-start-date" required></div>
+                    <div class="form-group"><label>Total Weeks</label><input type="number" id="set-weeks-count" min="1" max="52" required></div>
+                    <div class="form-group"><label>GCash Number</label><input type="text" id="set-gcash-num" required></div>
+                    <div class="form-group"><label>GCash Name</label><input type="text" id="set-gcash-name" required></div>
+                    <div class="form-group"><label>MariBank Account No.</label><input type="text" id="set-maribank-num" required></div>
+                    <div class="form-group"><label>MariBank Name</label><input type="text" id="set-maribank-name" required></div>
+                    <button type="submit" class="btn btn-primary" style="padding:12px;justify-content:center;">Save Settings</button>
+                </form>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
-</div>
-
-<!-- HISTORY MODAL -->
-<div class="modal" id="m-hist">
-  <div class="modal-bg" onclick="closeM('m-hist')"></div>
-  <div class="modal-wrap">
-    <div class="modal-panel lg">
-      <div class="modal-hd em">
-        <div><h3>Payment History</h3><p id="hist-sub">All payments</p></div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <select id="hist-filter" class="hist-filter" onchange="renderHistory()"><option value="all">All Members</option></select>
-          <button class="modal-x" onclick="closeM('m-hist')">✕</button>
-        </div>
-      </div>
-      <div class="hist-list" id="hist-list"></div>
-    </div>
-  </div>
-</div>
-
-<!-- PREVIEW MODAL -->
-<div class="modal" id="m-prev">
-  <div class="modal-bg" onclick="closeM('m-prev')"></div>
-  <div class="modal-wrap">
-    <div class="modal-panel xl">
-      <div class="modal-hd dk">
-        <div><h3>📋 Preview & Share</h3><p>Copy or share this summary</p></div>
-        <div style="display:flex;gap:8px">
-          <button class="modal-x" style="background:rgba(255,255,255,.15);width:auto;padding:0 12px;font-size:12px;font-weight:700" onclick="doCopy()">Copy</button>
-          <button class="modal-x" onclick="closeM('m-prev')">✕</button>
-        </div>
-      </div>
-      <pre id="prev-text" class="preview-text"></pre>
-    </div>
-  </div>
-</div>
-
-<!-- CONFIRM MODAL -->
-<div class="modal" id="m-ok" style="z-index:60">
-  <div class="modal-bg" onclick="resolveOk(false)"></div>
-  <div class="modal-wrap" style="align-items:center;padding:16px">
-    <div class="modal-panel confirm-panel">
-      <div class="modal-hd rd">
-        <div><h3 id="ok-title">Are you sure?</h3><p id="ok-sub">Cannot undo</p></div>
-      </div>
-      <div class="confirm-body">
-        <p class="confirm-msg" id="ok-msg"></p>
-        <div class="confirm-btns">
-          <button class="confirm-cancel" onclick="resolveOk(false)">Cancel</button>
-          <button class="confirm-ok" id="ok-btn" onclick="resolveOk(true)">Confirm</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script>
 /* =========================================================
-   1. FIREBASE CONFIGURATION (REPLACE WITH YOUR KEYS)
+   1. FIREBASE CONFIG — PASTE YOUR REAL databaseURL HERE
    ========================================================= */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_ID",
-  appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyAdu2G69SBviKXD6jMFGssb_1LcTXIgaf0",
+    authDomain: "olangotrip.firebaseapp.com",
+    // ⚠️ CRITICAL: Copy the EXACT URL from Firebase Console → Realtime Database
+    // If you chose Singapore it looks like:
+    // "https://olangotrip-default-rtdb.asia-southeast1.firebasedatabase.app"
+    databaseURL: "https://olangotrip-default-rtdb.firebaseio.com",
+    projectId: "olangotrip",
+    storageBucket: "olangotrip.firebasestorage.app",
+    messagingSenderId: "693372588889",
+    appId: "1:693372588889:web:ba96b6c10a223e3f5e7248",
+    measurementId: "G-PG3E62SWG8"
 };
 
-let dbRef = null;
-let isCloudActive = false;
+const STORAGE_KEY = "olango_trip_v2_cache";
+let DB = null, dbRef = null, isOnline = false, loaderHidden = false;
+
+const defaultState = {
+    tripName: "🏝️ Olango Island Trip",
+    rate: 30,
+    startDate: "2025-08-29",
+    weeksCount: 17,
+    gcashName: "KXI",
+    gcashNumber: "09939336295",
+    maribankName: "KXI",
+    maribankNumber: "13397715774",
+    members: [
+        { id: 1, name: "Fatima" },
+        { id: 2, name: "Kurt" },
+        { id: 3, name: "Johnchris" },
+        { id: 4, name: "Tina" }
+    ],
+    payments: []
+};
+
+let state = loadLocal();
+
+function loadLocal() {
+    try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (data) return Object.assign({}, defaultState, JSON.parse(data));
+    } catch (e) {}
+    return JSON.parse(JSON.stringify(defaultState));
+}
+
+function saveLocal() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+
+function syncToCloud() {
+    saveLocal();
+    if (isOnline && dbRef) {
+        dbRef.set(state).catch(err => console.warn("Cloud write:", err));
+    }
+}
+
+function hideLoader() {
+    if (loaderHidden) return;
+    loaderHidden = true;
+    const el = document.getElementById("loader");
+    if (el) el.classList.add("hide");
+}
+
+function setCloudStatus(active) {
+    isOnline = active;
+    const el = document.getElementById("cloud-badge");
+    if (!el) return;
+    if (active) {
+        el.className = "cloud-badge live";
+        el.textContent = "🟢 Cloud Live";
+    } else {
+        el.className = "cloud-badge local";
+        el.textContent = "🟡 Local Mode";
+    }
+}
+
+function fallbackToLocal(reason) {
+    console.warn("Falling back to local:", reason || "");
+    setCloudStatus(false);
+    renderAll();
+    hideLoader();
+}
 
 function initFirebase() {
-  try {
-    if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.database();
-      dbRef = db.ref('olango_tracker');
-      
-      // Listen to Realtime Database changes
-      dbRef.on('value', (snapshot) => {
-        const val = snapshot.val();
-        if (val) {
-          S = {
-            members: Array.isArray(val.members) ? val.members : [],
-            payments: Array.isArray(val.payments) ? val.payments : [],
-            rate: Number(val.rate) || DEFAULT_RATE,
-            nextMid: Number(val.nextMid) || 1,
-            nextPid: Number(val.nextPid) || 1
-          };
-        } else {
-          // Initialize DB if empty
-          S = defaultData();
-          syncToDatabase();
+    // ALWAYS show the app after 2.5 seconds max (never stuck forever)
+    setTimeout(() => {
+        if (!loaderHidden) {
+            fallbackToLocal("timeout");
+            toast("Using Local Mode (cloud slow / offline)");
         }
-        isCloudActive = true;
-        updateCloudStatusBadge(true);
-        recompute();
-        renderAll();
-        hideLoader();
-      }, (err) => {
-        console.warn("Firebase listener error, fallback to local:", err);
-        fallbackToLocal();
-      });
-    } else {
-      fallbackToLocal();
+    }, 2500);
+
+    try {
+        if (!firebaseConfig.databaseURL || firebaseConfig.databaseURL.includes("YOUR_")) {
+            fallbackToLocal("no databaseURL");
+            return;
+        }
+
+        firebase.initializeApp(firebaseConfig);
+        try { firebase.analytics(); } catch (e) {}
+
+        DB = firebase.database();
+        dbRef = DB.ref("olango_tracker_v2");
+
+        // One-time connection check
+        const connectedRef = DB.ref(".info/connected");
+        connectedRef.on("value", (snap) => {
+            if (snap.val() === true) {
+                // connected
+            }
+        });
+
+        dbRef.on("value", (snapshot) => {
+            const cloudData = snapshot.val();
+            if (cloudData && Array.isArray(cloudData.members) && cloudData.members.length > 0) {
+                state = Object.assign({}, defaultState, cloudData);
+                saveLocal();
+            } else {
+                // Cloud empty → push local data up (never wipe)
+                syncToCloud();
+            }
+            setCloudStatus(true);
+            renderAll();
+            hideLoader();
+        }, (err) => {
+            console.warn("Firebase listener error:", err);
+            fallbackToLocal(err && err.message);
+        });
+
+    } catch (e) {
+        console.error("Firebase init failed:", e);
+        fallbackToLocal(e.message);
     }
-  } catch (e) {
-    console.warn("Firebase init failed, fallback to local:", e);
-    fallbackToLocal();
-  }
 }
 
-function fallbackToLocal() {
-  isCloudActive = false;
-  updateCloudStatusBadge(false);
-  bootLocalData();
-  recompute();
-  renderAll();
-  hideLoader();
-}
-
-function updateCloudStatusBadge(active) {
-  const b = document.getElementById('cloud-badge');
-  if (b) {
-    if (active) {
-      b.className = "cloud-status live";
-      b.textContent = "🟢 Cloud Live";
-    } else {
-      b.className = "cloud-status local";
-      b.textContent = "🟡 Local Mode";
+/* ========== HELPERS ========== */
+function getWeeksList() {
+    const list = [];
+    const parts = (state.startDate || "2025-08-29").split("-").map(Number);
+    let curr = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 4, 0, 0));
+    for (let i = 0; i < (state.weeksCount || 17); i++) {
+        list.push(new Date(curr));
+        curr.setUTCDate(curr.getUTCDate() + 7);
     }
-  }
+    return list;
+}
+function formatDate(d) {
+    return new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
+}
+function formatShortDate(d) {
+    return new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric" });
+}
+function getCurrentWeekIndex(weeks) {
+    const now = Date.now();
+    for (let i = 0; i < weeks.length; i++) {
+        if (now <= new Date(weeks[i]).getTime() + 86400000) return i;
+    }
+    return weeks.length - 1;
 }
 
-function syncToDatabase() {
-  if (isCloudActive && dbRef) {
-    dbRef.set(S);
-  } else {
-    saveLocalRaw(S);
-  }
-}
-
-/* =========================================================
-   2. LOADER FAILSAFE
-   ========================================================= */
-function hideLoader(){
-  var l=document.getElementById('loader'),a=document.getElementById('app');
-  if(l)l.classList.add('hide');
-  if(a)a.classList.add('ready');
-  setTimeout(function(){try{l&&l.parentNode&&l.parentNode.removeChild(l);}catch(e){}},400);
-}
-setTimeout(hideLoader, 600); // 600ms failsafe timeout
-
-/* =========================================================
-   3. CONSTANTS & DATE HELPERS
-   ========================================================= */
-const LOCAL_KEY = 'olango-trip-cloud-fallback';
-const DEFAULT_MEMBERS = ['Fatima','Kurt','Johnchris','Tina'];
-const DEFAULT_RATE = 30;
-const GCASH = '09939336295';
-const TZ = 'Asia/Manila';
-
-const TONES = [
-  {g:'linear-gradient(135deg,#38bdf8,#06b6d4)',a:'#0284c7',s:'background:#f0f9ff;color:#0369a1;border-color:#bae6fd',b:'linear-gradient(90deg,#38bdf8,#06b6d4)'},
-  {g:'linear-gradient(135deg,#a78bfa,#a855f7)',a:'#7c3aed',s:'background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe',b:'linear-gradient(90deg,#a78bfa,#a855f7)'},
-  {g:'linear-gradient(135deg,#fbbf24,#f59e0b)',a:'#d97706',s:'background:#fffbeb;color:#b45309;border-color:#fed7aa',b:'linear-gradient(90deg,#fbbf24,#f59e0b)'},
-  {g:'linear-gradient(135deg,#fb7185,#ec4899)',a:'#e11d48',s:'background:#fff1f2;color:#be123c;border-color:#fecdd3',b:'linear-gradient(90deg,#fb7185,#ec4899)'},
-  {g:'linear-gradient(135deg,#34d399,#14b8a6)',a:'#059669',s:'background:#ecfdf5;color:#047857;border-color:#a7f3d0',b:'linear-gradient(90deg,#34d399,#14b8a6)'},
-  {g:'linear-gradient(135deg,#818cf8,#3b82f6)',a:'#4f46e5',s:'background:#eef2ff;color:#4338ca;border-color:#c7d2fe',b:'linear-gradient(90deg,#818cf8,#3b82f6)'}
+const AVATAR_COLORS = [
+    "linear-gradient(135deg,#0ea5e9,#0284c7)",
+    "linear-gradient(135deg,#a855f7,#7c3aed)",
+    "linear-gradient(135deg,#f59e0b,#d97706)",
+    "linear-gradient(135deg,#10b981,#059669)",
+    "linear-gradient(135deg,#ec4899,#db2777)"
 ];
-function tone(id){return TONES[Math.abs(id)%TONES.length];}
 
-function genFridays(){
-  var out=[],t=Date.UTC(2025,7,29,4,0,0),end=Date.UTC(2025,11,19,4,0,0);
-  while(t<=end){out.push(new Date(t));t+=7*86400000;}
-  return out;
-}
-const WEEKS = genFridays();
+function renderAll() {
+    try {
+        const weeks = getWeeksList();
+        const curWeek = getCurrentWeekIndex(weeks);
 
-const fmt = {
-  date: (d) => new Date(d).toLocaleDateString('en-PH', {month:'short',day:'2-digit',year:'numeric',timeZone:TZ}),
-  short: (d) => new Date(d).toLocaleDateString('en-PH', {month:'short',day:'2-digit',timeZone:TZ}),
-  full: (d) => new Date(d).toLocaleDateString('en-PH', {weekday:'long',month:'long',day:'numeric',year:'numeric',timeZone:TZ}),
-  fullS: (d) => new Date(d).toLocaleDateString('en-PH', {weekday:'short',month:'short',day:'2-digit',year:'numeric',timeZone:TZ}),
-  time: (d) => new Date(d).toLocaleTimeString('en-PH', {hour:'numeric',minute:'2-digit',hour12:true,timeZone:TZ}),
-  dt: (d) => fmt.fullS(d) + ' · ' + fmt.time(d),
-  rel: (d) => {
-    const m = Math.floor((Date.now()-new Date(d))/60000);
-    if(m<1)return'Just now';if(m<60)return m+'m ago';
-    const h=Math.floor(m/60);if(h<24)return h+'h ago';
-    const dy=Math.floor(h/24);if(dy===1)return'Yesterday';if(dy<7)return dy+'d ago';
-    return fmt.short(d);
-  }
-};
+        document.getElementById("trip-title-display").textContent = state.tripName || "🏝️ Olango Island Trip";
+        document.getElementById("trip-date-range").textContent = weeks.length
+            ? `${formatDate(weeks[0])} – ${formatDate(weeks[weeks.length - 1])} (${weeks.length} Weeks)`
+            : "";
+        document.getElementById("gcash-name").textContent = state.gcashName || "KXI";
+        document.getElementById("gcash-num").textContent = state.gcashNumber || "09939336295";
+        document.getElementById("maribank-name").textContent = state.maribankName || "KXI";
+        document.getElementById("maribank-num").textContent = state.maribankNumber || "13397715774";
 
-function weekDeadline(i){var d=new Date(WEEKS[i]);d.setUTCHours(15,59,59,999);return d.getTime();}
-function currentWeek(){var n=Date.now();for(var i=0;i<WEEKS.length;i++)if(n<=weekDeadline(i))return i;return WEEKS.length-1;}
-function isPast(i){return Date.now()>weekDeadline(i);}
-function daysLeft(){return Math.ceil((weekDeadline(WEEKS.length-1)-Date.now())/86400000);}
-function detectWeek(ts){var t=new Date(ts).getTime();for(var i=0;i<WEEKS.length;i++)if(t<=weekDeadline(i))return i;return WEEKS.length-1;}
+        const totalTarget = (state.rate || 30) * (state.weeksCount || 17) * (state.members || []).length;
+        const totalCollected = (state.payments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
+        const pct = totalTarget ? Math.min(100, Math.round((totalCollected / totalTarget) * 100)) : 0;
 
-/* =========================================================
-   4. LOCAL STORAGE FALLBACK
-   ========================================================= */
-function loadLocalRaw(){try{var r=localStorage.getItem(LOCAL_KEY);if(r)return JSON.parse(r);}catch(e){}return null;}
-function saveLocalRaw(d){try{localStorage.setItem(LOCAL_KEY,JSON.stringify(d));}catch(e){}}
-function defaultData(){return{members:DEFAULT_MEMBERS.map((n,i)=>({id:i+1,name:n})),payments:[],rate:DEFAULT_RATE,nextMid:DEFAULT_MEMBERS.length+1,nextPid:1};}
+        document.getElementById("stat-target").textContent = "₱" + totalTarget.toLocaleString();
+        document.getElementById("stat-collected").textContent = "₱" + totalCollected.toLocaleString();
+        document.getElementById("stat-pct").textContent = pct + "%";
+        document.getElementById("stat-bar").style.width = pct + "%";
 
-let S = defaultData();
-
-function bootLocalData(){
-  var raw=loadLocalRaw();
-  if(!raw||!Array.isArray(raw.members))S=defaultData();
-  else S={members:raw.members,payments:Array.isArray(raw.payments)?raw.payments:[],rate:Number(raw.rate)||DEFAULT_RATE,nextMid:Number(raw.nextMid)||raw.members.length+1,nextPid:Number(raw.nextPid)||1};
-  if(!loadLocalRaw())saveLocalRaw(S);
+        renderMembersGrid();
+        renderTrackingTable(weeks, curWeek);
+        renderRecentPayments();
+    } catch (e) { console.error(e); }
 }
 
-/* Derived Calculations */
-let grid=new Map(),totals=new Map(),counts=new Map(),dates=new Map(),grand=0;
-function recompute(){
-  grid=new Map();totals=new Map();counts=new Map();dates=new Map();grand=0;
-  S.members.forEach((m)=>{grid.set(m.id,new Map());totals.set(m.id,0);counts.set(m.id,0);dates.set(m.id,new Map());});
-  var sorted=S.payments.slice().sort((a,b)=>a.createdAt-b.createdAt);
-  sorted.forEach((p)=>{
-    if(!grid.has(p.memberId))return;
-    var w=grid.get(p.memberId);
-    w.set(p.weekIndex,(w.get(p.weekIndex)||0)+p.amount);
-    totals.set(p.memberId,(totals.get(p.memberId)||0)+p.amount);
-    counts.set(p.memberId,(counts.get(p.memberId)||0)+1);
-    var prev=dates.get(p.memberId).get(p.weekIndex);
-    if(!prev||p.createdAt>prev)dates.get(p.memberId).set(p.weekIndex,p.createdAt);
-    grand+=p.amount;
-  });
+function renderMembersGrid() {
+    const grid = document.getElementById("member-grid");
+    if (!state.members || !state.members.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:#94a3b8;">No members yet. Click Manage →</div>';
+        return;
+    }
+    grid.innerHTML = state.members.map((m, idx) => {
+        const paid = (state.payments || []).filter(p => p.memberId === m.id).reduce((s, p) => s + Number(p.amount), 0);
+        const target = (state.rate || 30) * (state.weeksCount || 17);
+        const pct = target ? Math.min(100, Math.round((paid / target) * 100)) : 0;
+        const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+        return `<div class="mem-card">
+            <div>
+                <div class="mem-header">
+                    <div class="avatar" style="background:${color}">${(m.name || "?")[0].toUpperCase()}</div>
+                    <span class="mem-name">${m.name}</span>
+                </div>
+                <div class="mem-amt">₱${paid.toLocaleString()}</div>
+                <div class="mem-sub">Goal: ₱${target.toLocaleString()} (${pct}%)</div>
+            </div>
+            <div style="height:6px;background:#f1f5f9;border-radius:99px;overflow:hidden;margin-top:10px;">
+                <div style="height:100%;width:${pct}%;background:#10b981;"></div>
+            </div>
+        </div>`;
+    }).join("");
 }
 
-/* =========================================================
-   5. UI UTILITIES & TOASTS
-   ========================================================= */
-function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-var toastT=null;
-function toast(msg,type){
-  var w=document.getElementById('toast-wrap');
-  var cls=type==='err'?'err':type==='warn'?'warn':'';
-  var ic=type==='err'?'✗':type==='warn'?'⚠':'✓';
-  var icCls=type==='err'?'err':type==='warn'?'warn':'ok';
-  w.innerHTML='<div class="toast '+cls+'"><span class="ic '+icCls+'">'+ic+'</span><span>'+esc(msg)+'</span></div>';
-  clearTimeout(toastT);toastT=setTimeout(()=>{w.innerHTML='';},2800);
-}
-function openM(id){document.getElementById(id).classList.add('open');}
-function closeM(id){document.getElementById(id).classList.remove('open');}
+function renderTrackingTable(weeks, curWeek) {
+    const thead = document.getElementById("tbl-head");
+    const tbody = document.getElementById("tbl-body");
+    const tfoot = document.getElementById("tbl-foot");
+    if (!state.members || !state.members.length) {
+        thead.innerHTML = ""; tbody.innerHTML = "<tr><td style='padding:24px;color:#94a3b8'>Add members first</td></tr>"; tfoot.innerHTML = "";
+        return;
+    }
+    let h = "<tr><th>Wk</th><th>Due Date</th>";
+    state.members.forEach(m => h += `<th>${m.name}</th>`);
+    h += "<th>Pot</th></tr>";
+    thead.innerHTML = h;
 
-var okFn=null;
-function ask(title,sub,msg,okText){
-  return new Promise((res)=>{
-    okFn=res;
-    document.getElementById('ok-title').textContent=title;
-    document.getElementById('ok-sub').textContent=sub||'';
-    document.getElementById('ok-msg').textContent=msg;
-    document.getElementById('ok-btn').textContent=okText||'Confirm';
-    openM('m-ok');
-  });
-}
-function resolveOk(v){closeM('m-ok');if(okFn){okFn(v);okFn=null;}}
+    let b = "", pot = 0;
+    weeks.forEach((w, wIdx) => {
+        const isNow = wIdx === curWeek;
+        let rowSum = 0;
+        b += `<tr class="${isNow ? "now-row" : ""}">
+            <td style="font-weight:800;color:#64748b;">${wIdx + 1}</td>
+            <td style="font-weight:600;">${formatShortDate(w)}${isNow ? ' <span style="color:#0284c7;font-size:10px;">● NOW</span>' : ""}</td>`;
+        state.members.forEach(m => {
+            const paid = (state.payments || []).filter(p => p.memberId === m.id && Number(p.weekIndex) === wIdx)
+                .reduce((s, p) => s + Number(p.amount), 0);
+            rowSum += paid;
+            let pill = `<span class="chk-pill none">—</span>`;
+            if (paid >= (state.rate || 30)) pill = `<span class="chk-pill paid">₱${paid} ✓</span>`;
+            else if (paid > 0) pill = `<span class="chk-pill part">₱${paid}</span>`;
+            b += `<td>${pill}</td>`;
+        });
+        pot += rowSum;
+        b += `<td style="font-weight:800;color:#047857;">₱${rowSum.toLocaleString()}</td></tr>`;
+    });
+    tbody.innerHTML = b;
 
-document.addEventListener('keydown',(e)=>{
-  if(e.key==='Escape'){
-    if(document.getElementById('m-ok').classList.contains('open')){resolveOk(false);return;}
-    var ids=['m-pay','m-mem','m-hist','m-prev'];
-    for(var i=0;i<ids.length;i++){if(document.getElementById(ids[i]).classList.contains('open')){closeM(ids[i]);return;}}
-  }
+    let f = `<tr style="background:#f8fafc;font-weight:900;"><td></td><td>TOTALS</td>`;
+    state.members.forEach(m => {
+        const total = (state.payments || []).filter(p => p.memberId === m.id).reduce((s, p) => s + Number(p.amount), 0);
+        f += `<td style="color:#0284c7">₱${total.toLocaleString()}</td>`;
+    });
+    const grand = (state.payments || []).reduce((s, p) => s + Number(p.amount), 0);
+    f += `<td style="color:#047857">₱${grand.toLocaleString()}</td></tr>`;
+    tfoot.innerHTML = f;
+}
+
+function renderRecentPayments() {
+    const list = document.getElementById("recent-list");
+    const pays = state.payments || [];
+    document.getElementById("recent-count").textContent = pays.length + " payment(s)";
+    if (!pays.length) {
+        list.innerHTML = `<p style="text-align:center;color:#94a3b8;padding:18px;">No payments logged yet.</p>`;
+        return;
+    }
+    list.innerHTML = pays.slice().reverse().slice(0, 8).map(p => {
+        const m = (state.members || []).find(x => x.id === p.memberId);
+        return `<div class="recent-item">
+            <div>
+                <div style="font-weight:800;">${m ? m.name : "Unknown"} <span style="font-weight:600;color:#64748b;">→ Week ${Number(p.weekIndex) + 1}</span></div>
+                <div class="recent-meta">${new Date(p.timestamp).toLocaleString()}${p.note ? ' · "' + p.note + '"' : ""}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-weight:900;color:#059669;">+₱${p.amount}</span>
+                <button onclick="deletePayment(${p.id})" style="color:#ef4444;font-weight:800;">✕</button>
+            </div>
+        </div>`;
+    }).join("");
+}
+
+/* ========== ACTIONS ========== */
+function openPaymentModal() {
+    if (!state.members || !state.members.length) { toast("Add a member first"); openModal("m-members"); return; }
+    const weeks = getWeeksList();
+    const cur = getCurrentWeekIndex(weeks);
+    document.getElementById("pay-member").innerHTML = state.members.map(m => `<option value="${m.id}">${m.name}</option>`).join("");
+    document.getElementById("pay-week").innerHTML = weeks.map((w, i) => `<option value="${i}">Week ${i + 1} (${formatShortDate(w)})</option>`).join("");
+    document.getElementById("pay-week").value = cur;
+    document.getElementById("pay-amount").value = state.rate || 30;
+    document.getElementById("pay-note").value = "";
+    openModal("m-payment");
+}
+
+function handlePaymentSubmit(e) {
+    e.preventDefault();
+    const payment = {
+        id: Date.now(),
+        memberId: Number(document.getElementById("pay-member").value),
+        weekIndex: Number(document.getElementById("pay-week").value),
+        amount: Number(document.getElementById("pay-amount").value),
+        note: document.getElementById("pay-note").value.trim(),
+        timestamp: new Date().toISOString()
+    };
+    state.payments = state.payments || [];
+    state.payments.push(payment);
+    syncToCloud();
+    renderAll();
+    closeModal("m-payment");
+    toast("Payment saved! 🎉");
+    if (typeof confetti === "function") confetti({ particleCount: 60, spread: 55, origin: { y: 0.8 } });
+}
+
+function deletePayment(id) {
+    if (!confirm("Delete this payment?")) return;
+    state.payments = (state.payments || []).filter(p => p.id !== id);
+    syncToCloud();
+    renderAll();
+    toast("Payment removed");
+}
+
+function handleAddMember() {
+    const name = (document.getElementById("new-member-name").value || "").trim();
+    if (!name) return;
+    const newId = ((state.members || []).reduce((max, m) => Math.max(max, m.id), 0) || 0) + 1;
+    state.members = state.members || [];
+    state.members.push({ id: newId, name });
+    document.getElementById("new-member-name").value = "";
+    syncToCloud();
+    renderMembersUI();
+    renderAll();
+    toast(name + " added!");
+}
+
+function removeMember(id) {
+    const m = (state.members || []).find(x => x.id === id);
+    if (!confirm(`Remove ${m ? m.name : "member"} and their payments?`)) return;
+    state.members = (state.members || []).filter(x => x.id !== id);
+    state.payments = (state.payments || []).filter(p => p.memberId !== id);
+    syncToCloud();
+    renderMembersUI();
+    renderAll();
+    toast("Member removed");
+}
+
+function renderMembersUI() {
+    document.getElementById("members-list-ui").innerHTML = (state.members || []).map(m =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;">
+            <span style="font-weight:700;">${m.name}</span>
+            <button onclick="removeMember(${m.id})" style="color:#ef4444;font-weight:800;font-size:12px;">Remove</button>
+        </div>`
+    ).join("") || '<p style="color:#94a3b8;text-align:center;">No members yet</p>';
+}
+
+function openModal(id) {
+    if (id === "m-members") renderMembersUI();
+    if (id === "m-settings") {
+        document.getElementById("set-trip-name").value = state.tripName || "";
+        document.getElementById("set-rate").value = state.rate || 30;
+        document.getElementById("set-start-date").value = state.startDate || "2025-08-29";
+        document.getElementById("set-weeks-count").value = state.weeksCount || 17;
+        document.getElementById("set-gcash-num").value = state.gcashNumber || "09939336295";
+        document.getElementById("set-gcash-name").value = state.gcashName || "KXI";
+        document.getElementById("set-maribank-num").value = state.maribankNumber || "13397715774";
+        document.getElementById("set-maribank-name").value = state.maribankName || "KXI";
+    }
+    document.getElementById(id).classList.add("open");
+}
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+function handleSettingsSubmit(e) {
+    e.preventDefault();
+    state.tripName = document.getElementById("set-trip-name").value.trim();
+    state.rate = Number(document.getElementById("set-rate").value);
+    state.startDate = document.getElementById("set-start-date").value;
+    state.weeksCount = Number(document.getElementById("set-weeks-count").value);
+    state.gcashNumber = document.getElementById("set-gcash-num").value.trim();
+    state.gcashName = document.getElementById("set-gcash-name").value.trim();
+    state.maribankNumber = document.getElementById("set-maribank-num").value.trim();
+    state.maribankName = document.getElementById("set-maribank-name").value.trim();
+    syncToCloud();
+    renderAll();
+    closeModal("m-settings");
+    toast("Settings saved!");
+}
+
+function copyMessengerSummary() {
+    const totalTarget = (state.rate || 30) * (state.weeksCount || 17) * (state.members || []).length;
+    const totalCollected = (state.payments || []).reduce((s, p) => s + Number(p.amount), 0);
+    const pct = totalTarget ? Math.round((totalCollected / totalTarget) * 100) : 0;
+    let txt = `🏝️ ${(state.tripName || "OLANGO").toUpperCase()}\n`;
+    txt += `💰 ₱${totalCollected.toLocaleString()} / ₱${totalTarget.toLocaleString()} (${pct}%)\n\n`;
+    txt += `💳 Payment Channels:\n• GCash: ${state.gcashNumber} (${state.gcashName})\n• MariBank: ${state.maribankNumber} (${state.maribankName})\n`;
+    txt += `-------------------------\n`;
+    (state.members || []).forEach(m => {
+        const paid = (state.payments || []).filter(p => p.memberId === m.id).reduce((s, p) => s + Number(p.amount), 0);
+        txt += `• ${m.name}: ₱${paid.toLocaleString()} / ₱${((state.rate || 30) * (state.weeksCount || 17)).toLocaleString()}\n`;
+    });
+    txt += `-------------------------\nUpdated: ${new Date().toLocaleDateString()}`;
+    navigator.clipboard.writeText(txt).then(() => toast("Copied for GC! 📋"));
+}
+
+function copyGCash() { navigator.clipboard.writeText(state.gcashNumber || "").then(() => toast("GCash copied! 📱")); }
+function copyMariBank() { navigator.clipboard.writeText(state.maribankNumber || "").then(() => toast("MariBank copied! 🏦")); }
+
+function exportBackup() {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `olango_backup_${Date.now()}.json`;
+    a.click();
+    toast("Backup downloaded! 💾");
+}
+
+function promptReset() {
+    if (!confirm("Reset EVERYTHING? Make a backup first!")) return;
+    if (!confirm("Final confirm — wipe all data?")) return;
+    state = JSON.parse(JSON.stringify(defaultState));
+    syncToCloud();
+    renderAll();
+    toast("Reset done");
+}
+
+function toast(msg) {
+    const box = document.getElementById("toast-box");
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.textContent = msg;
+    box.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    renderAll();          // show UI immediately from local cache
+    initFirebase();       // then try cloud (with 2.5s failsafe)
 });
-
-/* =========================================================
-   6. CRUD OPERATIONS (SYNCED TO CLOUD)
-   ========================================================= */
-function addMember(){
-  var inp=document.getElementById('new-mem');
-  var name=(inp.value||'').trim();
-  if(!name)return toast('Enter a name','err');
-  if(S.members.some(m=>m.name.toLowerCase()===name.toLowerCase()))return toast('Already exists','err');
-  S.members.push({id:S.nextMid++,name:name});
-  syncToDatabase(); recompute(); renderAll(); renderMemList();
-  inp.value=''; toast(name+' added');
-}
-
-function renameMember(id,name){
-  name=(name||'').trim();if(!name)return toast('Empty name','err');
-  var m=S.members.find(x=>x.id===id);
-  if(!m||m.name===name){renderMemList();return;}
-  if(S.members.some(x=>x.id!==id&&x.name.toLowerCase()===name.toLowerCase()))return toast('Name taken','err');
-  m.name=name; syncToDatabase(); recompute(); renderAll(); renderMemList(); toast('Renamed to '+name);
-}
-
-function removeMember(id){
-  var m=S.members.find(x=>x.id===id);
-  if(!m)return;
-  var n=S.payments.filter(p=>p.memberId===id).length;
-  ask('Remove '+m.name+'?','Deletes their payments',n?m.name+' has '+n+' payment(s). Continue?':'Remove this member?','Remove').then((ok)=>{
-    if(!ok)return;
-    S.payments=S.payments.filter(p=>p.memberId!==id);
-    S.members=S.members.filter(x=>x.id!==id);
-    syncToDatabase(); recompute(); renderAll(); renderMemList(); toast(m.name+' removed','warn');
-  });
-}
-
-function addPayment(o){
-  var p={id:S.nextPid++,memberId:+o.memberId,weekIndex:+o.weekIndex,amount:Math.round(+o.amount),note:(o.note||'').trim().slice(0,120),createdAt:Date.now(),detectedWeek:detectWeek(Date.now())};
-  if(!S.members.some(m=>m.id===p.memberId))throw new Error('Bad member');
-  if(p.weekIndex<0||p.weekIndex>=WEEKS.length)throw new Error('Bad week');
-  if(!(p.amount>0))throw new Error('Bad amount');
-  S.payments.unshift(p);
-  syncToDatabase();
-  return p;
-}
-
-function updatePayment(id,o){
-  var p=S.payments.find(x=>x.id===id);
-  if(!p)throw new Error('Not found');
-  p.memberId=+o.memberId;p.weekIndex=+o.weekIndex;p.amount=Math.round(+o.amount);p.note=(o.note||'').trim().slice(0,120);
-  syncToDatabase();
-}
-
-function delPayment(id){
-  S.payments=S.payments.filter(p=>p.id!==id);
-  syncToDatabase();
-}
-
-function saveRate(v){
-  var r=Math.round(+v);if(!(r>=1&&r<=100000))return toast('Invalid rate','err');
-  if(r===S.rate)return;S.rate=r; syncToDatabase(); recompute(); renderAll(); toast('Rate ₱'+r+'/wk');
-}
-
-function doReset(){
-  ask('Reset all?','Cannot undo','Wipe members, payments, settings?','Reset').then((ok)=>{
-    if(!ok)return;
-    ask('Final warning','Last chance','Really delete everything?','Yes, wipe').then((ok2)=>{
-      if(!ok2)return;
-      S=defaultData(); syncToDatabase(); recompute(); renderAll(); toast('Reset done','warn');
-    });
-  });
-}
-
-/* =========================================================
-   7. MODALS & RENDERING
-   ========================================================= */
-var editPayId=null;
-function openPay(opts={}){
-  if(!S.members.length){toast('Add a member first','err');openMembers();return;}
-  editPayId=opts.editing?opts.editing.id:null;
-  var cur=currentWeek();
-  var ms=document.getElementById('pay-mem'),ws=document.getElementById('pay-wk');
-  ms.innerHTML=S.members.map(m=>'<option value="'+m.id+'">'+esc(m.name)+'</option>').join('');
-  ws.innerHTML=WEEKS.map((d,i)=>'<option value="'+i+'">Week '+(i+1)+' · '+fmt.date(d)+(i===cur?' — NOW':isPast(i)?' — past':'')+'</option>').join('');
-  var box=document.getElementById('auto-box'),ic=document.getElementById('auto-ic'),lbl=document.getElementById('auto-lbl'),dt=document.getElementById('auto-date'),wk=document.getElementById('auto-week');
-  if(opts.editing){
-    document.getElementById('pay-title').textContent='Edit Payment';
-    document.getElementById('pay-sub').textContent='Original: '+fmt.dt(opts.editing.createdAt);
-    document.getElementById('pay-submit-txt').textContent='Save Changes';
-    box.className='auto-info am';ic.className='auto-icon am';ic.textContent='✎';
-    lbl.textContent='Original payment date';
-    dt.textContent=fmt.dt(opts.editing.createdAt);
-    wk.textContent='Timestamp kept as-is';
-    ms.value=opts.editing.memberId;ws.value=opts.editing.weekIndex;
-    document.getElementById('pay-amt').value=opts.editing.amount;
-    document.getElementById('pay-note').value=opts.editing.note||'';
-  }else{
-    document.getElementById('pay-title').textContent='Log a Payment';
-    document.getElementById('pay-sub').textContent='Date & week auto-detected';
-    document.getElementById('pay-submit-txt').textContent='Confirm Payment';
-    box.className='auto-info sky';ic.className='auto-icon sky';ic.textContent='📅';
-    lbl.textContent='Auto-detected payment date';
-    dt.textContent=fmt.dt(new Date());
-    wk.textContent='Detected Week '+(cur+1)+' · Due '+fmt.date(WEEKS[cur]);
-    ms.value=opts.memberId||S.members[0].id;
-    ws.value=opts.weekIndex!=null?opts.weekIndex:cur;
-    document.getElementById('pay-amt').value=S.rate;
-    document.getElementById('pay-note').value='';
-  }
-  var seen={},chips=[];
-  [S.rate,S.rate*2,S.rate*3,50,100,500].forEach(v=>{if(v>=1&&!seen[v]){seen[v]=1;chips.push(v);}});
-  chips=chips.slice(0,5);
-  document.getElementById('amt-chips').innerHTML=chips.map(v=>'<button type="button" class="chip-mini" onclick="document.getElementById(\'pay-amt\').value='+v+'">₱'+v+'</button>').join('');
-  openM('m-pay');
-}
-
-function submitPay(e){
-  e.preventDefault();
-  var btn=document.getElementById('pay-submit');btn.disabled=true;
-  try{
-    var memberId=document.getElementById('pay-mem').value;
-    var weekIndex=document.getElementById('pay-wk').value;
-    var amount=document.getElementById('pay-amt').value;
-    var note=document.getElementById('pay-note').value;
-    var mem=S.members.find(m=>m.id===+memberId);
-    if(editPayId){updatePayment(editPayId,{memberId:memberId,weekIndex:weekIndex,amount:amount,note:note});toast('Updated '+(mem?mem.name:''));}
-    else{var p=addPayment({memberId:memberId,weekIndex:weekIndex,amount:amount,note:note});toast((mem?mem.name:'')+' · ₱'+p.amount+' · Wk '+(+weekIndex+1)+' · '+fmt.short(p.createdAt));}
-    recompute();renderAll();closeM('m-pay');
-  }catch(err){toast(err.message||'Failed','err');}
-  finally{btn.disabled=false;}
-}
-
-function quickPay(memberId,weekIndex){
-  var sum=(grid.get(memberId)&&grid.get(memberId).get(weekIndex))||0;
-  var amt=Math.max(1,S.rate-sum);
-  var mem=S.members.find(m=>m.id===memberId);
-  try{var p=addPayment({memberId:memberId,weekIndex:weekIndex,amount:amt,note:'Quick pay'});recompute();renderAll();toast('⚡ '+mem.name+' · ₱'+amt+' · '+fmt.short(p.createdAt));}
-  catch(e){toast('Failed','err');}
-}
-
-function openMembers(){openM('m-mem');renderMemList();}
-var editMemId=null;
-function renderMemList(){
-  var box=document.getElementById('mem-list-mod');
-  if(!S.members.length){box.innerHTML='<div class="mem-empty"><div class="emoji">👥</div>No members yet. Add below.</div>';return;}
-  box.innerHTML=S.members.map(m=>{
-    var t=tone(m.id),paid=totals.get(m.id)||0,c=counts.get(m.id)||0,ed=editMemId===m.id;
-    return'<div class="mem-row"><div class="avatar" style="background:'+t.g+'">'+esc(m.name.charAt(0).toUpperCase())+'</div><div class="mem-row-body">'+(ed?'<input id="ren-'+m.id+'" class="mem-row-input" value="'+esc(m.name)+'" maxlength="40" onkeydown="if(event.key===\'Enter\'){event.preventDefault();commitRen('+m.id+')}if(event.key===\'Escape\'){editMemId=null;renderMemList()}" onblur="commitRen('+m.id+')">':'<p>'+esc(m.name)+'</p><p class="s">₱'+paid.toLocaleString()+' · '+c+' pmt</p>')+'</div><div class="mem-actions">'+(ed?'<button class="icon-btn save" onmousedown="commitRen('+m.id+')">✓</button>':'<button class="icon-btn edit" onclick="editMemId='+m.id+';renderMemList()">✎</button><button class="icon-btn del" onclick="removeMember('+m.id+')">✕</button>')+'</div></div>';
-  }).join('');
-  if(editMemId)setTimeout(()=>{var i=document.getElementById('ren-'+editMemId);if(i){i.focus();i.select();}},30);
-}
-function commitRen(id){var i=document.getElementById('ren-'+id);if(!i)return;var n=i.value;editMemId=null;renameMember(id,n);}
-
-function openHistory(){
-  var f=document.getElementById('hist-filter'),cur=f.value;
-  f.innerHTML='<option value="all">All Members</option>'+S.members.map(m=>'<option value="'+m.id+'">'+esc(m.name)+'</option>').join('');
-  var found=false;for(var i=0;i<f.options.length;i++)if(f.options[i].value===cur)found=true;
-  if(found)f.value=cur;
-  renderHistory();openM('m-hist');
-}
-var delId=null;
-function renderHistory(){
-  var filter=document.getElementById('hist-filter').value;
-  var list=S.payments.slice();
-  if(filter!=='all')list=list.filter(p=>p.memberId===+filter);
-  document.getElementById('hist-sub').textContent=list.length+' payment'+(list.length!==1?'s':'');
-  var box=document.getElementById('hist-list');
-  if(!list.length){box.innerHTML='<div class="recent-empty"><div class="emoji">📭</div>No payments yet</div>';return;}
-  box.innerHTML=list.map(p=>{
-    var m=S.members.find(x=>x.id===p.memberId);
-    var t=m?tone(m.id):TONES[0],conf=delId===p.id;
-    var dw=p.detectedWeek!=null?p.detectedWeek:detectWeek(p.createdAt);
-    var tag=dw!==p.weekIndex?'<span class="tag-manual">MANUAL</span>':'<span class="tag-auto">AUTO</span>';
-    return'<div class="hist-item recent-item"><div class="recent-row"><div class="avatar" style="background:'+t.g+'">'+esc((m?m.name:'?')[0].toUpperCase())+'</div><div class="recent-body"><div class="recent-name"><p>'+esc(m?m.name:'Unknown')+'</p><span>→ Wk '+(p.weekIndex+1)+' ('+fmt.short(WEEKS[p.weekIndex])+')</span>'+tag+'</div><div class="recent-dt">🕐 '+fmt.dt(p.createdAt)+' · <em>'+fmt.rel(p.createdAt)+'</em></div>'+(p.note?'<div class="recent-note">"'+esc(p.note)+'"</div>':'')+'</div><div class="recent-actions"><span class="recent-amt">+₱'+p.amount+'</span><button class="icon-btn edit" onclick=\'openPay({editing:'+JSON.stringify(p).replace(/'/g,'&#39;').replace(/"/g,'&quot;')+'});closeM("m-hist")\'>✎</button><button class="icon-btn del" onclick="delId='+p.id+';renderHistory();renderRecent()">✕</button></div></div>'+(conf?'<div class="confirm-bar"><span>Delete this payment?</span><div class="confirm-bar-btns"><button class="confirm-yes" onclick="confirmDel('+p.id+')">Delete</button><button class="confirm-no" onclick="delId=null;renderHistory();renderRecent()">Cancel</button></div></div>':'')+'</div>';
-  }).join('');
-}
-function confirmDel(id){
-  var p=S.payments.find(x=>x.id===id);
-  var m=p&&S.members.find(x=>x.id===p.memberId);
-  delPayment(id);delId=null;recompute();renderAll();
-  if(document.getElementById('m-hist').classList.contains('open'))renderHistory();
-  toast('Removed'+(m?' '+m.name:''),'warn');
-}
-
-function openPreview(){document.getElementById('prev-text').textContent=buildSummary();openM('m-prev');}
-function buildSummary(){
-  var target=S.rate*WEEKS.length*S.members.length,pct=target?Math.round(grand/target*100):0;
-  var t='🏝️ OLANGO ISLAND TRIP\n'+Array(41).join('=')+'\n';
-  t+='📅 '+fmt.date(WEEKS[0])+' – '+fmt.date(WEEKS[WEEKS.length-1])+'\n';
-  t+='💰 ₱'+S.rate+'/wk · Members: '+(S.members.map(m=>m.name).join(', ')||'-')+'\n';
-  t+='📱 GCash KXI '+GCASH+'\n🎯 ₱'+grand.toLocaleString()+' / ₱'+target.toLocaleString()+' ('+pct+'%)\n';
-  t+='📆 '+fmt.full(new Date())+'\n'+Array(41).join('-')+'\n';
-  S.members.forEach(m=>{var paid=totals.get(m.id)||0,tgt=S.rate*WEEKS.length,p=tgt?Math.round(paid/tgt*100):0;t+=m.name+': ₱'+paid+'/'+tgt+' ('+p+'%)\n';});
-  t+='\nGenerated '+fmt.dt(new Date())+'\n';
-  return t;
-}
-
-function copyText(text){
-  return new Promise((res)=>{
-    if(navigator.clipboard&&navigator.clipboard.writeText){
-      navigator.clipboard.writeText(text).then(()=>res(true),()=>res(fallbackCopy(text)));
-    }else res(fallbackCopy(text));
-  });
-}
-function fallbackCopy(text){
-  try{
-    var ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
-    document.body.appendChild(ta);ta.focus();ta.select();
-    var ok=document.execCommand('copy');document.body.removeChild(ta);return ok;
-  }catch(e){return false;}
-}
-function doCopy(){copyText(buildSummary()).then(ok=>toast(ok?'Copied 📋':'Copy failed',ok?'ok':'err'));}
-function copyGCash(){copyText(GCASH).then(ok=>toast(ok?'GCash copied 📱':'Copy failed',ok?'ok':'err'));}
-
-/* =========================================================
-   RENDER ALL
-   ========================================================= */
-function renderAll(){
-  try{renderHero();renderMembers();renderQP();renderTable();renderRecent();renderMiles();renderBadge();
-  var ri=document.getElementById('rate-inp');if(document.activeElement!==ri)ri.value=S.rate;}catch(e){console.error(e);}
-}
-function renderHero(){
-  var target=S.rate*WEEKS.length*S.members.length,pct=target?Math.round(grand/target*100):0;
-  var settled=0;S.members.forEach(m=>{(grid.get(m.id)||new Map()).forEach(s=>{if(s>=S.rate)settled++;});});
-  var slots=WEEKS.length*S.members.length,left=daysLeft(),cur=currentWeek();
-  document.getElementById('date-range').textContent=fmt.date(WEEKS[0])+' – '+fmt.date(WEEKS[WEEKS.length-1])+' · '+WEEKS.length+' Fridays';
-  document.getElementById('today-line').textContent='📅 Today: '+fmt.full(new Date())+' · Week '+(cur+1);
-  document.getElementById('stat-target').textContent='₱'+target.toLocaleString();
-  document.getElementById('stat-collected').textContent='₱'+grand.toLocaleString();
-  document.getElementById('stat-pct').textContent=pct+'%';
-  document.getElementById('stat-bar').style.width=Math.min(pct,100)+'%';
-  document.getElementById('badge-txt').textContent=left<=0?'🎉 Trip time!':'Week '+(cur+1)+' of '+WEEKS.length;
-  var rem=Math.max(0,target-grand);
-  var chips=[{t:'📊 '+settled+'/'+slots+' settled'},{t:'💰 ₱'+rem.toLocaleString()+' to go'}];
-  if(left>0)chips.push({t:'⏰ '+left+' days left',u:left<=14});
-  document.getElementById('hero-chips').innerHTML=chips.map(c=>'<span class="chip'+(c.u?' urgent':'')+'">'+esc(c.t)+'</span>').join('');
-}
-function renderMembers(){
-  var box=document.getElementById('mem-grid');var cur=currentWeek();
-  if(!S.members.length){box.innerHTML='<div style="grid-column:1/-1;background:#fff;border:2px dashed #cbd5e1;border-radius:16px;padding:32px;text-align:center"><div style="font-size:32px;margin-bottom:8px">👥</div><p style="font-weight:700;color:#334155">No members</p><button onclick="openMembers()" class="btn btn-vi no-print" style="margin-top:8px">+ Add Members</button></div>';return;}
-  box.innerHTML=S.members.map(m=>{
-    var t=tone(m.id),paid=totals.get(m.id)||0,tgt=S.rate*WEEKS.length,pct=tgt?Math.round(paid/tgt*100):0;
-    var sw=0;(grid.get(m.id)||new Map()).forEach(s=>{if(s>=S.rate)sw++;});
-    var last=S.payments.find(p=>p.memberId===m.id);
-    var barBg=pct>=100?'linear-gradient(90deg,#34d399,#10b981)':t.b;
-    return'<div class="mem-card"><div class="mem-hd"><div class="avatar" style="background:'+t.g+'">'+esc(m.name.charAt(0).toUpperCase())+'</div><p class="mem-name">'+esc(m.name)+'</p></div><p class="mem-paid">₱'+paid.toLocaleString()+'</p><p class="mem-of">of ₱'+tgt.toLocaleString()+'</p><div class="mem-bar"><div class="mem-bar-fill" style="width:'+Math.min(pct,100)+'%;background:'+barBg+'"></div></div><div class="mem-foot"><span class="mem-stat" style="color:'+t.a+'">'+sw+'/'+WEEKS.length+' · '+pct+'%</span><button class="mem-log no-print" style="'+t.s+'" onclick="openPay({memberId:'+m.id+',weekIndex:'+cur+'})">+ Log</button></div><p class="mem-last">'+(last?'Last: '+fmt.rel(last.createdAt):'No payments yet')+'</p></div>';
-  }).join('');
-}
-function renderQP(){
-  var sec=document.getElementById('qp-sec');
-  if(!S.members.length){sec.style.display='none';return;}sec.style.display='';
-  var cur=currentWeek();
-  document.getElementById('qp-info').textContent='Wk '+(cur+1)+' · Due '+fmt.date(WEEKS[cur]);
-  var box=document.getElementById('qp-btns');
-  var all=S.members.every(m=>((grid.get(m.id)&&grid.get(m.id).get(cur))||0)>=S.rate);
-  if(all){box.innerHTML='<div class="qp-all"><div class="emoji">🎉</div><div><div class="t">Everyone settled!</div><div class="s">Week '+(cur+1)+' is complete</div></div></div>';return;}
-  box.innerHTML=S.members.map(m=>{
-    var sum=(grid.get(m.id)&&grid.get(m.id).get(cur))||0;
-    if(sum>=S.rate)return'<span class="qp-btn done">✓ '+esc(m.name)+' · ₱'+sum+'</span>';
-    var need=Math.max(1,S.rate-sum);
-    return'<button class="qp-btn" onclick="quickPay('+m.id+','+cur+')">+ '+esc(m.name)+' · ₱'+need+(sum?' more':'')+'</button>';
-  }).join('');
-}
-function renderTable(){
-  var thead=document.getElementById('thead'),tbody=document.getElementById('tbody'),tfoot=document.getElementById('tfoot');
-  if(!S.members.length){thead.innerHTML='';tbody.innerHTML='<tr><td style="padding:32px;text-align:center;color:#94a3b8">Add members to see schedule</td></tr>';tfoot.innerHTML='';return;}
-  var h='<tr><th class="sticky-col" style="background:rgba(241,245,249,.95)">WK</th><th class="left">Due Date</th>';
-  S.members.forEach(m=>{var sn=m.name.length>7?m.name.slice(0,6)+'…':m.name;h+='<th title="'+esc(m.name)+'">'+esc(sn)+'</th>';});
-  h+='<th>Status</th><th class="right">Goal</th><th class="right">Pot</th></tr>';
-  thead.innerHTML=h;
-
-  var cur=currentWeek(),body='',pot=0;
-  for(var i=0;i<WEEKS.length;i++){
-    var past=isPast(i),now=i===cur,weekSum=0,settled=0,contrib=0;
-    S.members.forEach(m=>{var s=(grid.get(m.id)&&grid.get(m.id).get(i))||0;weekSum+=s;if(s>=S.rate)settled++;if(s>0)contrib++;});
-    pot+=weekSum;
-    var cls=now?'now':past?'past':'';
-    body+='<tr class="'+cls+'"><td class="sticky-col center wk-num" style="background:'+(now?'#f0f9ff':(i%2?'#fafbfc':'#fff'))+'">'+(i+1<10?'0':'')+(i+1)+'</td><td class="due-cell">'+fmt.date(WEEKS[i])+(now?'<span class="now-badge">Now</span>':past?'<span class="past-badge">Past</span>':'')+'</td>';
-    S.members.forEach(m=>{
-      var s=(grid.get(m.id)&&grid.get(m.id).get(i))||0;
-      var dt=dates.get(m.id)&&dates.get(m.id).get(i);
-      var cc='empty',mark='';
-      if(s>=S.rate){cc='paid';mark='✓';}else if(s>0){cc='partial';mark='~';}else if(past){cc='missed';mark='✗';}
-      var sub=s>0?'<span class="cell-amt '+(s>=S.rate?'paid':'partial')+'">₱'+s+'</span>'+(dt?'<span class="cell-dt">'+fmt.short(dt)+'</span>':''):'';
-      body+='<td class="center"><div class="cell-inner"><div class="chk '+cc+'">'+mark+'</div>'+sub+'</div></td>';
-    });
-    var st;
-    if(S.members.length&&settled===S.members.length)st='<span class="pill pill-ok">✓ DONE</span>';
-    else if(!contrib&&past)st='<span class="pill pill-miss">✗ MISS</span>';
-    else if(!contrib)st='<span class="pill pill-none">—</span>';
-    else st='<span class="pill pill-part">'+settled+'/'+S.members.length+'</span>';
-    var goal=S.rate*S.members.length;
-    body+='<td class="center">'+st+'</td><td class="right goal-cell">₱'+goal.toLocaleString()+'</td><td class="right pot-cell">₱'+pot.toLocaleString()+'</td></tr>';
-  }
-  tbody.innerHTML=body;
-
-  var target=S.rate*WEEKS.length*S.members.length;
-  var f='<tr><td class="sticky-col" style="background:#f1f5f9"></td><td class="totals-lbl">TOTALS</td>';
-  S.members.forEach(m=>{f+='<td class="center m-tot">₱'+(totals.get(m.id)||0).toLocaleString()+'</td>';});
-  f+='<td></td><td colspan="2" class="grand">₱'+grand.toLocaleString()+' / ₱'+target.toLocaleString()+'</td></tr>';
-  tfoot.innerHTML=f;
-}
-function renderRecent(){
-  var box=document.getElementById('recent');
-  var list=S.payments.slice(0,5);
-  if(!list.length){box.innerHTML='<div class="recent-empty"><div class="emoji">💸</div><p style="font-size:14px;font-weight:700;color:#475569">No payments logged yet</p><p style="font-size:12px;margin-top:4px">Click "Log Payment" to start</p></div>';return;}
-  box.innerHTML=list.map(p=>{
-    var m=S.members.find(x=>x.id===p.memberId);
-    var t=m?tone(m.id):TONES[0],conf=delId===p.id;
-    return'<div class="recent-item"><div class="recent-row"><div class="avatar" style="background:'+t.g+'">'+esc((m?m.name:'?')[0].toUpperCase())+'</div><div class="recent-body"><div class="recent-name"><p>'+esc(m?m.name:'Unknown')+'</p><span>→ Wk '+(p.weekIndex+1)+'</span></div><div class="recent-dt">🕐 '+fmt.dt(p.createdAt)+'</div><div class="recent-rel">'+fmt.rel(p.createdAt)+(p.note?' · "'+esc(p.note)+'"':'')+'</div></div><div class="recent-actions no-print"><span class="recent-amt">+₱'+p.amount+'</span><button class="icon-btn edit" onclick=\'openPay({editing:'+JSON.stringify(p).replace(/'/g,'&#39;').replace(/"/g,'&quot;')+'})\'>✎</button><button class="icon-btn del" onclick="delId='+p.id+';renderRecent();renderHistory()">✕</button></div></div>'+(conf?'<div class="confirm-bar no-print"><span>Delete this payment?</span><div class="confirm-bar-btns"><button class="confirm-yes" onclick="confirmDel('+p.id+')">Delete</button><button class="confirm-no" onclick="delId=null;renderRecent();renderHistory()">Cancel</button></div></div>':'')+'</div>';
-  }).join('');
-}
-function renderMiles(){
-  var marks=[0.25,0.5,0.75,1].map(f=>Math.max(1,Math.ceil(WEEKS.length*f)));
-  var labels=['25% Mark','Halfway 🎯','75% — Almost!','🎉 Trip Ready!'];
-  document.getElementById('ms-list').innerHTML=marks.map((wk,i)=>{
-    var tgt=S.rate*S.members.length*wk,ok=grand>=tgt&&tgt>0;
-    return'<li><span class="ms-check '+(ok?'ok':'pending')+'">'+(ok?'✓':'○')+'</span><span><b>Wk '+wk+' ('+fmt.short(WEEKS[Math.min(wk-1,WEEKS.length-1)])+'):</b> ₱'+tgt.toLocaleString()+' — '+labels[i]+'</span></li>';
-  }).join('');
-}
-function renderBadge(){
-  var b=document.getElementById('hist-badge'),n=S.payments.length;
-  if(n>0){b.textContent=n>99?'99+':n;b.style.display='inline';}else b.style.display='none';
-}
-
-/* =========================================================
-   8. STARTUP & EVENT LISTENERS
-   ========================================================= */
-function init(){
-  try{
-    initFirebase();
-    var ri=document.getElementById('rate-inp');
-    ri.addEventListener('change',()=>{saveRate(ri.value);});
-    ri.addEventListener('blur',()=>{saveRate(ri.value);});
-  }catch(e){
-    console.error('Init error:',e);
-    fallbackToLocal();
-  }
-}
-
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
-else init();
-
-setInterval(()=>{try{renderHero();renderTable();renderQP();renderRecent();}catch(e){}},60000);
 </script>
 </body>
 </html>
