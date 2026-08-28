@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#0284c7">
-    <title>🏝️ Olango Trip — Live Cloud Tracker</title>
+    <meta name="theme-color" content="#0ea5e9">
+    <title>🏝️ Olango Trip Tracker</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏝️</text></svg>">
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -13,176 +14,299 @@
 
     <style>
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-        :root{--primary:#0284c7;--radius-lg:20px;--radius-md:14px}
-        html,body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f1f5f9;color:#1e293b;line-height:1.5;-webkit-font-smoothing:antialiased}
-        button{font:inherit;cursor:pointer;border:none;background:none;color:inherit;transition:all .15s ease}
+        :root{
+            --bg:#fdfaf6;--card:#ffffff;--text:#27272a;--text-soft:#52525b;--text-faint:#a1a1aa;
+            --border:#e4e4e7;--border-soft:#f4f4f5;
+            --primary:#0ea5e9;--primary-dk:#0284c7;--primary-lt:#e0f2fe;
+            --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--late:#8b5cf6;
+            --shadow:0 4px 12px rgba(0,0,0,.03);--shadow-lg:0 12px 32px rgba(0,0,0,.06);
+            --radius:18px;--radius-lg:24px;
+        }
+        html,body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;}
+        button{font:inherit;cursor:pointer;border:none;background:none;color:inherit;transition:all .2s ease}
         input,select{font:inherit;color:inherit}
         input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
         input[type=number]{-moz-appearance:textfield}
-        ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px}
+        ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#d4d4d8;border-radius:99px}
 
-        #loader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);transition:opacity .35s ease,visibility .35s ease}
+        #loader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#f0f9ff,#ffedd5);transition:opacity .35s,visibility .35s}
         #loader.hide{opacity:0;visibility:hidden;pointer-events:none}
-        #loader .logo{font-size:52px;animation:bounce 1.6s infinite}
-        @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+        #loader .logo{font-size:64px;animation:float 2s ease-in-out infinite}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 
-        .wrap{max-width:1140px;margin:0 auto;padding:16px 12px 120px}
+        .wrap{max-width:1200px;margin:0 auto;padding:12px 12px 100px}
         @media(min-width:640px){.wrap{padding:24px 20px 60px}}
 
-        .hero{position:relative;overflow:hidden;border-radius:var(--radius-lg);background:linear-gradient(135deg,#0369a1 0%,#0e7490 50%,#047857 100%);color:#fff;padding:22px 20px;box-shadow:0 16px 36px -10px rgba(14,116,144,.35);margin-bottom:16px}
-        @media(min-width:640px){.hero{padding:32px 28px}}
-        .hero::before{content:"";position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.08)}
-        .hero-grid{position:relative;display:flex;flex-direction:column;gap:20px;justify-content:space-between}
-        @media(min-width:900px){.hero-grid{flex-direction:row;align-items:center}}
+        .hero{position:relative;overflow:hidden;border-radius:var(--radius-lg);background:linear-gradient(135deg,#0284c7 0%,#0d9488 50%,#10b981 100%);color:#fff;padding:26px 24px;box-shadow:0 20px 40px -12px rgba(13,148,136,.4);margin-bottom:16px}
+        @media(min-width:640px){.hero{padding:36px 32px}}
+        .hero::before{content:"";position:absolute;top:-80px;right:-80px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.1);backdrop-filter:blur(4px)}
+        .hero::after{content:"";position:absolute;bottom:-120px;left:-60px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,.06)}
+        .hero-grid{position:relative;display:flex;flex-direction:column;gap:24px;z-index:2}
+        @media(min-width:900px){.hero-grid{flex-direction:row;align-items:center;justify-content:space-between}}
         .badge-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-        .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
-        .cloud-badge{font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em;display:inline-flex;align-items:center;gap:5px}
-        .cloud-badge.live{background:rgba(16,185,129,.25);border:1px solid rgba(52,211,153,.5);color:#a7f3d0}
-        .cloud-badge.local{background:rgba(245,158,11,.25);border:1px solid rgba(251,191,36,.5);color:#fde68a}
-        .hero h1{font-size:26px;font-weight:900;line-height:1.2;margin-top:10px;letter-spacing:-.02em}
-        @media(min-width:640px){.hero h1{font-size:32px}}
-        .hero .sub{color:#e0f2fe;font-size:13px;font-weight:500;margin-top:4px}
-        .target-box{background:rgba(15,23,42,.38);border:1px solid rgba(255,255,255,.2);border-radius:18px;padding:20px;min-width:260px;backdrop-filter:blur(12px)}
-        .target-box .lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#bae6fd}
-        .target-box .amt{font-size:30px;font-weight:900;margin-top:2px;letter-spacing:-.02em}
-        .target-box .col{font-size:13px;margin-top:4px;color:#e0f2fe}
-        .target-box .col b{color:#6ee7b7;font-weight:800}
-        .progress-bar-wrap{height:10px;background:rgba(255,255,255,.18);border-radius:999px;overflow:hidden;margin-top:10px}
-        .progress-bar-fill{height:100%;background:linear-gradient(90deg,#34d399,#22d3ee);border-radius:999px;transition:width .6s ease}
+        .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;backdrop-filter:blur(4px)}
+        .badge-dot{width:6px;height:6px;background:#bef264;border-radius:50%;animation:pulse 2s infinite}
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+        .cloud-badge{font-size:10px;font-weight:800;padding:5px 12px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em;backdrop-filter:blur(4px)}
+        .cloud-badge.live{background:rgba(16,185,129,.3);color:#d1fae5;border:1px solid rgba(52,211,153,.5)}
+        .cloud-badge.local{background:rgba(245,158,11,.3);color:#fef3c7;border:1px solid rgba(251,191,36,.5)}
+        .cloud-badge.saving{background:rgba(59,130,246,.3);color:#dbeafe;border:1px solid rgba(147,197,253,.5)}
+        .hero h1{font-size:28px;font-weight:900;line-height:1.15;margin-top:12px;letter-spacing:-.02em}
+        @media(min-width:640px){.hero h1{font-size:36px}}
+        .hero .sub{color:#ccfbf1;font-size:14px;margin-top:4px}
+        .live-clock{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:6px 14px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.15);border-radius:12px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:#fff;backdrop-filter:blur(4px)}
+        .live-clock .dot{width:6px;height:6px;background:#4ade80;border-radius:50%;animation:pulse 1s infinite}
+        .hero-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+        .hero-chip{padding:6px 14px;border-radius:999px;background:rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.2);font-size:11px;font-weight:700;backdrop-filter:blur(4px)}
+        .hero-chip.urgent{background:rgba(239,68,68,.35);border-color:rgba(252,165,165,.5)}
+        .hero-chip.success{background:rgba(16,185,129,.35);border-color:rgba(110,231,183,.5)}
 
-        .toolbar{position:sticky;top:10px;z-index:30;background:rgba(255,255,255,.85);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.7);border-radius:var(--radius-md);padding:8px;margin-bottom:16px;box-shadow:0 4px 14px rgba(15,23,42,.06);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-        .btn{padding:8px 14px;border-radius:10px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-        .btn:active{transform:scale(.96)}
-        .btn-primary{background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;box-shadow:0 3px 10px rgba(14,165,233,.35)}
-        .btn-secondary{background:#fff;border:1px solid #cbd5e1;color:#334155}
+        .target-box{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.25);border-radius:24px;padding:24px;min-width:300px;backdrop-filter:blur(16px);box-shadow:0 10px 24px rgba(0,0,0,.1)}
+        .target-box .lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#ccfbf1}
+        .target-box .amt{font-size:36px;font-weight:900;margin-top:4px;letter-spacing:-.02em;line-height:1}
+        .target-box .col{font-size:14px;margin-top:8px;color:#f1f5f9}
+        .target-box .col b{color:#6ee7b7;font-weight:800}
+        .progress-wrap{height:12px;background:rgba(255,255,255,.2);border-radius:999px;overflow:hidden;margin-top:14px;box-shadow:inset 0 2px 4px rgba(0,0,0,.1)}
+        .progress-fill{height:100%;background:linear-gradient(90deg,#34d399,#6ee7b7);border-radius:999px;transition:width 1s cubic-bezier(0.4,0,0.2,1);position:relative;overflow:hidden}
+        .progress-fill::after{content:"";position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:shimmer 2s infinite}
+        @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+        .countdown{margin-top:16px;padding:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:14px}
+        .countdown-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#fde68a;margin-bottom:4px}
+        .countdown-val{font-size:16px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
+
+        .toolbar{position:sticky;top:10px;z-index:30;background:rgba(255,255,255,.9);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.6);border-radius:18px;padding:10px;margin-bottom:16px;box-shadow:0 8px 24px rgba(0,0,0,.04);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+        .btn{padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+        .btn:active{transform:scale(.95)}
+        .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dk));color:#fff;box-shadow:0 4px 12px rgba(14,165,233,.3)}
+        .btn-primary:hover{box-shadow:0 6px 16px rgba(14,165,233,.4);transform:translateY(-1px)}
+        .btn-secondary{background:var(--card);border:1px solid var(--border);color:var(--text)}
+        .btn-secondary:hover{background:var(--border-soft)}
         .btn-success{background:#ecfdf5;border:1px solid #a7f3d0;color:#047857}
         .btn-danger{background:#fef2f2;border:1px solid #fecaca;color:#dc2626}
+        .btn-late{background:#f5f3ff;border:1px solid #ddd6fe;color:#6d28d9}
         .spacer{flex:1}
+        .btn-icon{width:38px;height:38px;border-radius:12px;padding:0;justify-content:center;font-size:16px}
 
-        .payments-channel-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:16px}
-        @media(min-width:640px){.payments-channel-grid{grid-template-columns:1fr 1fr}}
-        .pay-card{color:#fff;border-radius:var(--radius-lg);padding:16px 18px;position:relative;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);display:flex;flex-direction:column;justify-content:space-between}
-        .pay-card.gcash{background:linear-gradient(135deg,#0056b3 0%,#0077ff 60%,#00b4d8 100%)}
-        .pay-card.maribank{background:linear-gradient(135deg,#ea580c 0%,#f97316 50%,#fb923c 100%)}
-        .pay-tag{background:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;display:inline-block}
-        .pay-card.gcash .pay-tag{color:#0056b3}.pay-card.maribank .pay-tag{color:#ea580c}
-        .pay-acc-lbl{font-size:11px;margin-top:6px;color:rgba(255,255,255,.8)}
-        .pay-acc-name{font-weight:800;font-size:13px;color:#fff}
-        .pay-num-btn{font-size:21px;font-weight:900;letter-spacing:.03em;color:#fff;text-align:left;margin:4px 0 10px;word-break:break-all}
-        .pay-copy-btn{padding:6px 12px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:8px;font-size:11px;font-weight:800;color:#fff;align-self:flex-start}
+        .pay-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:16px}
+        @media(min-width:640px){.pay-grid{grid-template-columns:1fr 1fr}}
+        .pay-card{color:#fff;border-radius:var(--radius-lg);padding:20px 24px;position:relative;overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;justify-content:space-between}
+        .pay-card.gcash{background:linear-gradient(135deg,#0284c7 0%,#2563eb 100%)}
+        .pay-card.mari{background:linear-gradient(135deg,#ea580c 0%,#f59e0b 100%)}
+        .pay-card::before{content:"";position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.1);backdrop-filter:blur(4px)}
+        .pay-tag{background:#fff;font-size:11px;font-weight:900;padding:4px 12px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;display:inline-block;position:relative}
+        .pay-card.gcash .pay-tag{color:#0284c7}.pay-card.mari .pay-tag{color:#ea580c}
+        .pay-acc-lbl{font-size:12px;margin-top:12px;color:rgba(255,255,255,.9);position:relative}
+        .pay-acc-name{font-weight:800;font-size:14px;color:#fff}
+        .pay-num{font-size:26px;font-weight:900;letter-spacing:.03em;color:#fff;text-align:left;margin:6px 0 16px;position:relative}
+        .pay-copy{padding:8px 16px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:12px;font-size:12px;font-weight:800;color:#fff;align-self:flex-start;position:relative}
+        .pay-copy:hover{background:rgba(255,255,255,.3)}
 
-        .card{background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-lg);padding:20px;box-shadow:0 2px 6px rgba(0,0,0,.02);margin-bottom:16px}
-        .sec-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-        .sec-title h2{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
-        .sec-title h2::before{content:"";width:4px;height:18px;border-radius:99px;background:#0284c7}
-        .member-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
+        .sec-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+        .sec-title h2{font-size:16px;font-weight:800;display:flex;align-items:center;gap:10px}
+        .sec-title h2::before{content:"";width:5px;height:20px;border-radius:99px;background:var(--primary)}
+
+        .member-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px}
         @media(min-width:768px){.member-grid{grid-template-columns:repeat(4,1fr)}}
-        .mem-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .15s,box-shadow .15s}
-        .mem-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.05)}
-        .mem-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-        .avatar{width:34px;height:34px;border-radius:10px;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-        .mem-name{font-size:13px;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .mem-amt{font-size:20px;font-weight:900;color:#0f172a}
-        .mem-sub{font-size:10px;font-weight:600;color:#64748b}
+        .mem-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s,border-color .2s}
+        .mem-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--primary-lt)}
+        .mem-card.complete{border-color:var(--success);background:#f0fdf4}
+        .mem-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+        .avatar{width:40px;height:40px;border-radius:12px;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+        .mem-name{font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+        .mem-status{font-size:10px;font-weight:800;padding:3px 8px;border-radius:8px}
+        .mem-status.done{background:#d1fae5;color:#047857}
+        .mem-status.behind{background:#fee2e2;color:#dc2626}
+        .mem-status.ahead{background:#dbeafe;color:#1d4ed8}
+        .mem-status.ontrack{background:#fef3c7;color:#b45309}
+        .mem-amt{font-size:24px;font-weight:900;color:var(--text);letter-spacing:-.02em}
+        .mem-sub{font-size:11px;font-weight:600;color:var(--text-soft);margin-top:2px}
+        .mem-missed-info{font-size:10px;font-weight:700;color:var(--danger);margin-top:4px;background:#fef2f2;padding:2px 8px;border-radius:6px;display:inline-block}
+        .mem-bar{height:8px;background:var(--border-soft);border-radius:99px;overflow:hidden;margin-top:12px}
+        .mem-bar-fill{height:100%;border-radius:99px;transition:width .6s ease-out}
+        .mem-actions{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
+        .quick-btn{flex:1;padding:8px;background:var(--primary-lt);color:var(--primary-dk);border-radius:10px;font-size:12px;font-weight:800;min-width:80px}
+        .quick-btn:hover{background:var(--primary);color:#fff}
+        .quick-btn.done{background:#d1fae5;color:#047857;cursor:default}
+        .quick-btn.late-pay{background:#f5f3ff;color:#6d28d9;flex:none;padding:8px 10px}
+        .quick-btn.late-pay:hover{background:var(--late);color:#fff}
 
-        .tbl-card{background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px}
+        .tbl-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow)}
+        .tbl-hd{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);background:#fff}
+        .tbl-hd h2{font-size:15px;font-weight:800}
         .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-        table{width:100%;min-width:620px;border-collapse:collapse}
-        th{background:#f8fafc;padding:10px 8px;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #e2e8f0;text-align:center}
-        td{padding:10px 8px;font-size:12px;border-bottom:1px solid #f1f5f9;text-align:center}
-        tr.now-row{background:rgba(2,132,199,.06);border-left:3px solid #0284c7}
-        .chk-pill{display:inline-flex;align-items:center;justify-content:center;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:800}
-        .chk-pill.paid{background:#d1fae5;color:#047857}.chk-pill.part{background:#fef3c7;color:#b45309}.chk-pill.none{background:#f1f5f9;color:#94a3b8}
+        table{width:100%;min-width:680px;border-collapse:collapse}
+        th{background:var(--bg);padding:12px 10px;font-size:11px;font-weight:800;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap}
+        td{padding:10px 8px;font-size:13px;border-bottom:1px solid var(--border-soft);text-align:center}
+        tbody tr:hover{background:var(--bg)}
+        tr.now-row{background:rgba(14,165,233,.08)!important;border-left:4px solid var(--primary)}
+        tr.past-row{opacity:.85}
+        tr.future-row{opacity:.9}
+        .chk-pill{display:inline-flex;padding:5px 9px;border-radius:8px;font-size:11px;font-weight:800;gap:3px;cursor:pointer;transition:transform .1s;align-items:center}
+        .chk-pill:hover{transform:scale(1.05)}
+        .chk-pill.paid{background:#d1fae5;color:#047857}
+        .chk-pill.late{background:#ede9fe;color:#6d28d9}
+        .chk-pill.part{background:#fef3c7;color:#b45309}
+        .chk-pill.miss{background:#fee2e2;color:#dc2626}
+        .chk-pill.none{background:var(--border-soft);color:var(--text-faint)}
+        .chk-pill.pending{background:#e0e7ff;color:#4338ca}
+        .chk-pill.add-btn{background:var(--primary-lt);color:var(--primary-dk);font-weight:900}
+        .chk-pill.add-btn:hover{background:var(--primary);color:#fff}
+        tfoot tr{background:var(--bg);font-weight:900}
+        tfoot td{padding:14px 10px;border-top:2px solid var(--border)}
+        .now-badge{display:inline-block;margin-left:6px;padding:3px 8px;background:var(--primary);color:#fff;font-size:9px;font-weight:900;border-radius:99px;text-transform:uppercase;letter-spacing:.05em;animation:pulse 2s infinite}
+        .past-badge{margin-left:6px;font-size:9px;color:var(--text-faint);font-weight:700}
+        .future-badge{margin-left:6px;font-size:9px;color:#6366f1;font-weight:700}
 
-        .recent-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:8px}
-        .recent-meta{font-size:11px;color:#64748b}
+        .recent-item{display:flex;align-items:center;gap:12px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;transition:transform .2s}
+        .recent-item:hover{transform:translateX(4px);border-color:var(--primary-lt)}
+        .recent-body{flex:1;min-width:0}
+        .recent-name{font-weight:800;font-size:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+        .recent-meta{font-size:12px;color:var(--text-soft);margin-top:2px}
+        .recent-amt{font-weight:900;color:var(--success);font-size:16px}
+        .tag-late{background:#ede9fe;color:#6d28d9;font-size:9px;font-weight:900;padding:2px 6px;border-radius:6px;letter-spacing:.05em}
+        .icon-btn{width:34px;height:34px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;background:var(--bg);flex-shrink:0}
+        .icon-btn.edit{color:#b45309}.icon-btn.edit:hover{background:#fef3c7}
+        .icon-btn.del{color:#dc2626}.icon-btn.del:hover{background:#fee2e2}
 
-        .modal{position:fixed;inset:0;z-index:100;display:none}.modal.open{display:block}
-        .modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px)}
-        .modal-box{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
-        @media(min-width:640px){.modal-box{align-items:center;padding:20px}}
-        .modal-content{pointer-events:auto;width:100%;max-width:480px;max-height:90vh;background:#fff;border-radius:20px 20px 0 0;overflow-y:auto;display:flex;flex-direction:column;box-shadow:0 -10px 30px rgba(0,0,0,.2);animation:slideUp .2s ease}
-        @media(min-width:640px){.modal-content{border-radius:20px}}
-        @keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
-        .modal-head{padding:16px 20px;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:space-between}
-        .modal-body{padding:20px;display:flex;flex-direction:column;gap:14px}
-        .form-group label{display:block;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;margin-bottom:5px}
-        .form-group input,.form-group select{width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;font-weight:600;background:#f8fafc}
-        .form-group input:focus,.form-group select:focus{border-color:#0284c7;outline:none;background:#fff}
+        .modal{position:fixed;inset:0;z-index:100;display:none}
+        .modal.open{display:block}
+        .modal-bg{position:absolute;inset:0;background:rgba(15,23,42,.4);backdrop-filter:blur(8px);animation:fadein .2s}
+        @keyframes fadein{from{opacity:0}to{opacity:1}}
+        .modal-wrap{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
+        @media(min-width:640px){.modal-wrap{align-items:center;padding:20px}}
+        .modal-content{pointer-events:auto;width:100%;max-width:520px;max-height:92vh;background:var(--card);border-radius:24px 24px 0 0;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 -20px 40px rgba(0,0,0,.15);animation:slideup .3s cubic-bezier(.16,1,.3,1)}
+        @media(min-width:640px){.modal-content{border-radius:24px}}
+        .modal-content.lg{max-width:680px}
+        @keyframes slideup{from{transform:translateY(50px);opacity:0}to{transform:translateY(0);opacity:1}}
+        .modal-hd{padding:18px 24px;background:linear-gradient(135deg,var(--primary),var(--primary-dk));color:#fff;display:flex;align-items:center;justify-content:space-between}
+        .modal-hd h3{font-size:18px;font-weight:800}
+        .modal-hd p{font-size:12px;opacity:.9;margin-top:2px}
+        .modal-x{width:34px;height:34px;background:rgba(255,255,255,.2);border-radius:50%;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center}
+        .modal-body{padding:24px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+        .form-group label{display:block;font-size:12px;font-weight:700;color:var(--text-soft);text-transform:uppercase;margin-bottom:8px;letter-spacing:.04em}
+        .form-group input,.form-group select{width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:14px;font-size:15px;font-weight:600;background:var(--bg);color:var(--text)}
+        .form-group input:focus,.form-group select:focus{border-color:var(--primary);outline:none;background:#fff}
+        .amt-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+        .amt-chip{padding:6px 14px;background:var(--primary-lt);color:var(--primary-dk);border-radius:10px;font-size:12px;font-weight:800}
+        .amt-chip:hover{background:var(--primary);color:#fff}
+        .auto-box{border-radius:16px;padding:14px;display:flex;gap:14px;align-items:center}
+        .auto-box.now{background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd}
+        .auto-box.late{background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:1px solid #ddd6fe}
+        .auto-box.edit{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a}
+        .auto-ic{width:42px;height:42px;color:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+        .auto-box.now .auto-ic{background:var(--primary)}
+        .auto-box.late .auto-ic{background:var(--late)}
+        .auto-box.edit .auto-ic{background:var(--warning)}
+        .auto-info-lbl{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+        .auto-box.now .auto-info-lbl{color:var(--primary-dk)}
+        .auto-box.late .auto-info-lbl{color:#6d28d9}
+        .auto-box.edit .auto-info-lbl{color:#b45309}
+        .auto-info-val{font-size:14px;font-weight:800;color:var(--text);margin-top:2px}
+        .auto-info-sub{font-size:12px;color:var(--text-soft);margin-top:2px}
 
-        .toast-box{position:fixed;bottom:24px;right:24px;z-index:9999;pointer-events:none}
-        .toast{background:#0f172a;color:#fff;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 10px 24px rgba(0,0,0,.3);margin-top:8px;animation:slideUp .2s ease}
-        .fab{position:fixed;bottom:20px;right:20px;z-index:50;width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,#0284c7,#06b6d4);color:#fff;font-size:26px;font-weight:900;box-shadow:0 10px 20px rgba(2,132,199,.4);display:flex;align-items:center;justify-content:center}
+        .toggle-row{display:flex;gap:8px;padding:4px;background:var(--bg);border-radius:12px;border:1px solid var(--border)}
+        .toggle-opt{flex:1;padding:8px;text-align:center;font-size:12px;font-weight:800;border-radius:8px;color:var(--text-soft);cursor:pointer}
+        .toggle-opt.active{background:#fff;color:var(--text);box-shadow:var(--shadow)}
+        .toggle-opt.late.active{background:#ede9fe;color:#6d28d9}
+
+        .toast-box{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;pointer-events:none}
+        @media(min-width:640px){.toast-box{bottom:30px;right:30px;left:auto;transform:none}}
+        .toast{background:#18181b;color:#fff;padding:14px 20px;border-radius:14px;font-size:14px;font-weight:600;box-shadow:0 12px 28px rgba(0,0,0,.2);margin-top:10px;animation:slideup .3s}
+        .toast.err{background:#dc2626}
+        .toast.warn{background:#d97706}
+        .toast.late{background:var(--late)}
+
+        .fab{position:fixed;bottom:24px;right:24px;z-index:50;width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,var(--primary),var(--primary-dk));color:#fff;font-size:32px;font-weight:900;box-shadow:0 12px 28px rgba(14,165,233,.4);display:flex;align-items:center;justify-content:center}
+        .fab:active{transform:scale(.9)}
         @media(min-width:640px){.fab{display:none}}
+
+        .empty{text-align:center;padding:40px 20px;color:var(--text-faint)}
+        .empty .emo{font-size:48px;margin-bottom:12px}
+
+        .save-indicator{position:fixed;bottom:24px;left:24px;z-index:50;padding:6px 12px;background:#10b981;color:#fff;border-radius:99px;font-size:11px;font-weight:800;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;box-shadow:0 8px 20px rgba(16,185,129,.3)}
+        .save-indicator.show{opacity:1;transform:translateY(0)}
     </style>
 </head>
+
 <body>
     <div id="loader">
-        <div class="logo">🏝️</div>
-        <p style="margin-top:12px;font-weight:700;color:#475569;">Connecting to Realtime Cloud…</p>
-        <p style="margin-top:6px;font-size:12px;color:#94a3b8;">If this takes too long, Local Mode will start automatically</p>
+        <div class="logo">🌴</div>
+        <p style="margin-top:16px;font-weight:800;color:var(--text-soft);font-size:16px;">Connecting to Island Cloud…</p>
+        <p style="margin-top:6px;font-size:12px;color:var(--text-faint);">Local Mode auto-starts if offline</p>
     </div>
+
     <div class="toast-box" id="toast-box"></div>
+    <div class="save-indicator" id="save-indicator">✓ Saved to cloud</div>
 
     <div class="wrap">
         <header class="hero">
             <div class="hero-grid">
                 <div>
                     <div class="badge-row">
-                        <div class="badge"><span id="badge-txt">Active Cycle</span></div>
-                        <div id="cloud-badge" class="cloud-badge local">● Connecting...</div>
+                        <div class="badge"><span class="badge-dot"></span><span id="badge-txt">Loading…</span></div>
+                        <div id="cloud-badge" class="cloud-badge local">● Connecting…</div>
                     </div>
-                    <h1 id="trip-title-display">🏝️ Olango Island Trip</h1>
-                    <p class="sub" id="trip-date-range">Calculating dates...</p>
+                    <h1 id="trip-title">🌴 Olango Trip</h1>
+                    <p class="sub" id="trip-range">Loading…</p>
+                    <div class="live-clock"><span class="dot"></span>🇵🇭 <span id="live-clock">--</span> Manila</div>
+                    <div class="hero-chips" id="hero-chips"></div>
                 </div>
                 <div class="target-box">
-                    <p class="lbl">Trip Target Fund</p>
+                    <p class="lbl">Total Trip Fund</p>
                     <p class="amt" id="stat-target">₱0</p>
-                    <p class="col">Collected: <b id="stat-collected">₱0</b> (<span id="stat-pct">0%</span>)</p>
-                    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="stat-bar" style="width:0%"></div></div>
+                    <p class="col">Collected: <b id="stat-collected">₱0</b> · <span id="stat-pct">0%</span></p>
+                    <div class="progress-wrap"><div class="progress-fill" id="stat-bar" style="width:0%"></div></div>
+                    <div class="countdown">
+                        <div class="countdown-lbl">⏰ This week's deadline</div>
+                        <div class="countdown-val" id="countdown-val">--</div>
+                    </div>
                 </div>
             </div>
         </header>
 
         <div class="toolbar">
-            <button class="btn btn-primary" onclick="openPaymentModal()">+ Log Payment</button>
+            <button class="btn btn-primary" onclick="openPayment()">＋ Log Payment</button>
+            <button class="btn btn-late" onclick="openPayment(null,true)">⏰ Late Pay</button>
+            <button class="btn btn-secondary" onclick="openModal('m-history')">📜 History</button>
             <button class="btn btn-secondary" onclick="openModal('m-members')">👥 Members</button>
             <button class="btn btn-secondary" onclick="openModal('m-settings')">⚙️ Settings</button>
-            <button class="btn btn-success" onclick="copyMessengerSummary()">📋 Copy for GC</button>
             <div class="spacer"></div>
-            <button class="btn btn-secondary" onclick="exportBackup()" title="Download Backup">💾 Backup</button>
-            <button class="btn btn-danger" onclick="promptReset()" title="Reset All Data">↺</button>
+            <button class="btn btn-success" onclick="copyMessengerSummary()">📋 Copy for GC</button>
+            <button class="btn btn-secondary btn-icon" onclick="exportBackup()" title="Backup">💾</button>
+            <button class="btn btn-secondary btn-icon" onclick="importBackup()" title="Restore">📤</button>
+            <button class="btn btn-danger btn-icon" onclick="promptReset()" title="Reset">↺</button>
         </div>
 
-        <div class="payments-channel-grid">
+        <div class="pay-grid">
             <div class="pay-card gcash">
-                <div>
+                <div style="position:relative;">
                     <span class="pay-tag">GCash</span>
                     <p class="pay-acc-lbl">Account Name: <span class="pay-acc-name" id="gcash-name">KXI</span></p>
-                    <button class="pay-num-btn" id="gcash-num" onclick="copyGCash()">0993 933 6295</button>
+                    <button class="pay-num" id="gcash-num" onclick="copyGCash()">0993 933 6295</button>
                 </div>
-                <button class="pay-copy-btn" onclick="copyGCash()">📋 Copy GCash</button>
+                <button class="pay-copy" onclick="copyGCash()">📋 Copy GCash</button>
             </div>
-            <div class="pay-card maribank">
-                <div>
+            <div class="pay-card mari">
+                <div style="position:relative;">
                     <span class="pay-tag">MariBank</span>
-                    <p class="pay-acc-lbl">Account Name: <span class="pay-acc-name" id="maribank-name">KXI</span></p>
-                    <button class="pay-num-btn" id="maribank-num" onclick="copyMariBank()">13397715774</button>
+                    <p class="pay-acc-lbl">Account Name: <span class="pay-acc-name" id="mari-name">KXI</span></p>
+                    <button class="pay-num" id="mari-num" onclick="copyMari()">13397715774</button>
                 </div>
-                <button class="pay-copy-btn" onclick="copyMariBank()">📋 Copy MariBank</button>
+                <button class="pay-copy" onclick="copyMari()">📋 Copy MariBank</button>
             </div>
         </div>
 
         <div class="sec-title">
             <h2>Member Balances</h2>
-            <button class="btn btn-secondary" style="padding:4px 10px;font-size:11px" onclick="openModal('m-members')">Manage →</button>
+            <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="openModal('m-members')">Manage →</button>
         </div>
         <div class="member-grid" id="member-grid"></div>
 
         <div class="tbl-card">
-            <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">
-                <h2 style="font-size:14px;font-weight:800;">📅 Weekly Schedule & Matrix</h2>
-                <span style="font-size:11px;color:#64748b;font-weight:700;">Live Auto Sync</span>
+            <div class="tbl-hd">
+                <h2>📅 Weekly Checklist</h2>
+                <span style="font-size:11px;color:var(--text-soft);font-weight:700;">Tap any cell to log · Manila Time</span>
             </div>
             <div class="tbl-scroll">
                 <table>
@@ -196,80 +320,125 @@
         <div class="card">
             <div class="sec-title">
                 <h2>Recent Payments</h2>
-                <span id="recent-count" style="font-size:11px;color:#64748b;font-weight:700;">0 payments</span>
+                <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="openModal('m-history')">View All →</button>
             </div>
             <div id="recent-list"></div>
         </div>
     </div>
 
-    <button class="fab" onclick="openPaymentModal()">+</button>
+    <button class="fab" onclick="openPayment()" aria-label="Log payment">+</button>
 
-    <!-- PAYMENT MODAL -->
+    <!-- Payment Modal -->
     <div class="modal" id="m-payment">
-        <div class="modal-backdrop" onclick="closeModal('m-payment')"></div>
-        <div class="modal-box">
+        <div class="modal-bg" onclick="closeModal('m-payment')"></div>
+        <div class="modal-wrap">
             <div class="modal-content">
-                <div class="modal-head"><h3>Log a Payment</h3><button onclick="closeModal('m-payment')">✕</button></div>
-                <form class="modal-body" onsubmit="handlePaymentSubmit(event)">
-                    <div class="form-group"><label>Member</label><select id="pay-member" required></select></div>
-                    <div class="form-group"><label>Week To Credit</label><select id="pay-week" required></select></div>
-                    <div class="form-group"><label>Amount (₱)</label><input type="number" id="pay-amount" min="1" required></div>
-                    <div class="form-group"><label>Note / Ref (Optional)</label><input type="text" id="pay-note" placeholder="e.g. GCash #1234 or MariBank"></div>
-                    <button type="submit" class="btn btn-primary" style="padding:12px;font-size:14px;justify-content:center;">Save Payment</button>
+                <div class="modal-hd" id="pay-modal-hd">
+                    <div><h3 id="pay-title">Log a Payment</h3><p id="pay-sub">Auto-detected</p></div>
+                    <button class="modal-x" onclick="closeModal('m-payment')">✕</button>
+                </div>
+                <form class="modal-body" onsubmit="submitPayment(event)">
+                    <input type="hidden" id="edit-id">
+                    <div class="auto-box now" id="auto-box">
+                        <div class="auto-ic" id="auto-ic">📅</div>
+                        <div>
+                            <div class="auto-info-lbl" id="auto-lbl">Current Manila Time</div>
+                            <div class="auto-info-val" id="auto-date">--</div>
+                            <div class="auto-info-sub" id="auto-week">--</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Type</label>
+                        <div class="toggle-row">
+                            <div class="toggle-opt active" id="tgl-normal" onclick="setPayType('normal')">On-time / Advance</div>
+                            <div class="toggle-opt late" id="tgl-late" onclick="setPayType('late')">⏰ Late Payment</div>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>Who Paid?</label><select id="pay-member" required></select></div>
+                    <div class="form-group"><label>For Which Week?</label><select id="pay-week" required onchange="onWeekChange()"></select></div>
+                    <div class="form-group">
+                        <label>Amount (₱) <span style="color:var(--text-faint);font-weight:600;text-transform:none">— Full, partial, or custom</span></label>
+                        <input type="number" id="pay-amount" min="1" required inputmode="numeric" placeholder="e.g. 30">
+                        <div class="amt-chips" id="amt-chips"></div>
+                    </div>
+                    <div class="form-group"><label>Note / Reference (Optional)</label><input type="text" id="pay-note" placeholder="e.g. GCash Ref #1234 or 'catch-up'" maxlength="120"></div>
+                    <button type="submit" class="btn btn-primary" style="padding:16px;font-size:15px;justify-content:center;" id="pay-submit">✓ Save Payment</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- MEMBERS MODAL -->
+    <!-- Members Modal -->
     <div class="modal" id="m-members">
-        <div class="modal-backdrop" onclick="closeModal('m-members')"></div>
-        <div class="modal-box">
+        <div class="modal-bg" onclick="closeModal('m-members')"></div>
+        <div class="modal-wrap">
             <div class="modal-content">
-                <div class="modal-head"><h3>Manage Members</h3><button onclick="closeModal('m-members')">✕</button></div>
+                <div class="modal-hd" style="background:linear-gradient(135deg,#0d9488,#14b8a6);">
+                    <div><h3>Manage Members</h3><p>Add or remove barkada</p></div>
+                    <button class="modal-x" onclick="closeModal('m-members')">✕</button>
+                </div>
                 <div class="modal-body">
-                    <div id="members-list-ui"></div>
-                    <div style="display:flex;gap:8px;margin-top:10px;">
-                        <input type="text" id="new-member-name" placeholder="New member name..." style="flex:1;padding:8px 12px;border:2px solid #cbd5e1;border-radius:10px;">
-                        <button class="btn btn-primary" onclick="handleAddMember()">Add</button>
+                    <div id="members-list"></div>
+                    <div style="display:flex;gap:10px;margin-top:12px;">
+                        <input type="text" id="new-member" placeholder="Add member name..." style="flex:1;padding:12px 14px;border:2px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);" onkeypress="if(event.key==='Enter'){event.preventDefault();addMember()}">
+                        <button class="btn btn-primary" onclick="addMember()">Add</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- SETTINGS MODAL -->
+    <!-- History Modal -->
+    <div class="modal" id="m-history">
+        <div class="modal-bg" onclick="closeModal('m-history')"></div>
+        <div class="modal-wrap">
+            <div class="modal-content lg">
+                <div class="modal-hd" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+                    <div><h3>Payment History</h3><p id="hist-sub">All payments</p></div>
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <select id="hist-filter" onchange="renderHistory()" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;"><option value="all">All Members</option></select>
+                        <button class="modal-x" onclick="closeModal('m-history')">✕</button>
+                    </div>
+                </div>
+                <div class="modal-body" id="hist-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
     <div class="modal" id="m-settings">
-        <div class="modal-backdrop" onclick="closeModal('m-settings')"></div>
-        <div class="modal-box">
+        <div class="modal-bg" onclick="closeModal('m-settings')"></div>
+        <div class="modal-wrap">
             <div class="modal-content">
-                <div class="modal-head"><h3>Trip & Payment Settings</h3><button onclick="closeModal('m-settings')">✕</button></div>
-                <form class="modal-body" onsubmit="handleSettingsSubmit(event)">
-                    <div class="form-group"><label>Trip Name</label><input type="text" id="set-trip-name" required></div>
+                <div class="modal-hd" style="background:linear-gradient(135deg,#334155,#0f172a);">
+                    <div><h3>Trip Settings</h3><p>Configure everything</p></div>
+                    <button class="modal-x" onclick="closeModal('m-settings')">✕</button>
+                </div>
+                <form class="modal-body" onsubmit="saveSettings(event)">
+                    <div class="form-group"><label>Trip Name</label><input type="text" id="set-name" required></div>
                     <div class="form-group"><label>Weekly Rate (₱)</label><input type="number" id="set-rate" min="1" required></div>
-                    <div class="form-group"><label>Start Date (First Friday)</label><input type="date" id="set-start-date" required></div>
-                    <div class="form-group"><label>Total Weeks</label><input type="number" id="set-weeks-count" min="1" max="52" required></div>
+                    <div class="form-group"><label>Start Date (First Friday)</label><input type="date" id="set-start" required></div>
+                    <div class="form-group"><label>Total Weeks</label><input type="number" id="set-weeks" min="1" max="104" required></div>
                     <div class="form-group"><label>GCash Number</label><input type="text" id="set-gcash-num" required></div>
                     <div class="form-group"><label>GCash Name</label><input type="text" id="set-gcash-name" required></div>
-                    <div class="form-group"><label>MariBank Account No.</label><input type="text" id="set-maribank-num" required></div>
-                    <div class="form-group"><label>MariBank Name</label><input type="text" id="set-maribank-name" required></div>
-                    <button type="submit" class="btn btn-primary" style="padding:12px;justify-content:center;">Save Settings</button>
+                    <div class="form-group"><label>MariBank Number</label><input type="text" id="set-mari-num" required></div>
+                    <div class="form-group"><label>MariBank Name</label><input type="text" id="set-mari-name" required></div>
+                    <button type="submit" class="btn btn-primary" style="padding:16px;font-size:15px;justify-content:center;">Save Settings</button>
                 </form>
             </div>
         </div>
     </div>
 
+    <input type="file" id="import-input" accept=".json" style="display:none" onchange="handleImport(event)">
+
 <script>
-/* =========================================================
-   1. FIREBASE CONFIG — PASTE YOUR REAL databaseURL HERE
-   ========================================================= */
+/* ================================================================
+   FIREBASE CONFIG — Singapore
+================================================================ */
 const firebaseConfig = {
     apiKey: "AIzaSyAdu2G69SBviKXD6jMFGssb_1LcTXIgaf0",
     authDomain: "olangotrip.firebaseapp.com",
-    // ⚠️ CRITICAL: Copy the EXACT URL from Firebase Console → Realtime Database
-    // If you chose Singapore it looks like:
-    // "https://olangotrip-default-rtdb.asia-southeast1.firebasedatabase.app"
-    databaseURL: "https://olangotrip-default-rtdb.firebaseio.com",
+    databaseURL: "https://olangotrip-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "olangotrip",
     storageBucket: "olangotrip.firebasestorage.app",
     messagingSenderId: "693372588889",
@@ -277,45 +446,138 @@ const firebaseConfig = {
     measurementId: "G-PG3E62SWG8"
 };
 
-const STORAGE_KEY = "olango_trip_v2_cache";
+const STORAGE_KEY = "olango_trip_v5";
+const TZ = "Asia/Manila";
+
 let DB = null, dbRef = null, isOnline = false, loaderHidden = false;
+let editingPaymentId = null;
+let payType = "normal"; // "normal" or "late"
+let milestonesReached = new Set();
+let syncTimeout = null;
 
 const defaultState = {
-    tripName: "🏝️ Olango Island Trip",
+    tripName: "🌴 Olango Island Trip",
     rate: 30,
-    startDate: "2025-08-29",
+    startDate: "2026-08-28", // Aug 28, 2026 Friday
     weeksCount: 17,
     gcashName: "KXI",
     gcashNumber: "09939336295",
-    maribankName: "KXI",
-    maribankNumber: "13397715774",
+    mariName: "KXI",
+    mariNumber: "13397715774",
     members: [
         { id: 1, name: "Fatima" },
         { id: 2, name: "Kurt" },
         { id: 3, name: "Johnchris" },
         { id: 4, name: "Tina" }
     ],
-    payments: []
+    payments: [],
+    lastUpdated: 0
 };
 
 let state = loadLocal();
 
+/* ================================================================
+   BULLETPROOF STORAGE & SYNC (Never resets, always saves)
+================================================================ */
 function loadLocal() {
     try {
-        const data = localStorage.getItem(STORAGE_KEY);
-        if (data) return Object.assign({}, defaultState, JSON.parse(data));
-    } catch (e) {}
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            return Object.assign({}, defaultState, parsed);
+        }
+    } catch(e){ console.error("Local load err:", e); }
     return JSON.parse(JSON.stringify(defaultState));
 }
 
 function saveLocal() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    try {
+        state.lastUpdated = Date.now();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch(e){ console.error("Local save err:", e); }
 }
 
-function syncToCloud() {
+function showSaveIndicator() {
+    const el = document.getElementById("save-indicator");
+    if (!el) return;
+    el.classList.add("show");
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove("show"), 1500);
+}
+
+function sync() {
     saveLocal();
+    // Debounced cloud write
+    clearTimeout(syncTimeout);
     if (isOnline && dbRef) {
-        dbRef.set(state).catch(err => console.warn("Cloud write:", err));
+        setCloudStatus("saving");
+        syncTimeout = setTimeout(() => {
+            dbRef.set(state).then(() => {
+                setCloudStatus(true);
+                showSaveIndicator();
+            }).catch(e => {
+                console.warn("Cloud write:", e);
+                setCloudStatus(false);
+            });
+        }, 250);
+    } else {
+        showSaveIndicator();
+    }
+}
+
+function initFirebase() {
+    // Failsafe
+    setTimeout(() => {
+        if (!loaderHidden) { fallback("timeout"); toast("Using Local Mode","warn"); }
+    }, 3000);
+    try {
+        firebase.initializeApp(firebaseConfig);
+        try { firebase.analytics(); } catch(e) {}
+        DB = firebase.database();
+        dbRef = DB.ref("olango_tracker_v5");
+        
+        dbRef.on("value", (snap) => {
+            const val = snap.val();
+            if (val && Array.isArray(val.members) && val.members.length > 0) {
+                // Only overwrite if cloud is newer OR local is default
+                const cloudTime = Number(val.lastUpdated) || 0;
+                const localTime = Number(state.lastUpdated) || 0;
+                if (cloudTime >= localTime) {
+                    state = Object.assign({}, defaultState, val);
+                    saveLocal();
+                } else {
+                    // Local is newer, push it
+                    sync();
+                }
+            } else {
+                // Cloud empty → push local up
+                sync();
+            }
+            setCloudStatus(true);
+            renderAll();
+            hideLoader();
+        }, (err) => {
+            console.warn("Firebase err:", err);
+            fallback(err.message);
+        });
+    } catch(e) { fallback(e.message); }
+}
+
+function fallback(r) { setCloudStatus(false); renderAll(); hideLoader(); }
+function setCloudStatus(status) {
+    const el = document.getElementById("cloud-badge");
+    if (!el) return;
+    if (status === "saving") {
+        el.className = "cloud-badge saving";
+        el.textContent = "💾 Saving…";
+    } else if (status === true) {
+        isOnline = true;
+        el.className = "cloud-badge live";
+        el.textContent = "🟢 Cloud Live";
+    } else {
+        isOnline = false;
+        el.className = "cloud-badge local";
+        el.textContent = "🟡 Local Mode";
     }
 }
 
@@ -326,389 +588,653 @@ function hideLoader() {
     if (el) el.classList.add("hide");
 }
 
-function setCloudStatus(active) {
-    isOnline = active;
-    const el = document.getElementById("cloud-badge");
-    if (!el) return;
-    if (active) {
-        el.className = "cloud-badge live";
-        el.textContent = "🟢 Cloud Live";
-    } else {
-        el.className = "cloud-badge local";
-        el.textContent = "🟡 Local Mode";
+/* ================================================================
+   TIME HELPERS (Manila-accurate)
+================================================================ */
+function nowUTC() { return Date.now(); }
+
+function weekDeadlineUTC(weekIdx) {
+    const [y, m, d] = state.startDate.split("-").map(Number);
+    // Fri 23:59:59.999 Manila = 15:59:59.999 UTC
+    const dt = new Date(Date.UTC(y, m - 1, d, 15, 59, 59, 999));
+    dt.setUTCDate(dt.getUTCDate() + 7 * weekIdx);
+    return dt.getTime();
+}
+
+function weekDate(weekIdx) {
+    const [y, m, d] = state.startDate.split("-").map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d, 4, 0, 0));
+    dt.setUTCDate(dt.getUTCDate() + 7 * weekIdx);
+    return dt;
+}
+
+function currentWeekIndex() {
+    const now = nowUTC();
+    for (let i = 0; i < state.weeksCount; i++) {
+        if (now <= weekDeadlineUTC(i)) return i;
     }
+    return state.weeksCount - 1;
 }
 
-function fallbackToLocal(reason) {
-    console.warn("Falling back to local:", reason || "");
-    setCloudStatus(false);
-    renderAll();
-    hideLoader();
+function isPastWeek(i) { return nowUTC() > weekDeadlineUTC(i); }
+function isFutureWeek(i) { return i > currentWeekIndex(); }
+
+function fmtManila(d, opts) {
+    return new Date(d).toLocaleDateString("en-PH", Object.assign({ timeZone: TZ }, opts || { weekday:"short", month:"short", day:"numeric", year:"numeric" }));
+}
+function fmtManilaShort(d) {
+    return new Date(d).toLocaleDateString("en-PH", { timeZone: TZ, weekday:"short", month:"short", day:"numeric", year:"numeric" });
+}
+function fmtManilaDT(d) {
+    return new Date(d).toLocaleString("en-PH", { timeZone: TZ, month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit", hour12:true });
 }
 
-function initFirebase() {
-    // ALWAYS show the app after 2.5 seconds max (never stuck forever)
-    setTimeout(() => {
-        if (!loaderHidden) {
-            fallbackToLocal("timeout");
-            toast("Using Local Mode (cloud slow / offline)");
-        }
-    }, 2500);
+function countdownStr(untilMs) {
+    const diff = untilMs - nowUTC();
+    if (diff <= 0) return "⚠ Deadline passed";
+    const days = Math.floor(diff / 86400000);
+    const hrs = Math.floor((diff % 86400000) / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    if (days > 0) return `${days}d ${hrs}h ${mins}m`;
+    if (hrs > 0) return `${hrs}h ${mins}m ${secs}s`;
+    return `${mins}m ${secs}s`;
+}
 
-    try {
-        if (!firebaseConfig.databaseURL || firebaseConfig.databaseURL.includes("YOUR_")) {
-            fallbackToLocal("no databaseURL");
-            return;
-        }
-
-        firebase.initializeApp(firebaseConfig);
-        try { firebase.analytics(); } catch (e) {}
-
-        DB = firebase.database();
-        dbRef = DB.ref("olango_tracker_v2");
-
-        // One-time connection check
-        const connectedRef = DB.ref(".info/connected");
-        connectedRef.on("value", (snap) => {
-            if (snap.val() === true) {
-                // connected
-            }
-        });
-
-        dbRef.on("value", (snapshot) => {
-            const cloudData = snapshot.val();
-            if (cloudData && Array.isArray(cloudData.members) && cloudData.members.length > 0) {
-                state = Object.assign({}, defaultState, cloudData);
-                saveLocal();
-            } else {
-                // Cloud empty → push local data up (never wipe)
-                syncToCloud();
-            }
-            setCloudStatus(true);
-            renderAll();
-            hideLoader();
-        }, (err) => {
-            console.warn("Firebase listener error:", err);
-            fallbackToLocal(err && err.message);
-        });
-
-    } catch (e) {
-        console.error("Firebase init failed:", e);
-        fallbackToLocal(e.message);
+function memberPaid(mid) {
+    return (state.payments || []).filter(p => p.memberId === mid).reduce((s,p) => s + Number(p.amount||0), 0);
+}
+function memberWeekPaid(mid, wIdx) {
+    return (state.payments || []).filter(p => p.memberId === mid && Number(p.weekIndex) === wIdx).reduce((s,p) => s + Number(p.amount||0), 0);
+}
+function memberWeekPayments(mid, wIdx) {
+    return (state.payments || []).filter(p => p.memberId === mid && Number(p.weekIndex) === wIdx);
+}
+function isLatePayment(p) {
+    // A payment is "late" if timestamp is after that week's deadline
+    if (p.isLate) return true; // manual flag
+    const deadline = weekDeadlineUTC(Number(p.weekIndex));
+    return new Date(p.timestamp).getTime() > deadline;
+}
+function memberMissedWeeks(mid) {
+    const missed = [];
+    const cur = currentWeekIndex();
+    for (let i = 0; i < cur; i++) {
+        if (isPastWeek(i) && memberWeekPaid(mid, i) < state.rate) missed.push(i);
     }
+    return missed;
 }
 
-/* ========== HELPERS ========== */
-function getWeeksList() {
-    const list = [];
-    const parts = (state.startDate || "2025-08-29").split("-").map(Number);
-    let curr = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 4, 0, 0));
-    for (let i = 0; i < (state.weeksCount || 17); i++) {
-        list.push(new Date(curr));
-        curr.setUTCDate(curr.getUTCDate() + 7);
+function weekCheckStatus(mid, wIdx) {
+    const paid = memberWeekPaid(mid, wIdx);
+    const past = isPastWeek(wIdx);
+    const future = isFutureWeek(wIdx);
+    const payments = memberWeekPayments(mid, wIdx);
+    
+    if (paid >= state.rate) {
+        // Check if any payment was late
+        const hasLate = payments.some(p => isLatePayment(p));
+        return hasLate ? "late-paid" : "paid";
     }
-    return list;
-}
-function formatDate(d) {
-    return new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
-}
-function formatShortDate(d) {
-    return new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric" });
-}
-function getCurrentWeekIndex(weeks) {
-    const now = Date.now();
-    for (let i = 0; i < weeks.length; i++) {
-        if (now <= new Date(weeks[i]).getTime() + 86400000) return i;
-    }
-    return weeks.length - 1;
+    if (paid > 0) return "partial";
+    if (past) return "missed";
+    if (future) return "pending";
+    return "none";
 }
 
-const AVATAR_COLORS = [
+function memberOverallStatus(mid, curIdx) {
+    const paid = memberPaid(mid);
+    const expected = state.rate * (curIdx + 1);
+    const target = state.rate * state.weeksCount;
+    if (paid >= target) return { text: "DONE", cls: "done" };
+    if (paid >= expected + state.rate) return { text: "AHEAD", cls: "ahead" };
+    if (paid < expected - state.rate) return { text: "BEHIND", cls: "behind" };
+    return { text: "ON TRACK", cls: "ontrack" };
+}
+
+const AVATARS = [
     "linear-gradient(135deg,#0ea5e9,#0284c7)",
-    "linear-gradient(135deg,#a855f7,#7c3aed)",
+    "linear-gradient(135deg,#14b8a6,#0f766e)",
     "linear-gradient(135deg,#f59e0b,#d97706)",
-    "linear-gradient(135deg,#10b981,#059669)",
-    "linear-gradient(135deg,#ec4899,#db2777)"
+    "linear-gradient(135deg,#f43f5e,#be185d)",
+    "linear-gradient(135deg,#8b5cf6,#6d28d9)",
+    "linear-gradient(135deg,#84cc16,#65a30d)"
 ];
+
+/* ================================================================
+   RENDER
+================================================================ */
+function updateLiveClock() {
+    const el = document.getElementById("live-clock");
+    if (!el) return;
+    el.textContent = new Date().toLocaleString("en-PH", {
+        timeZone: TZ, weekday:"short", month:"short", day:"numeric", year:"numeric",
+        hour:"numeric", minute:"2-digit", second:"2-digit", hour12:true
+    });
+    const cur = currentWeekIndex();
+    const cdEl = document.getElementById("countdown-val");
+    if (cdEl) cdEl.textContent = countdownStr(weekDeadlineUTC(cur));
+}
 
 function renderAll() {
     try {
-        const weeks = getWeeksList();
-        const curWeek = getCurrentWeekIndex(weeks);
+        const cur = currentWeekIndex();
+        document.getElementById("trip-title").textContent = state.tripName;
+        document.getElementById("trip-range").textContent =
+            `${fmtManila(weekDate(0))} – ${fmtManila(weekDate(state.weeksCount - 1))} · ${state.weeksCount} Fridays`;
+        document.getElementById("gcash-name").textContent = state.gcashName;
+        document.getElementById("gcash-num").textContent = state.gcashNumber;
+        document.getElementById("mari-name").textContent = state.mariName;
+        document.getElementById("mari-num").textContent = state.mariNumber;
+        document.getElementById("badge-txt").textContent = "Week " + (cur + 1) + " of " + state.weeksCount;
 
-        document.getElementById("trip-title-display").textContent = state.tripName || "🏝️ Olango Island Trip";
-        document.getElementById("trip-date-range").textContent = weeks.length
-            ? `${formatDate(weeks[0])} – ${formatDate(weeks[weeks.length - 1])} (${weeks.length} Weeks)`
-            : "";
-        document.getElementById("gcash-name").textContent = state.gcashName || "KXI";
-        document.getElementById("gcash-num").textContent = state.gcashNumber || "09939336295";
-        document.getElementById("maribank-name").textContent = state.maribankName || "KXI";
-        document.getElementById("maribank-num").textContent = state.maribankNumber || "13397715774";
+        const target = state.rate * state.weeksCount * state.members.length;
+        const collected = (state.payments || []).reduce((s,p) => s + Number(p.amount), 0);
+        const pct = target ? Math.min(100, Math.round((collected/target)*100)) : 0;
 
-        const totalTarget = (state.rate || 30) * (state.weeksCount || 17) * (state.members || []).length;
-        const totalCollected = (state.payments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
-        const pct = totalTarget ? Math.min(100, Math.round((totalCollected / totalTarget) * 100)) : 0;
-
-        document.getElementById("stat-target").textContent = "₱" + totalTarget.toLocaleString();
-        document.getElementById("stat-collected").textContent = "₱" + totalCollected.toLocaleString();
+        document.getElementById("stat-target").textContent = "₱" + target.toLocaleString();
+        document.getElementById("stat-collected").textContent = "₱" + collected.toLocaleString();
         document.getElementById("stat-pct").textContent = pct + "%";
         document.getElementById("stat-bar").style.width = pct + "%";
 
-        renderMembersGrid();
-        renderTrackingTable(weeks, curWeek);
-        renderRecentPayments();
-    } catch (e) { console.error(e); }
+        const remaining = Math.max(0, target - collected);
+        const weeksLeft = state.weeksCount - cur - 1;
+        const daysToTrip = Math.max(0, Math.ceil((weekDeadlineUTC(state.weeksCount - 1) - nowUTC()) / 86400000));
+        const totalMissed = state.members.reduce((s, m) => s + memberMissedWeeks(m.id).length, 0);
+
+        const chips = [];
+        chips.push({ t: `📊 Wk ${cur + 1} / ${state.weeksCount}` });
+        chips.push({ t: `💰 ₱${remaining.toLocaleString()} left` });
+        if (weeksLeft > 0) chips.push({ t: `🗓️ ${weeksLeft} wks left` });
+        if (totalMissed > 0) chips.push({ t: `⚠️ ${totalMissed} missed slots`, u: true });
+        if (daysToTrip > 0 && daysToTrip <= 365) chips.push({ t: `⏰ ${daysToTrip} days to trip`, u: daysToTrip < 30 });
+        if (pct >= 100) chips.push({ t: "🎉 Fully funded!", s: true });
+        document.getElementById("hero-chips").innerHTML = chips.map(c =>
+            `<span class="hero-chip ${c.u?"urgent":""} ${c.s?"success":""}">${c.t}</span>`
+        ).join("");
+
+        updateLiveClock();
+        renderMemberGrid(cur);
+        renderTable(cur);
+        renderRecent();
+        checkMilestones(pct);
+    } catch(e) { console.error(e); }
 }
 
-function renderMembersGrid() {
+function renderMemberGrid(cur) {
     const grid = document.getElementById("member-grid");
-    if (!state.members || !state.members.length) {
-        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:#94a3b8;">No members yet. Click Manage →</div>';
+    if (!state.members.length) {
+        grid.innerHTML = '<div class="empty" style="grid-column:1/-1;"><div class="emo">👥</div>No members yet<br><button class="btn btn-primary" style="margin-top:10px" onclick="openModal(\'m-members\')">+ Add Members</button></div>';
         return;
     }
-    grid.innerHTML = state.members.map((m, idx) => {
-        const paid = (state.payments || []).filter(p => p.memberId === m.id).reduce((s, p) => s + Number(p.amount), 0);
-        const target = (state.rate || 30) * (state.weeksCount || 17);
-        const pct = target ? Math.min(100, Math.round((paid / target) * 100)) : 0;
-        const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
-        return `<div class="mem-card">
-            <div>
-                <div class="mem-header">
-                    <div class="avatar" style="background:${color}">${(m.name || "?")[0].toUpperCase()}</div>
-                    <span class="mem-name">${m.name}</span>
-                </div>
-                <div class="mem-amt">₱${paid.toLocaleString()}</div>
-                <div class="mem-sub">Goal: ₱${target.toLocaleString()} (${pct}%)</div>
+    grid.innerHTML = state.members.map((m,i) => {
+        const paid = memberPaid(m.id);
+        const target = state.rate * state.weeksCount;
+        const pct = target ? Math.min(100, Math.round((paid/target)*100)) : 0;
+        const color = AVATARS[i % AVATARS.length];
+        const status = memberOverallStatus(m.id, cur);
+        const wPaid = memberWeekPaid(m.id, cur);
+        const wDone = wPaid >= state.rate;
+        const missed = memberMissedWeeks(m.id);
+        
+        return `<div class="mem-card ${pct >= 100 ? 'complete':''}">
+            <div class="mem-header">
+                <div class="avatar" style="background:${color}">${(m.name||"?")[0].toUpperCase()}</div>
+                <span class="mem-name">${m.name}</span>
+                <span class="mem-status ${status.cls}">${status.text}</span>
             </div>
-            <div style="height:6px;background:#f1f5f9;border-radius:99px;overflow:hidden;margin-top:10px;">
-                <div style="height:100%;width:${pct}%;background:#10b981;"></div>
+            <div class="mem-amt">₱${paid.toLocaleString()}</div>
+            <div class="mem-sub">of ₱${target.toLocaleString()} · ${pct}%</div>
+            ${missed.length ? `<div class="mem-missed-info">⚠ ${missed.length} unpaid week${missed.length>1?'s':''}</div>` : ''}
+            <div class="mem-bar"><div class="mem-bar-fill" style="width:${pct}%;background:${pct >= 100 ? 'linear-gradient(90deg,#10b981,#059669)' : color};"></div></div>
+            <div class="mem-actions">
+                ${wDone 
+                    ? `<button class="quick-btn done">✓ Wk ${cur+1} paid</button>`
+                    : `<button class="quick-btn" onclick="quickPay(${m.id},${cur})">+ Wk ${cur+1} · ₱${state.rate - wPaid}</button>`}
+                ${missed.length ? `<button class="quick-btn late-pay" onclick="openPayment({memberId:${m.id},weekIndex:${missed[0]}},true)" title="Pay for oldest missed week">⏰</button>` : ''}
             </div>
         </div>`;
     }).join("");
 }
 
-function renderTrackingTable(weeks, curWeek) {
+function renderTable(cur) {
     const thead = document.getElementById("tbl-head");
     const tbody = document.getElementById("tbl-body");
     const tfoot = document.getElementById("tbl-foot");
-    if (!state.members || !state.members.length) {
-        thead.innerHTML = ""; tbody.innerHTML = "<tr><td style='padding:24px;color:#94a3b8'>Add members first</td></tr>"; tfoot.innerHTML = "";
+    if (!state.members.length) {
+        thead.innerHTML=""; tbody.innerHTML="<tr><td class='empty'>Add members first</td></tr>"; tfoot.innerHTML="";
         return;
     }
-    let h = "<tr><th>Wk</th><th>Due Date</th>";
-    state.members.forEach(m => h += `<th>${m.name}</th>`);
+    let h = "<tr><th>Wk</th><th style='text-align:left'>Due (Fri 11:59 PM)</th>";
+    state.members.forEach(m => { h += `<th title="${m.name}">${m.name.length > 8 ? m.name.slice(0,7) + '…' : m.name}</th>`; });
     h += "<th>Pot</th></tr>";
     thead.innerHTML = h;
 
-    let b = "", pot = 0;
-    weeks.forEach((w, wIdx) => {
-        const isNow = wIdx === curWeek;
+    let b = "";
+    for (let wIdx = 0; wIdx < state.weeksCount; wIdx++) {
+        const isNow = wIdx === cur;
+        const past = isPastWeek(wIdx);
+        const future = isFutureWeek(wIdx);
         let rowSum = 0;
-        b += `<tr class="${isNow ? "now-row" : ""}">
-            <td style="font-weight:800;color:#64748b;">${wIdx + 1}</td>
-            <td style="font-weight:600;">${formatShortDate(w)}${isNow ? ' <span style="color:#0284c7;font-size:10px;">● NOW</span>' : ""}</td>`;
+        b += `<tr class="${isNow ? 'now-row' : past ? 'past-row' : future ? 'future-row' : ''}">
+            <td style="font-weight:900;color:var(--text-soft);">${String(wIdx + 1).padStart(2,'0')}</td>
+            <td style="font-weight:700;text-align:left;color:var(--text);">${fmtManilaShort(weekDate(wIdx))}${isNow ? '<span class="now-badge">NOW</span>' : past ? '<span class="past-badge">past</span>' : '<span class="future-badge">upcoming</span>'}</td>`;
         state.members.forEach(m => {
-            const paid = (state.payments || []).filter(p => p.memberId === m.id && Number(p.weekIndex) === wIdx)
-                .reduce((s, p) => s + Number(p.amount), 0);
+            const paid = memberWeekPaid(m.id, wIdx);
             rowSum += paid;
-            let pill = `<span class="chk-pill none">—</span>`;
-            if (paid >= (state.rate || 30)) pill = `<span class="chk-pill paid">₱${paid} ✓</span>`;
-            else if (paid > 0) pill = `<span class="chk-pill part">₱${paid}</span>`;
+            const st = weekCheckStatus(m.id, wIdx);
+            let pill;
+            const clickAction = past 
+                ? `onclick='openPayment({memberId:${m.id},weekIndex:${wIdx}},true)'` 
+                : `onclick='openPayment({memberId:${m.id},weekIndex:${wIdx}})'`;
+            
+            if (st === "paid")         pill = `<span class="chk-pill paid" ${clickAction} title="Paid on time">✓ ₱${paid}</span>`;
+            else if (st === "late-paid") pill = `<span class="chk-pill late" ${clickAction} title="Paid after deadline">⏰ ₱${paid}</span>`;
+            else if (st === "partial")   pill = `<span class="chk-pill part" ${clickAction} title="Partial payment">⚠ ₱${paid}</span>`;
+            else if (st === "missed")    pill = `<span class="chk-pill add-btn" ${clickAction} title="Click to pay late">+ pay late</span>`;
+            else if (st === "pending")   pill = `<span class="chk-pill pending" ${clickAction} title="Upcoming week">⏳</span>`;
+            else                         pill = `<span class="chk-pill add-btn" ${clickAction} title="Log payment">+</span>`;
             b += `<td>${pill}</td>`;
         });
-        pot += rowSum;
-        b += `<td style="font-weight:800;color:#047857;">₱${rowSum.toLocaleString()}</td></tr>`;
-    });
+        b += `<td style="font-weight:900;color:var(--success);">₱${rowSum.toLocaleString()}</td></tr>`;
+    }
     tbody.innerHTML = b;
 
-    let f = `<tr style="background:#f8fafc;font-weight:900;"><td></td><td>TOTALS</td>`;
-    state.members.forEach(m => {
-        const total = (state.payments || []).filter(p => p.memberId === m.id).reduce((s, p) => s + Number(p.amount), 0);
-        f += `<td style="color:#0284c7">₱${total.toLocaleString()}</td>`;
-    });
-    const grand = (state.payments || []).reduce((s, p) => s + Number(p.amount), 0);
-    f += `<td style="color:#047857">₱${grand.toLocaleString()}</td></tr>`;
+    let f = `<tr><td></td><td style="text-align:left;color:var(--text);">TOTALS</td>`;
+    state.members.forEach(m => { f += `<td style="color:var(--primary-dk)">₱${memberPaid(m.id).toLocaleString()}</td>`; });
+    const grand = (state.payments || []).reduce((s,p) => s + Number(p.amount), 0);
+    f += `<td style="color:var(--success)">₱${grand.toLocaleString()}</td></tr>`;
     tfoot.innerHTML = f;
 }
 
-function renderRecentPayments() {
+function renderRecent() {
     const list = document.getElementById("recent-list");
     const pays = state.payments || [];
-    document.getElementById("recent-count").textContent = pays.length + " payment(s)";
-    if (!pays.length) {
-        list.innerHTML = `<p style="text-align:center;color:#94a3b8;padding:18px;">No payments logged yet.</p>`;
-        return;
-    }
-    list.innerHTML = pays.slice().reverse().slice(0, 8).map(p => {
-        const m = (state.members || []).find(x => x.id === p.memberId);
+    if (!pays.length) { list.innerHTML = `<div class="empty"><div class="emo">💸</div>No payments logged yet</div>`; return; }
+    list.innerHTML = pays.slice().sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 6).map(p => {
+        const m = state.members.find(x => x.id === p.memberId);
+        const color = m ? AVATARS[state.members.indexOf(m) % AVATARS.length] : AVATARS[0];
+        const late = isLatePayment(p);
         return `<div class="recent-item">
-            <div>
-                <div style="font-weight:800;">${m ? m.name : "Unknown"} <span style="font-weight:600;color:#64748b;">→ Week ${Number(p.weekIndex) + 1}</span></div>
-                <div class="recent-meta">${new Date(p.timestamp).toLocaleString()}${p.note ? ' · "' + p.note + '"' : ""}</div>
+            <div class="avatar" style="background:${color}">${(m ? m.name : "?")[0].toUpperCase()}</div>
+            <div class="recent-body">
+                <div class="recent-name">${m ? m.name : "Unknown"} <span style="color:var(--text-soft);font-weight:700;">→ Wk ${Number(p.weekIndex) + 1}</span> ${late ? '<span class="tag-late">⏰ LATE</span>' : ''}</div>
+                <div class="recent-meta">${fmtManilaDT(p.timestamp)}${p.note ? ' · "' + p.note + '"' : ""}</div>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-weight:900;color:#059669;">+₱${p.amount}</span>
-                <button onclick="deletePayment(${p.id})" style="color:#ef4444;font-weight:800;">✕</button>
-            </div>
+            <span class="recent-amt">+₱${p.amount}</span>
+            <button class="icon-btn edit" onclick='openPayment(${JSON.stringify(p).replace(/'/g,"&#39;")})'>✎</button>
+            <button class="icon-btn del" onclick="deletePayment(${p.id})">✕</button>
         </div>`;
     }).join("");
 }
 
-/* ========== ACTIONS ========== */
-function openPaymentModal() {
-    if (!state.members || !state.members.length) { toast("Add a member first"); openModal("m-members"); return; }
-    const weeks = getWeeksList();
-    const cur = getCurrentWeekIndex(weeks);
+/* ================================================================
+   PAYMENT MODAL
+================================================================ */
+function setPayType(type) {
+    payType = type;
+    document.getElementById("tgl-normal").classList.toggle("active", type === "normal");
+    document.getElementById("tgl-late").classList.toggle("active", type === "late");
+    updateAutoBox();
+}
+
+function updateAutoBox() {
+    const box = document.getElementById("auto-box");
+    const ic = document.getElementById("auto-ic");
+    const lbl = document.getElementById("auto-lbl");
+    const dt = document.getElementById("auto-date");
+    const wk = document.getElementById("auto-week");
+    const wIdx = Number(document.getElementById("pay-week").value);
+    
+    box.className = "auto-box " + (payType === "late" ? "late" : editingPaymentId ? "edit" : "now");
+    
+    if (editingPaymentId) {
+        ic.textContent = "✎";
+        lbl.textContent = "Editing existing payment";
+        return;
+    }
+    
+    if (payType === "late") {
+        ic.textContent = "⏰";
+        lbl.textContent = "LATE PAYMENT (Catch-up)";
+        dt.textContent = "Paying now: " + new Date().toLocaleString("en-PH", { timeZone: TZ, month:"short", day:"numeric", hour:"numeric", minute:"2-digit", hour12:true });
+        wk.textContent = "For week: " + fmtManilaShort(weekDate(wIdx)) + " (Wk " + (wIdx+1) + ")";
+    } else {
+        ic.textContent = "📅";
+        lbl.textContent = "Current Manila Time";
+        dt.textContent = new Date().toLocaleString("en-PH", { timeZone: TZ, weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit", hour12:true });
+        wk.textContent = "Selected: Wk " + (wIdx+1) + " · " + fmtManilaShort(weekDate(wIdx));
+    }
+}
+
+function onWeekChange() { updateAutoBox(); }
+
+function openPayment(edit, isLateBtn) {
+    if (!state.members.length) { toast("Add a member first","err"); openModal("m-members"); return; }
+    
+    const cur = currentWeekIndex();
+    let targetWeek = cur;
+    let targetMember = null;
+    
+    if (edit) {
+        if (edit.id) editingPaymentId = edit.id;
+        else editingPaymentId = null;
+        if (edit.memberId !== undefined) targetMember = edit.memberId;
+        if (edit.weekIndex !== undefined) targetWeek = edit.weekIndex;
+    } else {
+        editingPaymentId = null;
+    }
+    
+    // Auto-set late if past week
+    payType = (isLateBtn || (targetWeek < cur && isPastWeek(targetWeek))) ? "late" : "normal";
+    setPayType(payType);
+
     document.getElementById("pay-member").innerHTML = state.members.map(m => `<option value="${m.id}">${m.name}</option>`).join("");
-    document.getElementById("pay-week").innerHTML = weeks.map((w, i) => `<option value="${i}">Week ${i + 1} (${formatShortDate(w)})</option>`).join("");
-    document.getElementById("pay-week").value = cur;
-    document.getElementById("pay-amount").value = state.rate || 30;
-    document.getElementById("pay-note").value = "";
+    document.getElementById("pay-week").innerHTML = Array.from({length: state.weeksCount}, (_,i) => {
+        let badge = "";
+        if (i === cur) badge = " ← NOW";
+        else if (isPastWeek(i)) badge = " (past)";
+        else if (i > cur) badge = " (upcoming)";
+        return `<option value="${i}">Wk ${String(i+1).padStart(2,'0')} · ${fmtManilaShort(weekDate(i))}${badge}</option>`;
+    }).join("");
+
+    if (edit && edit.id) {
+        document.getElementById("pay-title").textContent = "Edit Payment";
+        document.getElementById("pay-sub").textContent = "Original: " + fmtManilaDT(edit.timestamp);
+        document.getElementById("pay-submit").textContent = "✓ Save Changes";
+        document.getElementById("pay-modal-hd").style.background = "linear-gradient(135deg,#f59e0b,#d97706)";
+        document.getElementById("pay-member").value = edit.memberId;
+        document.getElementById("pay-week").value = edit.weekIndex;
+        document.getElementById("pay-amount").value = edit.amount;
+        document.getElementById("pay-note").value = edit.note || "";
+    } else {
+        document.getElementById("pay-title").textContent = payType === "late" ? "⏰ Late Payment" : "Log a Payment";
+        document.getElementById("pay-sub").textContent = payType === "late" ? "Catch-up for missed week" : "Auto-detected from Manila time";
+        document.getElementById("pay-submit").textContent = payType === "late" ? "⏰ Save Late Payment" : "✓ Save Payment";
+        document.getElementById("pay-modal-hd").style.background = payType === "late" 
+            ? "linear-gradient(135deg,#8b5cf6,#6d28d9)" 
+            : "linear-gradient(135deg,var(--primary),var(--primary-dk))";
+        
+        if (targetMember !== null) document.getElementById("pay-member").value = targetMember;
+        document.getElementById("pay-week").value = targetWeek;
+        
+        // Calculate suggested amount
+        const currentPaid = targetMember !== null ? memberWeekPaid(targetMember, targetWeek) : 0;
+        const suggested = Math.max(1, state.rate - currentPaid);
+        document.getElementById("pay-amount").value = suggested;
+        document.getElementById("pay-note").value = "";
+    }
+    
+    const chips = [...new Set([state.rate, state.rate*2, state.rate*3, 100, 300, 500, 1000])].slice(0,7);
+    document.getElementById("amt-chips").innerHTML = chips.map(v =>
+        `<button type="button" class="amt-chip" onclick="document.getElementById('pay-amount').value=${v}">₱${v}</button>`
+    ).join("");
+    
+    updateAutoBox();
     openModal("m-payment");
 }
 
-function handlePaymentSubmit(e) {
-    e.preventDefault();
-    const payment = {
-        id: Date.now(),
-        memberId: Number(document.getElementById("pay-member").value),
-        weekIndex: Number(document.getElementById("pay-week").value),
-        amount: Number(document.getElementById("pay-amount").value),
-        note: document.getElementById("pay-note").value.trim(),
-        timestamp: new Date().toISOString()
-    };
+function quickPay(mid, wIdx) {
+    const paid = memberWeekPaid(mid, wIdx);
+    const amt = Math.max(1, state.rate - paid);
+    const mem = state.members.find(m => m.id === mid);
+    const past = isPastWeek(wIdx);
     state.payments = state.payments || [];
-    state.payments.push(payment);
-    syncToCloud();
-    renderAll();
+    state.payments.push({ 
+        id: Date.now(), 
+        memberId: mid, 
+        weekIndex: wIdx, 
+        amount: amt, 
+        note: past ? "Late catch-up" : "Quick pay", 
+        timestamp: new Date().toISOString(),
+        isLate: past
+    });
+    sync(); renderAll();
+    toast(`⚡ ${mem.name} · ₱${amt}${past ? ' (Late)' : ''}`, past ? "late" : null);
+    confetti({ particleCount: 50, spread: 60, origin: { y: 0.85 } });
+}
+
+function submitPayment(e) {
+    e.preventDefault();
+    const memberId = Number(document.getElementById("pay-member").value);
+    const weekIndex = Number(document.getElementById("pay-week").value);
+    const amount = Number(document.getElementById("pay-amount").value);
+    const note = document.getElementById("pay-note").value.trim();
+    
+    if (!amount || amount < 1) { toast("Enter a valid amount","err"); return; }
+    
+    const data = { memberId, weekIndex, amount, note };
+    
+    if (editingPaymentId) {
+        const p = state.payments.find(x => x.id === editingPaymentId);
+        if (p) {
+            Object.assign(p, data);
+            p.isLate = isLatePayment(p);
+        }
+        toast("Payment updated!");
+    } else {
+        state.payments = state.payments || [];
+        const isLate = payType === "late" || isPastWeek(weekIndex);
+        state.payments.push(Object.assign({ 
+            id: Date.now(), 
+            timestamp: new Date().toISOString(),
+            isLate
+        }, data));
+        toast(isLate ? "⏰ Late payment saved!" : "Payment saved! 🌴", isLate ? "late" : null);
+        confetti({ particleCount: 70, spread: 70, origin: { y: 0.8 }, colors: isLate ? ['#8b5cf6','#a855f7','#c4b5fd'] : undefined });
+    }
+    editingPaymentId = null;
+    sync(); renderAll();
     closeModal("m-payment");
-    toast("Payment saved! 🎉");
-    if (typeof confetti === "function") confetti({ particleCount: 60, spread: 55, origin: { y: 0.8 } });
 }
 
 function deletePayment(id) {
     if (!confirm("Delete this payment?")) return;
     state.payments = (state.payments || []).filter(p => p.id !== id);
-    syncToCloud();
-    renderAll();
-    toast("Payment removed");
+    sync(); renderAll();
+    if (document.getElementById("m-history").classList.contains("open")) renderHistory();
+    toast("Payment removed","warn");
 }
 
-function handleAddMember() {
-    const name = (document.getElementById("new-member-name").value || "").trim();
-    if (!name) return;
-    const newId = ((state.members || []).reduce((max, m) => Math.max(max, m.id), 0) || 0) + 1;
-    state.members = state.members || [];
+function addMember() {
+    const inp = document.getElementById("new-member");
+    const name = inp.value.trim();
+    if (!name) return toast("Enter a name","err");
+    if (state.members.some(m => m.name.toLowerCase() === name.toLowerCase())) return toast("Already exists","err");
+    const newId = (state.members.reduce((m,x) => Math.max(m,x.id), 0) || 0) + 1;
     state.members.push({ id: newId, name });
-    document.getElementById("new-member-name").value = "";
-    syncToCloud();
-    renderMembersUI();
-    renderAll();
+    inp.value = "";
+    sync(); renderMembersList(); renderAll();
     toast(name + " added!");
 }
 
 function removeMember(id) {
-    const m = (state.members || []).find(x => x.id === id);
-    if (!confirm(`Remove ${m ? m.name : "member"} and their payments?`)) return;
-    state.members = (state.members || []).filter(x => x.id !== id);
-    state.payments = (state.payments || []).filter(p => p.memberId !== id);
-    syncToCloud();
-    renderMembersUI();
-    renderAll();
-    toast("Member removed");
+    const m = state.members.find(x => x.id === id);
+    if (!m) return;
+    const cnt = state.payments.filter(p => p.memberId === id).length;
+    if (!confirm(`Remove ${m.name}${cnt ? ` and ${cnt} payment(s)` : ''}?`)) return;
+    state.members = state.members.filter(x => x.id !== id);
+    state.payments = state.payments.filter(p => p.memberId !== id);
+    sync(); renderMembersList(); renderAll();
+    toast(m.name + " removed","warn");
 }
 
-function renderMembersUI() {
-    document.getElementById("members-list-ui").innerHTML = (state.members || []).map(m =>
-        `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;">
-            <span style="font-weight:700;">${m.name}</span>
-            <button onclick="removeMember(${m.id})" style="color:#ef4444;font-weight:800;font-size:12px;">Remove</button>
-        </div>`
-    ).join("") || '<p style="color:#94a3b8;text-align:center;">No members yet</p>';
+function renderMembersList() {
+    const list = document.getElementById("members-list");
+    if (!state.members.length) { list.innerHTML = '<div class="empty"><div class="emo">👥</div>No members yet</div>'; return; }
+    list.innerHTML = state.members.map((m,i) => `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;">
+            <div class="avatar" style="background:${AVATARS[i % AVATARS.length]}">${m.name[0].toUpperCase()}</div>
+            <div style="flex:1;">
+                <div style="font-weight:800;color:var(--text);">${m.name}</div>
+                <div style="font-size:12px;color:var(--text-soft);font-weight:600;">₱${memberPaid(m.id).toLocaleString()} paid</div>
+            </div>
+            <button class="icon-btn del" onclick="removeMember(${m.id})">✕</button>
+        </div>
+    `).join("");
+}
+
+function renderHistory() {
+    const filter = document.getElementById("hist-filter").value;
+    let pays = state.payments.slice().sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+    if (filter !== "all") pays = pays.filter(p => p.memberId === Number(filter));
+    document.getElementById("hist-sub").textContent = `${pays.length} payment(s)`;
+    const list = document.getElementById("hist-list");
+    if (!pays.length) { list.innerHTML = '<div class="empty"><div class="emo">📭</div>No payments</div>'; return; }
+    list.innerHTML = pays.map(p => {
+        const m = state.members.find(x => x.id === p.memberId);
+        const color = m ? AVATARS[state.members.indexOf(m) % AVATARS.length] : AVATARS[0];
+        const late = isLatePayment(p);
+        return `<div class="recent-item">
+            <div class="avatar" style="background:${color}">${(m ? m.name : "?")[0].toUpperCase()}</div>
+            <div class="recent-body">
+                <div class="recent-name">${m ? m.name : "Unknown"} <span style="color:var(--text-soft);font-weight:700;">→ Wk ${Number(p.weekIndex) + 1}</span> ${late ? '<span class="tag-late">⏰ LATE</span>' : ''}</div>
+                <div class="recent-meta">${fmtManilaDT(p.timestamp)}${p.note ? ' · "' + p.note + '"' : ""}</div>
+            </div>
+            <span class="recent-amt">+₱${p.amount}</span>
+            <button class="icon-btn edit" onclick='openPayment(${JSON.stringify(p).replace(/'/g,"&#39;")});closeModal("m-history")'>✎</button>
+            <button class="icon-btn del" onclick="deletePayment(${p.id})">✕</button>
+        </div>`;
+    }).join("");
 }
 
 function openModal(id) {
-    if (id === "m-members") renderMembersUI();
+    if (id === "m-members") renderMembersList();
+    if (id === "m-history") {
+        const f = document.getElementById("hist-filter");
+        f.innerHTML = '<option value="all">All Members</option>' + state.members.map(m => `<option value="${m.id}">${m.name}</option>`).join("");
+        renderHistory();
+    }
     if (id === "m-settings") {
-        document.getElementById("set-trip-name").value = state.tripName || "";
-        document.getElementById("set-rate").value = state.rate || 30;
-        document.getElementById("set-start-date").value = state.startDate || "2025-08-29";
-        document.getElementById("set-weeks-count").value = state.weeksCount || 17;
-        document.getElementById("set-gcash-num").value = state.gcashNumber || "09939336295";
-        document.getElementById("set-gcash-name").value = state.gcashName || "KXI";
-        document.getElementById("set-maribank-num").value = state.maribankNumber || "13397715774";
-        document.getElementById("set-maribank-name").value = state.maribankName || "KXI";
+        document.getElementById("set-name").value = state.tripName;
+        document.getElementById("set-rate").value = state.rate;
+        document.getElementById("set-start").value = state.startDate;
+        document.getElementById("set-weeks").value = state.weeksCount;
+        document.getElementById("set-gcash-num").value = state.gcashNumber;
+        document.getElementById("set-gcash-name").value = state.gcashName;
+        document.getElementById("set-mari-num").value = state.mariNumber;
+        document.getElementById("set-mari-name").value = state.mariName;
     }
     document.getElementById(id).classList.add("open");
 }
 function closeModal(id) { document.getElementById(id).classList.remove("open"); }
 
-function handleSettingsSubmit(e) {
+function saveSettings(e) {
     e.preventDefault();
-    state.tripName = document.getElementById("set-trip-name").value.trim();
+    state.tripName = document.getElementById("set-name").value.trim();
     state.rate = Number(document.getElementById("set-rate").value);
-    state.startDate = document.getElementById("set-start-date").value;
-    state.weeksCount = Number(document.getElementById("set-weeks-count").value);
+    state.startDate = document.getElementById("set-start").value;
+    state.weeksCount = Number(document.getElementById("set-weeks").value);
     state.gcashNumber = document.getElementById("set-gcash-num").value.trim();
     state.gcashName = document.getElementById("set-gcash-name").value.trim();
-    state.maribankNumber = document.getElementById("set-maribank-num").value.trim();
-    state.maribankName = document.getElementById("set-maribank-name").value.trim();
-    syncToCloud();
-    renderAll();
-    closeModal("m-settings");
+    state.mariNumber = document.getElementById("set-mari-num").value.trim();
+    state.mariName = document.getElementById("set-mari-name").value.trim();
+    sync(); renderAll(); closeModal("m-settings");
     toast("Settings saved!");
 }
 
 function copyMessengerSummary() {
-    const totalTarget = (state.rate || 30) * (state.weeksCount || 17) * (state.members || []).length;
-    const totalCollected = (state.payments || []).reduce((s, p) => s + Number(p.amount), 0);
-    const pct = totalTarget ? Math.round((totalCollected / totalTarget) * 100) : 0;
-    let txt = `🏝️ ${(state.tripName || "OLANGO").toUpperCase()}\n`;
-    txt += `💰 ₱${totalCollected.toLocaleString()} / ₱${totalTarget.toLocaleString()} (${pct}%)\n\n`;
-    txt += `💳 Payment Channels:\n• GCash: ${state.gcashNumber} (${state.gcashName})\n• MariBank: ${state.maribankNumber} (${state.maribankName})\n`;
-    txt += `-------------------------\n`;
-    (state.members || []).forEach(m => {
-        const paid = (state.payments || []).filter(p => p.memberId === m.id).reduce((s, p) => s + Number(p.amount), 0);
-        txt += `• ${m.name}: ₱${paid.toLocaleString()} / ₱${((state.rate || 30) * (state.weeksCount || 17)).toLocaleString()}\n`;
+    const cur = currentWeekIndex();
+    const target = state.rate * state.weeksCount * state.members.length;
+    const collected = (state.payments || []).reduce((s,p) => s + Number(p.amount), 0);
+    const pct = target ? Math.round(collected/target*100) : 0;
+    const barLen = 10, filled = Math.round(pct/100*barLen);
+    const bar = "█".repeat(filled) + "░".repeat(barLen - filled);
+    
+    let txt = `🏝️ ${state.tripName.toUpperCase()}\n━━━━━━━━━━━━━━━━━━━━\n`;
+    txt += `${bar} ${pct}%\n💰 ₱${collected.toLocaleString()} / ₱${target.toLocaleString()}\n\n`;
+    txt += `📅 Week ${cur+1} of ${state.weeksCount} · Due ${fmtManilaShort(weekDate(cur))}\n`;
+    txt += `⏰ ${countdownStr(weekDeadlineUTC(cur))} left\n\n`;
+    txt += `💳 Payment Accounts:\n• GCash: ${state.gcashNumber} (${state.gcashName})\n• MariBank: ${state.mariNumber} (${state.mariName})\n`;
+    txt += `📝 Note: [Name] - Wk [#]\n━━━━━━━━━━━━━━━━━━━━\n`;
+    state.members.forEach(m => {
+        const paid = memberPaid(m.id);
+        const mT = state.rate * state.weeksCount;
+        const p = mT ? Math.round(paid/mT*100) : 0;
+        const missed = memberMissedWeeks(m.id).length;
+        const emoji = p >= 100 ? "✅" : p >= 75 ? "🟢" : p >= 50 ? "🟡" : "🔴";
+        const missTxt = missed > 0 ? ` ⚠${missed} miss` : '';
+        txt += `${emoji} ${m.name}: ₱${paid.toLocaleString()} / ₱${mT.toLocaleString()} (${p}%)${missTxt}\n`;
     });
-    txt += `-------------------------\nUpdated: ${new Date().toLocaleDateString()}`;
-    navigator.clipboard.writeText(txt).then(() => toast("Copied for GC! 📋"));
+    txt += `━━━━━━━━━━━━━━━━━━━━\n📆 Updated: ${new Date().toLocaleString("en-PH",{timeZone:TZ,month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit",hour12:true})}`;
+    navigator.clipboard.writeText(txt).then(() => toast("Copied for GC! 📋"), () => toast("Copy failed","err"));
 }
 
-function copyGCash() { navigator.clipboard.writeText(state.gcashNumber || "").then(() => toast("GCash copied! 📱")); }
-function copyMariBank() { navigator.clipboard.writeText(state.maribankNumber || "").then(() => toast("MariBank copied! 🏦")); }
+function copyGCash(){ navigator.clipboard.writeText(state.gcashNumber||"").then(()=>toast("GCash copied! 📱")); }
+function copyMari(){ navigator.clipboard.writeText(state.mariNumber||"").then(()=>toast("MariBank copied! 🏦")); }
 
 function exportBackup() {
-    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(state,null,2)], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `olango_backup_${Date.now()}.json`;
+    a.download = `olango_backup_${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     toast("Backup downloaded! 💾");
+}
+function importBackup(){ document.getElementById("import-input").click(); }
+function handleImport(e){
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        try {
+            const data = JSON.parse(ev.target.result);
+            if (!data.members) throw new Error();
+            if (!confirm("Replace all current data?")) return;
+            state = Object.assign({}, defaultState, data);
+            sync(); renderAll(); toast("Backup restored! ✓");
+        } catch { toast("Invalid backup file","err"); }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
 }
 
 function promptReset() {
     if (!confirm("Reset EVERYTHING? Make a backup first!")) return;
-    if (!confirm("Final confirm — wipe all data?")) return;
+    if (!confirm("Final warning — wipe all data?")) return;
     state = JSON.parse(JSON.stringify(defaultState));
-    syncToCloud();
-    renderAll();
-    toast("Reset done");
+    sync(); renderAll(); toast("Reset done","warn");
 }
 
-function toast(msg) {
+function checkMilestones(pct) {
+    [25,50,75,100].forEach(m => {
+        if (pct >= m && !milestonesReached.has(m)) {
+            milestonesReached.add(m);
+            if (milestonesReached.size > 1 || pct > 5) {
+                setTimeout(() => {
+                    confetti({ particleCount:100, spread:80, origin:{y:0.6} });
+                    toast(`🎉 ${m}% Milestone reached!`);
+                }, 300);
+            }
+        }
+    });
+}
+
+function toast(msg,type) {
     const box = document.getElementById("toast-box");
     const el = document.createElement("div");
-    el.className = "toast";
+    el.className = "toast" + (type?" "+type:"");
     el.textContent = msg;
     box.appendChild(el);
-    setTimeout(() => el.remove(), 3000);
+    setTimeout(() => el.remove(), 3200);
 }
 
+/* ================================================================
+   BOOT
+================================================================ */
 document.addEventListener("DOMContentLoaded", () => {
-    renderAll();          // show UI immediately from local cache
-    initFirebase();       // then try cloud (with 2.5s failsafe)
+    renderAll();
+    initFirebase();
+    const target = state.rate * state.weeksCount * state.members.length;
+    const collected = (state.payments||[]).reduce((s,p) => s + Number(p.amount), 0);
+    const pct = target ? Math.round(collected/target*100) : 0;
+    [25,50,75,100].forEach(m => { if (pct >= m) milestonesReached.add(m); });
 });
+
+setInterval(updateLiveClock, 1000);
+setInterval(renderAll, 30000);
+
+// Save before closing
+window.addEventListener("beforeunload", () => { saveLocal(); });
 </script>
 </body>
 </html>
