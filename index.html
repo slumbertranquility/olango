@@ -1,1240 +1,1343 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#0ea5e9">
-    <title>🏝️ Olango Trip Tracker</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏝️</text></svg>">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0ea5e9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Olango">
+<title>🌴 Olango</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌴</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌴</text></svg>">
+<link rel="manifest" href='data:application/manifest+json,{"name":"Olango Trip","short_name":"Olango","start_url":".","display":"standalone","background_color":"%23fdfaf6","theme_color":"%230ea5e9","icons":[{"src":"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌴</text></svg>","sizes":"any","type":"image/svg+xml"}]}'>
 
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 
-    <style>
-        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-        :root{
-            --bg:#fdfaf6;--card:#ffffff;--text:#27272a;--text-soft:#52525b;--text-faint:#a1a1aa;
-            --border:#e4e4e7;--border-soft:#f4f4f5;
-            --primary:#0ea5e9;--primary-dk:#0284c7;--primary-lt:#e0f2fe;
-            --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--late:#8b5cf6;
-            --shadow:0 4px 12px rgba(0,0,0,.03);--shadow-lg:0 12px 32px rgba(0,0,0,.06);
-            --radius:18px;--radius-lg:24px;
-        }
-        html,body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;}
-        button{font:inherit;cursor:pointer;border:none;background:none;color:inherit;transition:all .2s ease}
-        input,select{font:inherit;color:inherit}
-        input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-        input[type=number]{-moz-appearance:textfield}
-        ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#d4d4d8;border-radius:99px}
+:root{
+  --bg:#fdfaf6;--card:#ffffff;--text:#18181b;--soft:#52525b;--faint:#a1a1aa;
+  --border:#e7e5e0;--border-2:#f4f2ed;
+  --ocean:#0ea5e9;--ocean-dk:#0284c7;--ocean-lt:#e0f2fe;
+  --sand:#f5e6c8;--sun:#f59e0b;--palm:#10b981;--coral:#ef4444;--dusk:#8b5cf6;
+  --shadow:0 2px 8px rgba(24,24,27,.04);
+  --shadow-md:0 8px 24px rgba(24,24,27,.06);
+  --shadow-lg:0 20px 40px rgba(24,24,27,.1);
+  --r:16px;--r-lg:24px;--r-xl:28px;
+  --safe-t:env(safe-area-inset-top,0);
+  --safe-b:env(safe-area-inset-bottom,0);
+  --safe-l:env(safe-area-inset-left,0);
+  --safe-r:env(safe-area-inset-right,0);
+  --nav-h:64px;
+}
 
-        #loader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#f0f9ff,#ffedd5);transition:opacity .35s,visibility .35s}
-        #loader.hide{opacity:0;visibility:hidden;pointer-events:none}
-        #loader .logo{font-size:64px;animation:float 2s ease-in-out infinite}
-        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
-        .wrap{max-width:1200px;margin:0 auto;padding:12px 12px 100px}
-        @media(min-width:640px){.wrap{padding:24px 20px 60px}}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+body{min-height:100dvh;padding-top:var(--safe-t);padding-left:var(--safe-l);padding-right:var(--safe-r)}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit;transition:transform .15s cubic-bezier(.34,1.56,.64,1),background .15s,border-color .15s;min-height:44px;min-width:44px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ocean);outline-offset:2px}
+input,select{font:inherit;color:inherit;min-height:44px}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:#d4d4d8;border-radius:99px}
 
-        .hero{position:relative;overflow:hidden;border-radius:var(--radius-lg);background:linear-gradient(135deg,#0284c7 0%,#0d9488 50%,#10b981 100%);color:#fff;padding:26px 24px;box-shadow:0 20px 40px -12px rgba(13,148,136,.4);margin-bottom:16px}
-        @media(min-width:640px){.hero{padding:36px 32px}}
-        .hero::before{content:"";position:absolute;top:-80px;right:-80px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.1);backdrop-filter:blur(4px)}
-        .hero::after{content:"";position:absolute;bottom:-120px;left:-60px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,.06)}
-        .hero-grid{position:relative;display:flex;flex-direction:column;gap:24px;z-index:2}
-        @media(min-width:900px){.hero-grid{flex-direction:row;align-items:center;justify-content:space-between}}
-        .badge-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-        .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;backdrop-filter:blur(4px)}
-        .badge-dot{width:6px;height:6px;background:#bef264;border-radius:50%;animation:pulse 2s infinite}
-        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
-        .cloud-badge{font-size:10px;font-weight:800;padding:5px 12px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em;backdrop-filter:blur(4px)}
-        .cloud-badge.live{background:rgba(16,185,129,.3);color:#d1fae5;border:1px solid rgba(52,211,153,.5)}
-        .cloud-badge.local{background:rgba(245,158,11,.3);color:#fef3c7;border:1px solid rgba(251,191,36,.5)}
-        .cloud-badge.saving{background:rgba(59,130,246,.3);color:#dbeafe;border:1px solid rgba(147,197,253,.5)}
-        .hero h1{font-size:28px;font-weight:900;line-height:1.15;margin-top:12px;letter-spacing:-.02em}
-        @media(min-width:640px){.hero h1{font-size:36px}}
-        .hero .sub{color:#ccfbf1;font-size:14px;margin-top:4px}
-        .live-clock{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:6px 14px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.15);border-radius:12px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:#fff;backdrop-filter:blur(4px)}
-        .live-clock .dot{width:6px;height:6px;background:#4ade80;border-radius:50%;animation:pulse 1s infinite}
-        .hero-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-        .hero-chip{padding:6px 14px;border-radius:999px;background:rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.2);font-size:11px;font-weight:700;backdrop-filter:blur(4px)}
-        .hero-chip.urgent{background:rgba(239,68,68,.35);border-color:rgba(252,165,165,.5)}
-        .hero-chip.success{background:rgba(16,185,129,.35);border-color:rgba(110,231,183,.5)}
+.app{display:grid;grid-template-columns:1fr;min-height:100dvh}
 
-        .target-box{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.25);border-radius:24px;padding:24px;min-width:300px;backdrop-filter:blur(16px);box-shadow:0 10px 24px rgba(0,0,0,.1)}
-        .target-box .lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#ccfbf1}
-        .target-box .amt{font-size:36px;font-weight:900;margin-top:4px;letter-spacing:-.02em;line-height:1}
-        .target-box .col{font-size:14px;margin-top:8px;color:#f1f5f9}
-        .target-box .col b{color:#6ee7b7;font-weight:800}
-        .progress-wrap{height:12px;background:rgba(255,255,255,.2);border-radius:999px;overflow:hidden;margin-top:14px;box-shadow:inset 0 2px 4px rgba(0,0,0,.1)}
-        .progress-fill{height:100%;background:linear-gradient(90deg,#34d399,#6ee7b7);border-radius:999px;transition:width 1s cubic-bezier(0.4,0,0.2,1);position:relative;overflow:hidden}
-        .progress-fill::after{content:"";position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:shimmer 2s infinite}
-        @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-        .countdown{margin-top:16px;padding:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:14px}
-        .countdown-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#fde68a;margin-bottom:4px}
-        .countdown-val{font-size:16px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
+.sidebar{display:none;position:sticky;top:0;height:100dvh;padding:24px 16px;border-right:1px solid var(--border);background:var(--card)}
+.sidebar-logo{font-size:32px;margin-bottom:24px;padding:8px}
+.sidebar nav{display:flex;flex-direction:column;gap:6px}
+.side-btn{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;font-size:14px;font-weight:600;color:var(--soft);width:100%;text-align:left}
+.side-btn.active,.side-btn:hover{background:var(--ocean-lt);color:var(--ocean-dk)}
+.side-btn .ic{font-size:20px;width:24px;text-align:center}
 
-        .toolbar{position:sticky;top:10px;z-index:30;background:rgba(255,255,255,.9);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.6);border-radius:18px;padding:10px;margin-bottom:16px;box-shadow:0 8px 24px rgba(0,0,0,.04);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-        .btn{padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-        .btn:active{transform:scale(.95)}
-        .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dk));color:#fff;box-shadow:0 4px 12px rgba(14,165,233,.3)}
-        .btn-primary:hover{box-shadow:0 6px 16px rgba(14,165,233,.4);transform:translateY(-1px)}
-        .btn-secondary{background:var(--card);border:1px solid var(--border);color:var(--text)}
-        .btn-secondary:hover{background:var(--border-soft)}
-        .btn-success{background:#ecfdf5;border:1px solid #a7f3d0;color:#047857}
-        .btn-danger{background:#fef2f2;border:1px solid #fecaca;color:#dc2626}
-        .btn-late{background:#f5f3ff;border:1px solid #ddd6fe;color:#6d28d9}
-        .spacer{flex:1}
-        .btn-icon{width:38px;height:38px;border-radius:12px;padding:0;justify-content:center;font-size:16px}
+@media (min-width:900px){
+  .app{grid-template-columns:220px 1fr}
+  .sidebar{display:flex;flex-direction:column}
+  .bottom-nav{display:none!important}
+  main{padding-bottom:40px!important}
+}
+@media (min-width:1400px){.app{grid-template-columns:260px 1fr}}
 
-        .pay-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:16px}
-        @media(min-width:640px){.pay-grid{grid-template-columns:1fr 1fr}}
-        .pay-card{color:#fff;border-radius:var(--radius-lg);padding:20px 24px;position:relative;overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;justify-content:space-between}
-        .pay-card.gcash{background:linear-gradient(135deg,#0284c7 0%,#2563eb 100%)}
-        .pay-card.mari{background:linear-gradient(135deg,#ea580c 0%,#f59e0b 100%)}
-        .pay-card::before{content:"";position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.1);backdrop-filter:blur(4px)}
-        .pay-tag{background:#fff;font-size:11px;font-weight:900;padding:4px 12px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;display:inline-block;position:relative}
-        .pay-card.gcash .pay-tag{color:#0284c7}.pay-card.mari .pay-tag{color:#ea580c}
-        .pay-acc-lbl{font-size:12px;margin-top:12px;color:rgba(255,255,255,.9);position:relative}
-        .pay-acc-name{font-weight:800;font-size:14px;color:#fff}
-        .pay-num{font-size:26px;font-weight:900;letter-spacing:.03em;color:#fff;text-align:left;margin:6px 0 16px;position:relative}
-        .pay-copy{padding:8px 16px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:12px;font-size:12px;font-weight:800;color:#fff;align-self:flex-start;position:relative}
-        .pay-copy:hover{background:rgba(255,255,255,.3)}
+main{padding:16px 14px calc(var(--nav-h) + var(--safe-b) + 20px);max-width:1400px;margin:0 auto;width:100%}
+@media (min-width:640px){main{padding:24px 20px 40px}}
+@media (min-width:900px){main{padding:24px 32px 40px}}
 
-        .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
-        .sec-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-        .sec-title h2{font-size:16px;font-weight:800;display:flex;align-items:center;gap:10px}
-        .sec-title h2::before{content:"";width:5px;height:20px;border-radius:99px;background:var(--primary)}
+.grid-mem{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));margin-bottom:16px}
 
-        .member-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px}
-        @media(min-width:768px){.member-grid{grid-template-columns:repeat(4,1fr)}}
-        .mem-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s,border-color .2s}
-        .mem-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--primary-lt)}
-        .mem-card.complete{border-color:var(--success);background:#f0fdf4}
-        .mem-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-        .avatar{width:40px;height:40px;border-radius:12px;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-        .mem-name{font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-        .mem-status{font-size:10px;font-weight:800;padding:3px 8px;border-radius:8px}
-        .mem-status.done{background:#d1fae5;color:#047857}
-        .mem-status.behind{background:#fee2e2;color:#dc2626}
-        .mem-status.ahead{background:#dbeafe;color:#1d4ed8}
-        .mem-status.ontrack{background:#fef3c7;color:#b45309}
-        .mem-amt{font-size:24px;font-weight:900;color:var(--text);letter-spacing:-.02em}
-        .mem-sub{font-size:11px;font-weight:600;color:var(--text-soft);margin-top:2px}
-        .mem-missed-info{font-size:10px;font-weight:700;color:var(--danger);margin-top:4px;background:#fef2f2;padding:2px 8px;border-radius:6px;display:inline-block}
-        .mem-bar{height:8px;background:var(--border-soft);border-radius:99px;overflow:hidden;margin-top:12px}
-        .mem-bar-fill{height:100%;border-radius:99px;transition:width .6s ease-out}
-        .mem-actions{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
-        .quick-btn{flex:1;padding:8px;background:var(--primary-lt);color:var(--primary-dk);border-radius:10px;font-size:12px;font-weight:800;min-width:80px}
-        .quick-btn:hover{background:var(--primary);color:#fff}
-        .quick-btn.done{background:#d1fae5;color:#047857;cursor:default}
-        .quick-btn.late-pay{background:#f5f3ff;color:#6d28d9;flex:none;padding:8px 10px}
-        .quick-btn.late-pay:hover{background:var(--late);color:#fff}
+#loader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#f0f9ff,#fef3c7);transition:opacity .35s,visibility .35s}
+#loader.hide{opacity:0;visibility:hidden;pointer-events:none}
+#loader .logo{font-size:64px;animation:float 2s ease-in-out infinite}
+#loader p{margin-top:14px;font-weight:700;color:var(--soft);font-size:13px}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 
-        .tbl-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow)}
-        .tbl-hd{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);background:#fff}
-        .tbl-hd h2{font-size:15px;font-weight:800}
-        .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-        table{width:100%;min-width:680px;border-collapse:collapse}
-        th{background:var(--bg);padding:12px 10px;font-size:11px;font-weight:800;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap}
-        td{padding:10px 8px;font-size:13px;border-bottom:1px solid var(--border-soft);text-align:center}
-        tbody tr:hover{background:var(--bg)}
-        tr.now-row{background:rgba(14,165,233,.08)!important;border-left:4px solid var(--primary)}
-        tr.past-row{opacity:.85}
-        tr.future-row{opacity:.9}
-        .chk-pill{display:inline-flex;padding:5px 9px;border-radius:8px;font-size:11px;font-weight:800;gap:3px;cursor:pointer;transition:transform .1s;align-items:center}
-        .chk-pill:hover{transform:scale(1.05)}
-        .chk-pill.paid{background:#d1fae5;color:#047857}
-        .chk-pill.late{background:#ede9fe;color:#6d28d9}
-        .chk-pill.part{background:#fef3c7;color:#b45309}
-        .chk-pill.miss{background:#fee2e2;color:#dc2626}
-        .chk-pill.none{background:var(--border-soft);color:var(--text-faint)}
-        .chk-pill.pending{background:#e0e7ff;color:#4338ca}
-        .chk-pill.add-btn{background:var(--primary-lt);color:var(--primary-dk);font-weight:900}
-        .chk-pill.add-btn:hover{background:var(--primary);color:#fff}
-        tfoot tr{background:var(--bg);font-weight:900}
-        tfoot td{padding:14px 10px;border-top:2px solid var(--border)}
-        .now-badge{display:inline-block;margin-left:6px;padding:3px 8px;background:var(--primary);color:#fff;font-size:9px;font-weight:900;border-radius:99px;text-transform:uppercase;letter-spacing:.05em;animation:pulse 2s infinite}
-        .past-badge{margin-left:6px;font-size:9px;color:var(--text-faint);font-weight:700}
-        .future-badge{margin-left:6px;font-size:9px;color:#6366f1;font-weight:700}
+.hero{position:relative;overflow:hidden;border-radius:var(--r-xl);background:linear-gradient(135deg,#0284c7 0%,#0d9488 55%,#10b981 100%);color:#fff;padding:22px 20px;box-shadow:var(--shadow-lg);margin-bottom:14px}
+@media (min-width:640px){.hero{padding:32px 28px}}
+.hero::before{content:"";position:absolute;top:-80px;right:-80px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.1)}
+.hero::after{content:"";position:absolute;bottom:-120px;left:-60px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,.06)}
+.hero-grid{position:relative;display:flex;flex-direction:column;gap:20px;z-index:2}
+@media (min-width:900px){.hero-grid{flex-direction:row;align-items:center;justify-content:space-between}}
+.badge-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;min-height:24px}
+.dot{width:6px;height:6px;background:#bef264;border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.cloud{font-size:9px;font-weight:900;padding:4px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em;min-height:24px;display:inline-flex;align-items:center}
+.cloud.live{background:rgba(16,185,129,.3);color:#d1fae5;border:1px solid rgba(52,211,153,.5)}
+.cloud.local{background:rgba(245,158,11,.3);color:#fef3c7;border:1px solid rgba(251,191,36,.5)}
+.cloud.saving{background:rgba(59,130,246,.3);color:#dbeafe;border:1px solid rgba(147,197,253,.5)}
 
-        .recent-item{display:flex;align-items:center;gap:12px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;transition:transform .2s}
-        .recent-item:hover{transform:translateX(4px);border-color:var(--primary-lt)}
-        .recent-body{flex:1;min-width:0}
-        .recent-name{font-weight:800;font-size:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-        .recent-meta{font-size:12px;color:var(--text-soft);margin-top:2px}
-        .recent-amt{font-weight:900;color:var(--success);font-size:16px}
-        .tag-late{background:#ede9fe;color:#6d28d9;font-size:9px;font-weight:900;padding:2px 6px;border-radius:6px;letter-spacing:.05em}
-        .icon-btn{width:34px;height:34px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;background:var(--bg);flex-shrink:0}
-        .icon-btn.edit{color:#b45309}.icon-btn.edit:hover{background:#fef3c7}
-        .icon-btn.del{color:#dc2626}.icon-btn.del:hover{background:#fee2e2}
+.hero h1{font-size:clamp(24px,5vw,34px);font-weight:900;line-height:1.15;margin-top:8px;letter-spacing:-.02em}
+.clock{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 12px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.15);border-radius:10px;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;color:#fff;min-height:28px}
+.clock .d{width:6px;height:6px;background:#4ade80;border-radius:50%;animation:pulse 1s infinite}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip{padding:5px 11px;border-radius:999px;background:rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.2);font-size:11px;font-weight:700;min-height:26px;display:inline-flex;align-items:center}
+.chip.urgent{background:rgba(239,68,68,.35);border-color:rgba(252,165,165,.5)}
+.chip.win{background:rgba(16,185,129,.35);border-color:rgba(110,231,183,.5)}
+.chip.predict{background:rgba(139,92,246,.3);border-color:rgba(196,181,253,.5)}
 
-        .modal{position:fixed;inset:0;z-index:100;display:none}
-        .modal.open{display:block}
-        .modal-bg{position:absolute;inset:0;background:rgba(15,23,42,.4);backdrop-filter:blur(8px);animation:fadein .2s}
-        @keyframes fadein{from{opacity:0}to{opacity:1}}
-        .modal-wrap{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
-        @media(min-width:640px){.modal-wrap{align-items:center;padding:20px}}
-        .modal-content{pointer-events:auto;width:100%;max-width:520px;max-height:92vh;background:var(--card);border-radius:24px 24px 0 0;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 -20px 40px rgba(0,0,0,.15);animation:slideup .3s cubic-bezier(.16,1,.3,1)}
-        @media(min-width:640px){.modal-content{border-radius:24px}}
-        .modal-content.lg{max-width:680px}
-        @keyframes slideup{from{transform:translateY(50px);opacity:0}to{transform:translateY(0);opacity:1}}
-        .modal-hd{padding:18px 24px;background:linear-gradient(135deg,var(--primary),var(--primary-dk));color:#fff;display:flex;align-items:center;justify-content:space-between}
-        .modal-hd h3{font-size:18px;font-weight:800}
-        .modal-hd p{font-size:12px;opacity:.9;margin-top:2px}
-        .modal-x{width:34px;height:34px;background:rgba(255,255,255,.2);border-radius:50%;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center}
-        .modal-body{padding:24px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
-        .form-group label{display:block;font-size:12px;font-weight:700;color:var(--text-soft);text-transform:uppercase;margin-bottom:8px;letter-spacing:.04em}
-        .form-group input,.form-group select{width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:14px;font-size:15px;font-weight:600;background:var(--bg);color:var(--text)}
-        .form-group input:focus,.form-group select:focus{border-color:var(--primary);outline:none;background:#fff}
-        .amt-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-        .amt-chip{padding:6px 14px;background:var(--primary-lt);color:var(--primary-dk);border-radius:10px;font-size:12px;font-weight:800}
-        .amt-chip:hover{background:var(--primary);color:#fff}
-        .auto-box{border-radius:16px;padding:14px;display:flex;gap:14px;align-items:center}
-        .auto-box.now{background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd}
-        .auto-box.late{background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:1px solid #ddd6fe}
-        .auto-box.edit{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a}
-        .auto-ic{width:42px;height:42px;color:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-        .auto-box.now .auto-ic{background:var(--primary)}
-        .auto-box.late .auto-ic{background:var(--late)}
-        .auto-box.edit .auto-ic{background:var(--warning)}
-        .auto-info-lbl{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
-        .auto-box.now .auto-info-lbl{color:var(--primary-dk)}
-        .auto-box.late .auto-info-lbl{color:#6d28d9}
-        .auto-box.edit .auto-info-lbl{color:#b45309}
-        .auto-info-val{font-size:14px;font-weight:800;color:var(--text);margin-top:2px}
-        .auto-info-sub{font-size:12px;color:var(--text-soft);margin-top:2px}
+.target{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:20px;min-width:min(100%,280px)}
+.target .l{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#ccfbf1}
+.target .a{font-size:clamp(28px,6vw,36px);font-weight:900;margin-top:2px;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.target .c{font-size:13px;margin-top:6px;color:#f1f5f9}
+.target .c b{color:#6ee7b7;font-weight:800}
+.bar{height:10px;background:rgba(255,255,255,.2);border-radius:999px;overflow:hidden;margin-top:12px}
+.bar-fill{height:100%;background:linear-gradient(90deg,#34d399,#6ee7b7);border-radius:999px;transition:width 1s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
+.bar-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:shimmer 2s infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.countdown{margin-top:12px;padding:10px 12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px}
+.countdown .l{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#fde68a}
+.countdown .v{font-size:15px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums;margin-top:2px}
 
-        .toggle-row{display:flex;gap:8px;padding:4px;background:var(--bg);border-radius:12px;border:1px solid var(--border)}
-        .toggle-opt{flex:1;padding:8px;text-align:center;font-size:12px;font-weight:800;border-radius:8px;color:var(--text-soft);cursor:pointer}
-        .toggle-opt.active{background:#fff;color:var(--text);box-shadow:var(--shadow)}
-        .toggle-opt.late.active{background:#ede9fe;color:#6d28d9}
+.toolbar{display:none;gap:8px;flex-wrap:wrap;align-items:center;background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:var(--r);padding:8px;margin-bottom:14px;position:sticky;top:12px;z-index:30;box-shadow:var(--shadow)}
+@media (min-width:900px){.toolbar{display:flex}}
+.spacer{flex:1}
 
-        .toast-box{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;pointer-events:none}
-        @media(min-width:640px){.toast-box{bottom:30px;right:30px;left:auto;transform:none}}
-        .toast{background:#18181b;color:#fff;padding:14px 20px;border-radius:14px;font-size:14px;font-weight:600;box-shadow:0 12px 28px rgba(0,0,0,.2);margin-top:10px;animation:slideup .3s}
-        .toast.err{background:#dc2626}
-        .toast.warn{background:#d97706}
-        .toast.late{background:var(--late)}
+.btn{padding:10px 14px;border-radius:12px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;min-height:44px}
+.btn:active{transform:scale(.96)}
+.btn-p{background:linear-gradient(135deg,var(--ocean),var(--ocean-dk));color:#fff;box-shadow:0 4px 12px rgba(14,165,233,.3)}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(14,165,233,.4)}
+.btn-s{background:var(--card);border:1px solid var(--border);color:var(--text)}
+.btn-s:hover{background:var(--border-2)}
+.btn-w{background:#fef2f2;border:1px solid #fecaca;color:#dc2626}
+.btn-l{background:#f5f3ff;border:1px solid #ddd6fe;color:#6d28d9}
+.btn-ic{width:44px;height:44px;padding:0;justify-content:center;border-radius:12px;font-size:16px}
 
-        .fab{position:fixed;bottom:24px;right:24px;z-index:50;width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,var(--primary),var(--primary-dk));color:#fff;font-size:32px;font-weight:900;box-shadow:0 12px 28px rgba(14,165,233,.4);display:flex;align-items:center;justify-content:center}
-        .fab:active{transform:scale(.9)}
-        @media(min-width:640px){.fab{display:none}}
+.pay-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:14px}
+@media (min-width:640px){.pay-grid{grid-template-columns:1fr 1fr}}
+.pay{color:#fff;border-radius:var(--r-lg);padding:18px 20px;position:relative;overflow:hidden;box-shadow:var(--shadow-md);display:flex;flex-direction:column;gap:12px}
+.pay.gcash{background:linear-gradient(135deg,#0284c7,#2563eb)}
+.pay.mari{background:linear-gradient(135deg,#ea580c,#f59e0b)}
+.pay::before{content:"";position:absolute;top:-50px;right:-50px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.1)}
+.pay-tag{background:#fff;font-size:10px;font-weight:900;padding:4px 10px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;display:inline-block;position:relative;min-height:22px;align-self:flex-start}
+.pay.gcash .pay-tag{color:#0284c7}
+.pay.mari .pay-tag{color:#ea580c}
+.pay-row{display:flex;justify-content:space-between;align-items:center;gap:12px;position:relative}
+.pay-info{flex:1;min-width:0}
+.pay-name{font-weight:800;font-size:13px;opacity:.9;margin-bottom:2px}
+.pay-num{font-size:clamp(20px,4vw,26px);font-weight:900;letter-spacing:.02em;color:#fff;text-align:left;word-break:break-all;line-height:1.1}
+.pay-actions{display:flex;gap:8px;position:relative}
+.pay-btn{padding:8px 12px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:10px;font-size:11px;font-weight:800;color:#fff;min-height:36px}
+.pay-btn:hover{background:rgba(255,255,255,.3)}
 
-        .empty{text-align:center;padding:40px 20px;color:var(--text-faint)}
-        .empty .emo{font-size:48px;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+.sec{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px}
+.sec h2{font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
+.sec h2::before{content:"";width:4px;height:18px;border-radius:99px;background:var(--ocean)}
+.sec-link{font-size:12px;font-weight:700;color:var(--ocean-dk);padding:6px 10px;border-radius:8px}
+.sec-link:hover{background:var(--ocean-lt)}
 
-        .save-indicator{position:fixed;bottom:24px;left:24px;z-index:50;padding:6px 12px;background:#10b981;color:#fff;border-radius:99px;font-size:11px;font-weight:800;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;box-shadow:0 8px 20px rgba(16,185,129,.3)}
-        .save-indicator.show{opacity:1;transform:translateY(0)}
-    </style>
+.mem{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s,border-color .2s}
+.mem:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--ocean-lt)}
+.mem.done{border-color:var(--palm);background:#f0fdf4}
+.mem-hd{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.av{width:38px;height:38px;border-radius:12px;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.mem-nm{font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.streak{font-size:11px;font-weight:800;color:var(--sun);display:flex;align-items:center;gap:2px;background:#fef3c7;padding:2px 6px;border-radius:6px}
+.mem-tag{font-size:9px;font-weight:900;padding:2px 6px;border-radius:6px}
+.mem-tag.done{background:#d1fae5;color:#047857}
+.mem-tag.behind{background:#fee2e2;color:#dc2626}
+.mem-tag.ahead{background:#dbeafe;color:#1d4ed8}
+.mem-tag.ok{background:#fef3c7;color:#b45309}
+.mem-amt{font-size:22px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mem-sub{font-size:11px;color:var(--soft);font-weight:600}
+.mem-warn{font-size:10px;font-weight:700;color:var(--coral);margin-top:4px;background:#fef2f2;padding:2px 6px;border-radius:6px;display:inline-block}
+.mem-bar{height:6px;background:var(--border-2);border-radius:99px;overflow:hidden;margin-top:10px}
+.mem-bar-fill{height:100%;border-radius:99px;transition:width .6s}
+.mem-btns{display:flex;gap:6px;margin-top:10px}
+.qbtn{flex:1;padding:8px;background:var(--ocean-lt);color:var(--ocean-dk);border-radius:10px;font-size:12px;font-weight:800;min-height:36px}
+.qbtn:hover{background:var(--ocean);color:#fff}
+.qbtn.done{background:#d1fae5;color:#047857;cursor:default}
+.qbtn.late{background:#f5f3ff;color:#6d28d9;flex:none;padding:8px 10px;min-width:44px}
+.qbtn.late:hover{background:var(--dusk);color:#fff}
+
+.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow)}
+.tbl-hd{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.tbl-hd h2{font-size:14px;font-weight:800}
+.tbl-sub{font-size:11px;color:var(--soft);font-weight:600}
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;min-width:640px;border-collapse:collapse}
+th{background:var(--bg);padding:10px 8px;font-size:10px;font-weight:800;color:var(--soft);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap}
+td{padding:9px 6px;font-size:12px;border-bottom:1px solid var(--border-2);text-align:center}
+tr.now td{background:rgba(14,165,233,.06)}
+tr.now td:first-child{border-left:3px solid var(--ocean)}
+tr.past{opacity:.7}
+.pill{display:inline-flex;padding:5px 8px;border-radius:8px;font-size:11px;font-weight:800;gap:3px;cursor:pointer;transition:transform .1s;align-items:center;min-height:28px;min-width:44px;justify-content:center}
+.pill:hover{transform:scale(1.05)}
+.pill.paid{background:#d1fae5;color:#047857}
+.pill.late{background:#ede9fe;color:#6d28d9}
+.pill.part{background:#fef3c7;color:#b45309}
+.pill.miss{background:#fee2e2;color:#dc2626}
+.pill.none{background:var(--border-2);color:var(--faint)}
+.pill.pend{background:#e0e7ff;color:#4338ca}
+.pill.add{background:var(--ocean-lt);color:var(--ocean-dk);font-weight:900}
+.pill.add:hover{background:var(--ocean);color:#fff}
+tfoot tr{background:var(--bg);font-weight:900}
+tfoot td{padding:12px 8px;border-top:2px solid var(--border)}
+.now-b{display:inline-block;margin-left:5px;padding:2px 7px;background:var(--ocean);color:#fff;font-size:9px;font-weight:900;border-radius:99px;text-transform:uppercase;letter-spacing:.05em;animation:pulse 2s infinite}
+.past-b{margin-left:5px;font-size:9px;color:var(--faint);font-weight:700}
+.up-b{margin-left:5px;font-size:9px;color:#6366f1;font-weight:700}
+
+.recent-item{display:flex;align-items:center;gap:10px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px}
+.recent-body{flex:1;min-width:0}
+.recent-nm{font-weight:800;font-size:13px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.recent-mt{font-size:11px;color:var(--soft);margin-top:2px}
+.recent-a{font-weight:900;color:var(--palm);font-size:14px;font-variant-numeric:tabular-nums}
+.tag{background:#ede9fe;color:#6d28d9;font-size:9px;font-weight:900;padding:2px 6px;border-radius:6px;letter-spacing:.05em}
+.ib{width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;background:var(--bg);flex-shrink:0}
+.ib.edit:hover{background:#fef3c7;color:#b45309}
+.ib.del:hover{background:#fee2e2;color:#dc2626}
+
+.modal{position:fixed;inset:0;z-index:100;display:none}
+.modal.open{display:block}
+.modal-bg{position:absolute;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(8px);animation:fade .2s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal-w{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;padding-bottom:var(--safe-b)}
+@media (min-width:640px){.modal-w{align-items:center;padding:20px}}
+.mc{pointer-events:auto;width:100%;max-width:520px;max-height:92dvh;background:var(--card);border-radius:24px 24px 0 0;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 -20px 40px rgba(0,0,0,.15);animation:slide .3s cubic-bezier(.16,1,.3,1)}
+@media (min-width:640px){.mc{border-radius:24px}}
+.mc.lg{max-width:680px}
+@keyframes slide{from{transform:translateY(50px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mh{padding:16px 20px;background:linear-gradient(135deg,var(--ocean),var(--ocean-dk));color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mh h3{font-size:17px;font-weight:800}
+.mh p{font-size:11px;opacity:.9;margin-top:2px}
+.mx{width:38px;height:38px;background:rgba(255,255,255,.2);border-radius:50%;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mb{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px}
+.fg label{display:block;font-size:11px;font-weight:700;color:var(--soft);text-transform:uppercase;margin-bottom:6px;letter-spacing:.04em}
+.fg input,.fg select{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-weight:600;background:var(--bg);color:var(--text)}
+.fg input:focus,.fg select:focus{border-color:var(--ocean);outline:none;background:#fff}
+.amt-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.amt-c{padding:6px 12px;background:var(--ocean-lt);color:var(--ocean-dk);border-radius:8px;font-size:12px;font-weight:800;min-height:32px}
+.amt-c:hover{background:var(--ocean);color:#fff}
+.auto{border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center}
+.auto.now{background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd}
+.auto.late{background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:1px solid #ddd6fe}
+.auto.edit{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a}
+.auto-ic{width:38px;height:38px;color:#fff;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.auto.now .auto-ic{background:var(--ocean)}
+.auto.late .auto-ic{background:var(--dusk)}
+.auto.edit .auto-ic{background:var(--sun)}
+.auto-l{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+.auto.now .auto-l{color:var(--ocean-dk)}
+.auto.late .auto-l{color:#6d28d9}
+.auto.edit .auto-l{color:#b45309}
+.auto-v{font-size:13px;font-weight:800;margin-top:2px}
+.auto-s{font-size:11px;color:var(--soft);margin-top:1px}
+.toggle{display:flex;gap:4px;padding:4px;background:var(--bg);border-radius:12px;border:1px solid var(--border)}
+.toggle-o{flex:1;padding:9px;text-align:center;font-size:12px;font-weight:800;border-radius:8px;color:var(--soft);cursor:pointer;min-height:40px}
+.toggle-o.active{background:#fff;color:var(--text);box-shadow:var(--shadow)}
+.toggle-o.late.active{background:#ede9fe;color:#6d28d9}
+
+.qr-box{display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px;background:#fff;border:1px solid var(--border);border-radius:var(--r);text-align:center}
+.qr-box canvas,.qr-box img{border-radius:12px;max-width:100%;height:auto}
+.qr-lbl{font-size:12px;color:var(--soft);font-weight:700}
+.qr-num{font-size:18px;font-weight:900;letter-spacing:.03em}
+.qr-warn{font-size:12px;color:var(--soft);padding:20px;text-align:center;background:var(--border-2);border-radius:12px;font-weight:600}
+
+.toast-box{position:fixed;bottom:calc(var(--nav-h) + var(--safe-b) + 12px);left:50%;transform:translateX(-50%);z-index:9999;pointer-events:none;display:flex;flex-direction:column-reverse;gap:8px;width:calc(100% - 24px);max-width:400px}
+@media (min-width:900px){.toast-box{bottom:24px;right:24px;left:auto;transform:none;width:auto}}
+.toast{background:#18181b;color:#fff;padding:12px 16px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 12px 28px rgba(0,0,0,.25);animation:slide .3s;display:flex;align-items:center;gap:10px;pointer-events:auto}
+.toast.err{background:#dc2626}
+.toast.warn{background:#d97706}
+.toast.late{background:var(--dusk)}
+.toast.win{background:var(--palm)}
+.toast-btn{padding:5px 12px;background:rgba(255,255,255,.2);border-radius:8px;font-size:11px;font-weight:800;color:#fff;margin-left:auto;min-height:32px;white-space:nowrap}
+
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nav-h) + var(--safe-b));padding-bottom:var(--safe-b);z-index:40;background:rgba(255,255,255,.95);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding-left:var(--safe-l);padding-right:var(--safe-r)}
+.nav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex:1;font-size:10px;font-weight:700;color:var(--soft);height:100%;padding:6px 4px;min-height:44px}
+.nav-btn .ic{font-size:20px}
+.nav-btn.active{color:var(--ocean-dk)}
+.nav-btn.pri{color:#fff}
+.nav-btn.pri .ic{background:linear-gradient(135deg,var(--ocean),var(--ocean-dk));color:#fff;width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 6px 14px rgba(14,165,233,.4);margin-bottom:2px}
+
+.empty{text-align:center;padding:36px 16px;color:var(--faint)}
+.empty .emo{font-size:44px;margin-bottom:8px}
+.hidden{display:none!important}
+</style>
 </head>
 
 <body>
-    <div id="loader">
-        <div class="logo">🌴</div>
-        <p style="margin-top:16px;font-weight:800;color:var(--text-soft);font-size:16px;">Connecting to Island Cloud…</p>
-        <p style="margin-top:6px;font-size:12px;color:var(--text-faint);">Local Mode auto-starts if offline</p>
+<div id="loader" role="status" aria-label="Loading">
+<div class="logo">🌴</div>
+<p id="loader-msg">Loading Olango</p>
+</div>
+
+<div class="toast-box" id="toast-box" aria-live="polite"></div>
+
+<div class="app">
+
+<aside class="sidebar" aria-label="Navigation">
+  <div class="sidebar-logo">🌴</div>
+  <nav>
+    <button class="side-btn active" onclick="scrollTop()"><span class="ic">🏠</span>Home</button>
+    <button class="side-btn" onclick="openPayment()"><span class="ic">➕</span>Log Pay</button>
+    <button class="side-btn" onclick="openPayment(null,true)"><span class="ic">⏰</span>Late Pay</button>
+    <button class="side-btn" onclick="openModal('m-history')"><span class="ic">📜</span>History</button>
+    <button class="side-btn" onclick="openModal('m-members')"><span class="ic">👥</span>Members</button>
+    <button class="side-btn" onclick="openModal('m-qr')"><span class="ic">📱</span>QR Codes</button>
+    <button class="side-btn" onclick="openModal('m-settings')"><span class="ic">⚙️</span>Settings</button>
+    <button class="side-btn" onclick="copySummary()"><span class="ic">📋</span>Copy GC</button>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="badge-row">
+          <div class="badge"><span class="dot"></span><span id="badge-txt">—</span></div>
+          <div id="cloud" class="cloud local">● Local</div>
+        </div>
+        <h1 id="trip-title">🌴 Olango</h1>
+        <div class="clock"><span class="d"></span><span id="live-clock">—</span></div>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="target">
+        <p class="l">Fund Target</p>
+        <p class="a" id="stat-target">₱0</p>
+        <p class="c"><b id="stat-collected">₱0</b> · <span id="stat-pct">0%</span></p>
+        <div class="bar"><div class="bar-fill" id="stat-bar" style="width:0%"></div></div>
+        <div class="countdown">
+          <div class="l">⏰ Deadline</div>
+          <div class="v" id="countdown">—</div>
+        </div>
+      </div>
     </div>
+  </header>
 
-    <div class="toast-box" id="toast-box"></div>
-    <div class="save-indicator" id="save-indicator">✓ Saved to cloud</div>
+  <div class="toolbar">
+    <button class="btn btn-p" onclick="openPayment()">＋ Pay</button>
+    <button class="btn btn-l" onclick="openPayment(null,true)">⏰ Late</button>
+    <button class="btn btn-s btn-ic" onclick="openModal('m-qr')" aria-label="QR">📱</button>
+    <div class="spacer"></div>
+    <button class="btn btn-s btn-ic" onclick="exportBackup()" aria-label="Backup">💾</button>
+    <button class="btn btn-s btn-ic" onclick="importBackup()" aria-label="Restore">📤</button>
+    <button class="btn btn-w btn-ic" onclick="promptReset()" aria-label="Reset">↺</button>
+  </div>
 
-    <div class="wrap">
-        <header class="hero">
-            <div class="hero-grid">
-                <div>
-                    <div class="badge-row">
-                        <div class="badge"><span class="badge-dot"></span><span id="badge-txt">Loading…</span></div>
-                        <div id="cloud-badge" class="cloud-badge local">● Connecting…</div>
-                    </div>
-                    <h1 id="trip-title">🌴 Olango Trip</h1>
-                    <p class="sub" id="trip-range">Loading…</p>
-                    <div class="live-clock"><span class="dot"></span>🇵🇭 <span id="live-clock">--</span> Manila</div>
-                    <div class="hero-chips" id="hero-chips"></div>
-                </div>
-                <div class="target-box">
-                    <p class="lbl">Total Trip Fund</p>
-                    <p class="amt" id="stat-target">₱0</p>
-                    <p class="col">Collected: <b id="stat-collected">₱0</b> · <span id="stat-pct">0%</span></p>
-                    <div class="progress-wrap"><div class="progress-fill" id="stat-bar" style="width:0%"></div></div>
-                    <div class="countdown">
-                        <div class="countdown-lbl">⏰ This week's deadline</div>
-                        <div class="countdown-val" id="countdown-val">--</div>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <div class="toolbar">
-            <button class="btn btn-primary" onclick="openPayment()">＋ Log Payment</button>
-            <button class="btn btn-late" onclick="openPayment(null,true)">⏰ Late Pay</button>
-            <button class="btn btn-secondary" onclick="openModal('m-history')">📜 History</button>
-            <button class="btn btn-secondary" onclick="openModal('m-members')">👥 Members</button>
-            <button class="btn btn-secondary" onclick="openModal('m-settings')">⚙️ Settings</button>
-            <div class="spacer"></div>
-            <button class="btn btn-success" onclick="copyMessengerSummary()">📋 Copy for GC</button>
-            <button class="btn btn-secondary btn-icon" onclick="exportBackup()" title="Backup">💾</button>
-            <button class="btn btn-secondary btn-icon" onclick="importBackup()" title="Restore">📤</button>
-            <button class="btn btn-danger btn-icon" onclick="promptReset()" title="Reset">↺</button>
+  <div class="pay-grid">
+    <div class="pay gcash">
+      <span class="pay-tag">GCash</span>
+      <div class="pay-row">
+        <div class="pay-info">
+          <div class="pay-name" id="gcash-name">—</div>
+          <button class="pay-num" id="gcash-num" onclick="copyGCash()">—</button>
         </div>
-
-        <div class="pay-grid">
-            <div class="pay-card gcash">
-                <div style="position:relative;">
-                    <span class="pay-tag">GCash</span>
-                    <p class="pay-acc-lbl">Account Name: <span class="pay-acc-name" id="gcash-name">KXI</span></p>
-                    <button class="pay-num" id="gcash-num" onclick="copyGCash()">0993 933 6295</button>
-                </div>
-                <button class="pay-copy" onclick="copyGCash()">📋 Copy GCash</button>
-            </div>
-            <div class="pay-card mari">
-                <div style="position:relative;">
-                    <span class="pay-tag">MariBank</span>
-                    <p class="pay-acc-lbl">Account Name: <span class="pay-acc-name" id="mari-name">KXI</span></p>
-                    <button class="pay-num" id="mari-num" onclick="copyMari()">13397715774</button>
-                </div>
-                <button class="pay-copy" onclick="copyMari()">📋 Copy MariBank</button>
-            </div>
+        <div class="pay-actions">
+          <button class="pay-btn" onclick="showQR('gcash')" aria-label="Show QR">⬜</button>
+          <button class="pay-btn" onclick="copyGCash()">📋</button>
         </div>
-
-        <div class="sec-title">
-            <h2>Member Balances</h2>
-            <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="openModal('m-members')">Manage →</button>
-        </div>
-        <div class="member-grid" id="member-grid"></div>
-
-        <div class="tbl-card">
-            <div class="tbl-hd">
-                <h2>📅 Weekly Checklist</h2>
-                <span style="font-size:11px;color:var(--text-soft);font-weight:700;">Tap any cell to log · Manila Time</span>
-            </div>
-            <div class="tbl-scroll">
-                <table>
-                    <thead id="tbl-head"></thead>
-                    <tbody id="tbl-body"></tbody>
-                    <tfoot id="tbl-foot"></tfoot>
-                </table>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="sec-title">
-                <h2>Recent Payments</h2>
-                <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="openModal('m-history')">View All →</button>
-            </div>
-            <div id="recent-list"></div>
-        </div>
+      </div>
     </div>
-
-    <button class="fab" onclick="openPayment()" aria-label="Log payment">+</button>
-
-    <!-- Payment Modal -->
-    <div class="modal" id="m-payment">
-        <div class="modal-bg" onclick="closeModal('m-payment')"></div>
-        <div class="modal-wrap">
-            <div class="modal-content">
-                <div class="modal-hd" id="pay-modal-hd">
-                    <div><h3 id="pay-title">Log a Payment</h3><p id="pay-sub">Auto-detected</p></div>
-                    <button class="modal-x" onclick="closeModal('m-payment')">✕</button>
-                </div>
-                <form class="modal-body" onsubmit="submitPayment(event)">
-                    <input type="hidden" id="edit-id">
-                    <div class="auto-box now" id="auto-box">
-                        <div class="auto-ic" id="auto-ic">📅</div>
-                        <div>
-                            <div class="auto-info-lbl" id="auto-lbl">Current Manila Time</div>
-                            <div class="auto-info-val" id="auto-date">--</div>
-                            <div class="auto-info-sub" id="auto-week">--</div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Payment Type</label>
-                        <div class="toggle-row">
-                            <div class="toggle-opt active" id="tgl-normal" onclick="setPayType('normal')">On-time / Advance</div>
-                            <div class="toggle-opt late" id="tgl-late" onclick="setPayType('late')">⏰ Late Payment</div>
-                        </div>
-                    </div>
-                    <div class="form-group"><label>Who Paid?</label><select id="pay-member" required></select></div>
-                    <div class="form-group"><label>For Which Week?</label><select id="pay-week" required onchange="onWeekChange()"></select></div>
-                    <div class="form-group">
-                        <label>Amount (₱) <span style="color:var(--text-faint);font-weight:600;text-transform:none">— Full, partial, or custom</span></label>
-                        <input type="number" id="pay-amount" min="1" required inputmode="numeric" placeholder="e.g. 30">
-                        <div class="amt-chips" id="amt-chips"></div>
-                    </div>
-                    <div class="form-group"><label>Note / Reference (Optional)</label><input type="text" id="pay-note" placeholder="e.g. GCash Ref #1234 or 'catch-up'" maxlength="120"></div>
-                    <button type="submit" class="btn btn-primary" style="padding:16px;font-size:15px;justify-content:center;" id="pay-submit">✓ Save Payment</button>
-                </form>
-            </div>
+    <div class="pay mari">
+      <span class="pay-tag">MariBank</span>
+      <div class="pay-row">
+        <div class="pay-info">
+          <div class="pay-name" id="mari-name">—</div>
+          <button class="pay-num" id="mari-num" onclick="copyMari()">—</button>
         </div>
-    </div>
-
-    <!-- Members Modal -->
-    <div class="modal" id="m-members">
-        <div class="modal-bg" onclick="closeModal('m-members')"></div>
-        <div class="modal-wrap">
-            <div class="modal-content">
-                <div class="modal-hd" style="background:linear-gradient(135deg,#0d9488,#14b8a6);">
-                    <div><h3>Manage Members</h3><p>Add or remove barkada</p></div>
-                    <button class="modal-x" onclick="closeModal('m-members')">✕</button>
-                </div>
-                <div class="modal-body">
-                    <div id="members-list"></div>
-                    <div style="display:flex;gap:10px;margin-top:12px;">
-                        <input type="text" id="new-member" placeholder="Add member name..." style="flex:1;padding:12px 14px;border:2px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);" onkeypress="if(event.key==='Enter'){event.preventDefault();addMember()}">
-                        <button class="btn btn-primary" onclick="addMember()">Add</button>
-                    </div>
-                </div>
-            </div>
+        <div class="pay-actions">
+          <button class="pay-btn" onclick="showQR('mari')" aria-label="Show QR">⬜</button>
+          <button class="pay-btn" onclick="copyMari()">📋</button>
         </div>
+      </div>
     </div>
+  </div>
 
-    <!-- History Modal -->
-    <div class="modal" id="m-history">
-        <div class="modal-bg" onclick="closeModal('m-history')"></div>
-        <div class="modal-wrap">
-            <div class="modal-content lg">
-                <div class="modal-hd" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
-                    <div><h3>Payment History</h3><p id="hist-sub">All payments</p></div>
-                    <div style="display:flex;gap:10px;align-items:center;">
-                        <select id="hist-filter" onchange="renderHistory()" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;"><option value="all">All Members</option></select>
-                        <button class="modal-x" onclick="closeModal('m-history')">✕</button>
-                    </div>
-                </div>
-                <div class="modal-body" id="hist-list"></div>
-            </div>
-        </div>
+  <div class="sec"><h2>Members</h2><button class="sec-link" onclick="openModal('m-members')">Manage →</button></div>
+  <div class="grid-mem" id="mem-grid"></div>
+
+  <div class="tbl-wrap">
+    <div class="tbl-hd">
+      <h2>📅 Checklist</h2>
+      <span class="tbl-sub">Tap cell · Manila</span>
     </div>
-
-    <!-- Settings Modal -->
-    <div class="modal" id="m-settings">
-        <div class="modal-bg" onclick="closeModal('m-settings')"></div>
-        <div class="modal-wrap">
-            <div class="modal-content">
-                <div class="modal-hd" style="background:linear-gradient(135deg,#334155,#0f172a);">
-                    <div><h3>Trip Settings</h3><p>Configure everything</p></div>
-                    <button class="modal-x" onclick="closeModal('m-settings')">✕</button>
-                </div>
-                <form class="modal-body" onsubmit="saveSettings(event)">
-                    <div class="form-group"><label>Trip Name</label><input type="text" id="set-name" required></div>
-                    <div class="form-group"><label>Weekly Rate (₱)</label><input type="number" id="set-rate" min="1" required></div>
-                    <div class="form-group"><label>Start Date (First Friday)</label><input type="date" id="set-start" required></div>
-                    <div class="form-group"><label>Total Weeks</label><input type="number" id="set-weeks" min="1" max="104" required></div>
-                    <div class="form-group"><label>GCash Number</label><input type="text" id="set-gcash-num" required></div>
-                    <div class="form-group"><label>GCash Name</label><input type="text" id="set-gcash-name" required></div>
-                    <div class="form-group"><label>MariBank Number</label><input type="text" id="set-mari-num" required></div>
-                    <div class="form-group"><label>MariBank Name</label><input type="text" id="set-mari-name" required></div>
-                    <button type="submit" class="btn btn-primary" style="padding:16px;font-size:15px;justify-content:center;">Save Settings</button>
-                </form>
-            </div>
-        </div>
+    <div class="tbl-scroll">
+      <table><thead id="tbl-h"></thead><tbody id="tbl-b"></tbody><tfoot id="tbl-f"></tfoot></table>
     </div>
+  </div>
 
-    <input type="file" id="import-input" accept=".json" style="display:none" onchange="handleImport(event)">
+  <div class="card">
+    <div class="sec"><h2>Recent</h2><button class="sec-link" onclick="openModal('m-history')">All →</button></div>
+    <div id="recent"></div>
+  </div>
+</main>
+
+</div>
+
+<nav class="bottom-nav" aria-label="Main">
+  <button class="nav-btn" onclick="scrollTop()"><span class="ic">🏠</span>Home</button>
+  <button class="nav-btn" onclick="openModal('m-history')"><span class="ic">📜</span>Log</button>
+  <button class="nav-btn pri" onclick="openPayment()"><span class="ic">＋</span>Pay</button>
+  <button class="nav-btn" onclick="openModal('m-members')"><span class="ic">👥</span>Team</button>
+  <button class="nav-btn" onclick="openModal('m-settings')"><span class="ic">⚙️</span>More</button>
+</nav>
+
+<div class="modal" id="m-payment" role="dialog" aria-modal="true">
+<div class="modal-bg" onclick="closeModal('m-payment')"></div>
+<div class="modal-w"><div class="mc">
+<div class="mh" id="pay-mh">
+<div><h3 id="pay-title">Log Payment</h3><p id="pay-sub">—</p></div>
+<button class="mx" onclick="closeModal('m-payment')" aria-label="Close">✕</button>
+</div>
+<form class="mb" onsubmit="submitPayment(event)">
+<div class="auto now" id="auto-box">
+<div class="auto-ic" id="auto-ic">📅</div>
+<div>
+<div class="auto-l" id="auto-lbl">Manila Time</div>
+<div class="auto-v" id="auto-date">—</div>
+<div class="auto-s" id="auto-week">—</div>
+</div>
+</div>
+<div class="fg">
+<label>Type</label>
+<div class="toggle">
+<div class="toggle-o active" id="tgl-normal" onclick="setPayType('normal')">On-time / Advance</div>
+<div class="toggle-o late" id="tgl-late" onclick="setPayType('late')">⏰ Late</div>
+</div>
+</div>
+<div class="fg"><label>Member</label><select id="pay-member" required></select></div>
+<div class="fg"><label>Week</label><select id="pay-week" required onchange="onWeekChange()"></select></div>
+<div class="fg">
+<label>Amount ₱</label>
+<input type="number" id="pay-amount" min="1" required inputmode="numeric">
+<div class="amt-chips" id="amt-chips"></div>
+</div>
+<div class="fg"><label>Note</label><input type="text" id="pay-note" maxlength="120"></div>
+<button type="submit" class="btn btn-p" style="padding:14px;justify-content:center" id="pay-submit">✓ Save</button>
+</form>
+</div></div>
+</div>
+
+<div class="modal" id="m-members" role="dialog" aria-modal="true">
+<div class="modal-bg" onclick="closeModal('m-members')"></div>
+<div class="modal-w"><div class="mc">
+<div class="mh" style="background:linear-gradient(135deg,#0d9488,#14b8a6)">
+<div><h3>Members</h3></div>
+<button class="mx" onclick="closeModal('m-members')" aria-label="Close">✕</button>
+</div>
+<div class="mb">
+<div id="mem-list"></div>
+<div style="display:flex;gap:8px;margin-top:8px">
+<input type="text" id="new-mem" placeholder="Name…" style="flex:1;padding:12px;border:2px solid var(--border);border-radius:12px;background:var(--bg)" onkeypress="if(event.key==='Enter'){event.preventDefault();addMember()}">
+<button class="btn btn-p" onclick="addMember()">Add</button>
+</div>
+</div>
+</div></div>
+</div>
+
+<div class="modal" id="m-history" role="dialog" aria-modal="true">
+<div class="modal-bg" onclick="closeModal('m-history')"></div>
+<div class="modal-w"><div class="mc lg">
+<div class="mh" style="background:linear-gradient(135deg,#f59e0b,#d97706)">
+<div><h3>History</h3><p id="hist-sub">—</p></div>
+<div style="display:flex;gap:8px;align-items:center">
+<select id="hist-filter" onchange="renderHistory()" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;min-height:36px"><option value="all">All</option></select>
+<button class="mx" onclick="closeModal('m-history')" aria-label="Close">✕</button>
+</div>
+</div>
+<div class="mb" id="hist-list"></div>
+</div></div>
+</div>
+
+<div class="modal" id="m-qr" role="dialog" aria-modal="true">
+<div class="modal-bg" onclick="closeModal('m-qr')"></div>
+<div class="modal-w"><div class="mc">
+<div class="mh" style="background:linear-gradient(135deg,#0284c7,#2563eb)">
+<div><h3>Scan to Pay</h3></div>
+<button class="mx" onclick="closeModal('m-qr')" aria-label="Close">✕</button>
+</div>
+<div class="mb">
+<div class="toggle" style="margin-bottom:4px">
+<div class="toggle-o active" id="qr-tgl-gcash" onclick="renderQR('gcash')">GCash</div>
+<div class="toggle-o" id="qr-tgl-mari" onclick="renderQR('mari')">MariBank</div>
+</div>
+<div class="qr-box" id="qr-box">
+<div id="qr-slot"></div>
+<div class="qr-lbl" id="qr-name">—</div>
+<div class="qr-num" id="qr-num">—</div>
+</div>
+</div>
+</div></div>
+</div>
+
+<div class="modal" id="m-settings" role="dialog" aria-modal="true">
+<div class="modal-bg" onclick="closeModal('m-settings')"></div>
+<div class="modal-w"><div class="mc">
+<div class="mh" style="background:linear-gradient(135deg,#334155,#0f172a)">
+<div><h3>Settings</h3></div>
+<button class="mx" onclick="closeModal('m-settings')" aria-label="Close">✕</button>
+</div>
+<form class="mb" onsubmit="saveSettings(event)">
+<div class="fg"><label>Trip Name</label><input type="text" id="set-name" required></div>
+<div class="fg"><label>Weekly Rate ₱</label><input type="number" id="set-rate" min="1" required></div>
+<div class="fg"><label>Start (First Friday)</label><input type="date" id="set-start" required></div>
+<div class="fg"><label>Total Weeks</label><input type="number" id="set-weeks" min="1" max="104" required></div>
+<div class="fg"><label>GCash Number</label><input type="text" id="set-gcash-num" required></div>
+<div class="fg"><label>GCash Name</label><input type="text" id="set-gcash-name" required></div>
+<div class="fg"><label>MariBank Number</label><input type="text" id="set-mari-num" required></div>
+<div class="fg"><label>MariBank Name</label><input type="text" id="set-mari-name" required></div>
+<div style="display:flex;gap:8px">
+<button type="button" class="btn btn-s" style="flex:1;justify-content:center" onclick="exportBackup()">💾 Backup</button>
+<button type="button" class="btn btn-s" style="flex:1;justify-content:center" onclick="importBackup()">📤 Restore</button>
+</div>
+<button type="button" class="btn btn-w" style="justify-content:center" onclick="promptReset()">↺ Reset All Data</button>
+<button type="submit" class="btn btn-p" style="padding:14px;justify-content:center">✓ Save</button>
+</form>
+</div></div>
+</div>
+
+<input type="file" id="import-input" accept=".json" style="display:none" onchange="handleImport(event)">
 
 <script>
 /* ================================================================
-   FIREBASE CONFIG — Singapore
+   HARD FAILSAFE — Loader ALWAYS hides within 2 seconds no matter what
 ================================================================ */
-const firebaseConfig = {
-    apiKey: "AIzaSyAdu2G69SBviKXD6jMFGssb_1LcTXIgaf0",
-    authDomain: "olangotrip.firebaseapp.com",
-    databaseURL: "https://olangotrip-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "olangotrip",
-    storageBucket: "olangotrip.firebasestorage.app",
-    messagingSenderId: "693372588889",
-    appId: "1:693372588889:web:ba96b6c10a223e3f5e7248",
-    measurementId: "G-PG3E62SWG8"
-};
-
-const STORAGE_KEY = "olango_trip_v5";
-const TZ = "Asia/Manila";
-
-let DB = null, dbRef = null, isOnline = false, loaderHidden = false;
-let editingPaymentId = null;
-let payType = "normal"; // "normal" or "late"
-let milestonesReached = new Set();
-let syncTimeout = null;
-
-const defaultState = {
-    tripName: "🌴 Olango Island Trip",
-    rate: 30,
-    startDate: "2026-08-28", // Aug 28, 2026 Friday
-    weeksCount: 17,
-    gcashName: "KXI",
-    gcashNumber: "09939336295",
-    mariName: "KXI",
-    mariNumber: "13397715774",
-    members: [
-        { id: 1, name: "Fatima" },
-        { id: 2, name: "Kurt" },
-        { id: 3, name: "Johnchris" },
-        { id: 4, name: "Tina" }
-    ],
-    payments: [],
-    lastUpdated: 0
-};
-
-let state = loadLocal();
+var __loaderHidden = false;
+function hideLoader(){
+  if (__loaderHidden) return;
+  __loaderHidden = true;
+  try {
+    var el = document.getElementById("loader");
+    if (el) el.classList.add("hide");
+    setTimeout(function(){ try{ el && el.remove(); }catch(e){} }, 600);
+  } catch(e){}
+}
+// Multiple guaranteed unlocks
+setTimeout(hideLoader, 2000);
+window.addEventListener("load", function(){ setTimeout(hideLoader, 500); });
+window.addEventListener("error", function(){ hideLoader(); });
+window.addEventListener("unhandledrejection", function(){ hideLoader(); });
+document.addEventListener("DOMContentLoaded", function(){ setTimeout(hideLoader, 800); });
 
 /* ================================================================
-   BULLETPROOF STORAGE & SYNC (Never resets, always saves)
+   LAZY-LOAD Firebase, confetti, QR — none of them can block UI
 ================================================================ */
-function loadLocal() {
+function loadScript(src, timeoutMs){
+  return new Promise(function(resolve){
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-            const parsed = JSON.parse(raw);
-            return Object.assign({}, defaultState, parsed);
-        }
-    } catch(e){ console.error("Local load err:", e); }
-    return JSON.parse(JSON.stringify(defaultState));
+      var s = document.createElement("script");
+      var done = false;
+      var finish = function(ok){ if(done) return; done = true; resolve(!!ok); };
+      s.src = src; s.async = true;
+      s.onload = function(){ finish(true); };
+      s.onerror = function(){ finish(false); };
+      document.head.appendChild(s);
+      setTimeout(function(){ finish(false); }, timeoutMs || 3000);
+    } catch(e){ resolve(false); }
+  });
 }
 
-function saveLocal() {
-    try {
-        state.lastUpdated = Date.now();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch(e){ console.error("Local save err:", e); }
-}
+/* ================================================================
+   FIREBASE CONFIG — Singapore (kept as-is)
+================================================================ */
+var firebaseConfig = {
+  apiKey: "AIzaSyAdu2G69SBviKXD6jMFGssb_1LcTXIgaf0",
+  authDomain: "olangotrip.firebaseapp.com",
+  databaseURL: "https://olangotrip-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "olangotrip",
+  storageBucket: "olangotrip.firebasestorage.app",
+  messagingSenderId: "693372588889",
+  appId: "1:693372588889:web:ba96b6c10a223e3f5e7248",
+  measurementId: "G-PG3E62SWG8"
+};
 
-function showSaveIndicator() {
-    const el = document.getElementById("save-indicator");
-    if (!el) return;
-    el.classList.add("show");
-    clearTimeout(el._t);
-    el._t = setTimeout(() => el.classList.remove("show"), 1500);
-}
+var STORAGE_KEY = "olango_trip_v5";
+var TZ = "Asia/Manila";
 
-function sync() {
-    saveLocal();
-    // Debounced cloud write
-    clearTimeout(syncTimeout);
-    if (isOnline && dbRef) {
-        setCloudStatus("saving");
-        syncTimeout = setTimeout(() => {
-            dbRef.set(state).then(() => {
-                setCloudStatus(true);
-                showSaveIndicator();
-            }).catch(e => {
-                console.warn("Cloud write:", e);
-                setCloudStatus(false);
-            });
-        }, 250);
-    } else {
-        showSaveIndicator();
+var DB=null, dbRef=null, isOnline=false;
+var editingId=null, payType="normal", syncTO=null;
+var milestones=new Set();
+var undoStack=null;
+var hasConfetti=false, hasQR=false;
+
+var defaultState = {
+  tripName: "🌴 Olango Island Trip",
+  rate: 30,
+  startDate: "2026-08-28",
+  weeksCount: 17,
+  gcashName: "KXI", gcashNumber: "09939336295",
+  mariName: "KXI",  mariNumber:  "13397715774",
+  members: [
+    {id:1,name:"Fatima"},{id:2,name:"Kurt"},
+    {id:3,name:"Johnchris"},{id:4,name:"Tina"}
+  ],
+  payments: [],
+  lastUpdated: 0
+};
+
+/* ================================================================
+   Device
+================================================================ */
+var device = {
+  isTouch: ('ontouchstart' in window) || navigator.maxTouchPoints > 0,
+  isDesktop: window.matchMedia && window.matchMedia('(min-width:1025px)').matches,
+  reducedMotion: window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches
+};
+function haptic(p){ if(device.isTouch && navigator.vibrate){ try{ navigator.vibrate(p||10); }catch(e){} } }
+
+/* ================================================================
+   Storage
+================================================================ */
+function loadLocal(){
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw){
+      var parsed = JSON.parse(raw);
+      return Object.assign({}, defaultState, parsed);
     }
+  } catch(e){}
+  return JSON.parse(JSON.stringify(defaultState));
+}
+function saveLocal(){
+  try {
+    state.lastUpdated = Date.now();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch(e){}
+}
+function sync(){
+  saveLocal();
+  if (!isOnline || !dbRef) return;
+  clearTimeout(syncTO);
+  setCloud("saving");
+  syncTO = setTimeout(function(){
+    try {
+      dbRef.set(state).then(function(){ setCloud(true); }).catch(function(){ setCloud(false); });
+    } catch(e){ setCloud(false); }
+  }, 250);
 }
 
-function initFirebase() {
-    // Failsafe
-    setTimeout(() => {
-        if (!loaderHidden) { fallback("timeout"); toast("Using Local Mode","warn"); }
-    }, 3000);
-    try {
+var state = loadLocal();
+
+/* ================================================================
+   Cloud badge
+================================================================ */
+function setCloud(s){
+  try {
+    var el = document.getElementById("cloud");
+    if (!el) return;
+    if (s === "saving"){ el.className = "cloud saving"; el.textContent = "💾 Saving"; }
+    else if (s === true){ isOnline = true; el.className = "cloud live"; el.textContent = "🟢 Live"; }
+    else { isOnline = false; el.className = "cloud local"; el.textContent = "🟡 Local"; }
+  } catch(e){}
+}
+
+/* ================================================================
+   Firebase init — never blocks UI
+================================================================ */
+function initFirebase(){
+  loadScript("https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js", 3500).then(function(ok1){
+    if (!ok1 || !window.firebase){ setCloud(false); return; }
+    loadScript("https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js", 3500).then(function(ok2){
+      if (!ok2){ setCloud(false); return; }
+      try {
         firebase.initializeApp(firebaseConfig);
-        try { firebase.analytics(); } catch(e) {}
         DB = firebase.database();
         dbRef = DB.ref("olango_tracker_v5");
-        
-        dbRef.on("value", (snap) => {
-            const val = snap.val();
-            if (val && Array.isArray(val.members) && val.members.length > 0) {
-                // Only overwrite if cloud is newer OR local is default
-                const cloudTime = Number(val.lastUpdated) || 0;
-                const localTime = Number(state.lastUpdated) || 0;
-                if (cloudTime >= localTime) {
-                    state = Object.assign({}, defaultState, val);
-                    saveLocal();
-                } else {
-                    // Local is newer, push it
-                    sync();
-                }
-            } else {
-                // Cloud empty → push local up
+
+        // hard cloud timeout — if no response in 4s, stay local
+        var cloudSettled = false;
+        setTimeout(function(){ if (!cloudSettled){ setCloud(false); } }, 4000);
+
+        dbRef.on("value", function(snap){
+          cloudSettled = true;
+          try {
+            var val = snap.val();
+            if (val && Array.isArray(val.members) && val.members.length){
+              var ct = Number(val.lastUpdated) || 0;
+              var lt = Number(state.lastUpdated) || 0;
+              if (ct >= lt){
+                state = Object.assign({}, defaultState, val);
+                saveLocal();
+                renderAll();
+              } else {
                 sync();
+              }
+            } else {
+              // cloud empty — push local up, never wipe
+              sync();
             }
-            setCloudStatus(true);
-            renderAll();
-            hideLoader();
-        }, (err) => {
-            console.warn("Firebase err:", err);
-            fallback(err.message);
+            setCloud(true);
+          } catch(e){ setCloud(false); }
+        }, function(){
+          cloudSettled = true;
+          setCloud(false);
         });
-    } catch(e) { fallback(e.message); }
-}
-
-function fallback(r) { setCloudStatus(false); renderAll(); hideLoader(); }
-function setCloudStatus(status) {
-    const el = document.getElementById("cloud-badge");
-    if (!el) return;
-    if (status === "saving") {
-        el.className = "cloud-badge saving";
-        el.textContent = "💾 Saving…";
-    } else if (status === true) {
-        isOnline = true;
-        el.className = "cloud-badge live";
-        el.textContent = "🟢 Cloud Live";
-    } else {
-        isOnline = false;
-        el.className = "cloud-badge local";
-        el.textContent = "🟡 Local Mode";
-    }
-}
-
-function hideLoader() {
-    if (loaderHidden) return;
-    loaderHidden = true;
-    const el = document.getElementById("loader");
-    if (el) el.classList.add("hide");
+      } catch(e){ setCloud(false); }
+    });
+  });
 }
 
 /* ================================================================
-   TIME HELPERS (Manila-accurate)
+   Time helpers
 ================================================================ */
-function nowUTC() { return Date.now(); }
-
-function weekDeadlineUTC(weekIdx) {
-    const [y, m, d] = state.startDate.split("-").map(Number);
-    // Fri 23:59:59.999 Manila = 15:59:59.999 UTC
-    const dt = new Date(Date.UTC(y, m - 1, d, 15, 59, 59, 999));
-    dt.setUTCDate(dt.getUTCDate() + 7 * weekIdx);
-    return dt.getTime();
+function nowMs(){ return Date.now(); }
+function weekDeadline(i){
+  var parts = state.startDate.split("-").map(Number);
+  var dt = new Date(Date.UTC(parts[0], parts[1]-1, parts[2], 15, 59, 59, 999));
+  dt.setUTCDate(dt.getUTCDate() + 7*i);
+  return dt.getTime();
+}
+function weekDate(i){
+  var parts = state.startDate.split("-").map(Number);
+  var dt = new Date(Date.UTC(parts[0], parts[1]-1, parts[2], 4, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + 7*i);
+  return dt;
+}
+function curWeek(){
+  var n = nowMs();
+  for (var i=0; i<state.weeksCount; i++) if (n <= weekDeadline(i)) return i;
+  return state.weeksCount - 1;
+}
+function isPast(i){ return nowMs() > weekDeadline(i); }
+function isFuture(i){ return i > curWeek(); }
+function fmtD(d){ try{ return new Date(d).toLocaleDateString("en-PH",{timeZone:TZ,weekday:"short",month:"short",day:"numeric"}); }catch(e){ return ""; } }
+function fmtDT(d){ try{ return new Date(d).toLocaleString("en-PH",{timeZone:TZ,month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true}); }catch(e){ return ""; } }
+function fmtClock(){ try{ return new Date().toLocaleString("en-PH",{timeZone:TZ,weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",second:"2-digit",hour12:true}); }catch(e){ return ""; } }
+function countdown(ms){
+  var d = ms - nowMs();
+  if (d <= 0) return "⚠ Passed";
+  var dy=Math.floor(d/86400000), h=Math.floor(d%86400000/3600000), m=Math.floor(d%3600000/60000), s=Math.floor(d%60000/1000);
+  if (dy>0) return dy+"d "+h+"h "+m+"m";
+  if (h>0) return h+"h "+m+"m "+s+"s";
+  return m+"m "+s+"s";
 }
 
-function weekDate(weekIdx) {
-    const [y, m, d] = state.startDate.split("-").map(Number);
-    const dt = new Date(Date.UTC(y, m - 1, d, 4, 0, 0));
-    dt.setUTCDate(dt.getUTCDate() + 7 * weekIdx);
-    return dt;
+/* ================================================================
+   Calculations
+================================================================ */
+function memPaid(mid){ return (state.payments||[]).filter(function(p){return p.memberId===mid;}).reduce(function(s,p){return s+Number(p.amount||0);},0); }
+function memWeekPaid(mid,w){ return (state.payments||[]).filter(function(p){return p.memberId===mid && Number(p.weekIndex)===w;}).reduce(function(s,p){return s+Number(p.amount||0);},0); }
+function isLate(p){ if(p.isLate) return true; return new Date(p.timestamp).getTime() > weekDeadline(Number(p.weekIndex)); }
+function memMissed(mid){ var m=[],c=curWeek(); for (var i=0;i<c;i++) if (isPast(i) && memWeekPaid(mid,i)<state.rate) m.push(i); return m; }
+function weekStatus(mid,w){
+  var paid=memWeekPaid(mid,w);
+  var pays=(state.payments||[]).filter(function(p){return p.memberId===mid && Number(p.weekIndex)===w;});
+  if (paid>=state.rate) return pays.some(isLate) ? "late-paid" : "paid";
+  if (paid>0) return "partial";
+  if (isPast(w)) return "missed";
+  if (isFuture(w)) return "pending";
+  return "none";
 }
+function memOverall(mid,cur){
+  var paid=memPaid(mid), exp=state.rate*(cur+1), tgt=state.rate*state.weeksCount;
+  if (paid>=tgt) return {t:"DONE",c:"done"};
+  if (paid>=exp+state.rate) return {t:"AHEAD",c:"ahead"};
+  if (paid<exp-state.rate) return {t:"BEHIND",c:"behind"};
+  return {t:"OK",c:"ok"};
+}
+function memStreak(mid){
+  var cur=curWeek(), streak=0;
+  for (var i=cur-1;i>=0;i--){
+    if (!isPast(i)) continue;
+    var paid=memWeekPaid(mid,i);
+    var pays=(state.payments||[]).filter(function(p){return p.memberId===mid && Number(p.weekIndex)===i;});
+    if (paid>=state.rate && !pays.some(isLate)) streak++;
+    else break;
+  }
+  return streak;
+}
+function predictCompletion(){
+  var target=state.rate*state.weeksCount*state.members.length;
+  var collected=(state.payments||[]).reduce(function(s,p){return s+Number(p.amount);},0);
+  var remaining=target-collected;
+  if (remaining<=0) return null;
+  var cur=curWeek(); if (cur<1) return null;
+  var avg=collected/(cur+1); if (avg<=0) return null;
+  var need=Math.ceil(remaining/avg), fin=cur+need;
+  if (fin>=state.weeksCount) return {late:true};
+  return {date:fmtD(weekDate(fin)),late:false};
+}
+function abbr(n){ n=Number(n||0); if(n>=1e6) return "₱"+(n/1e6).toFixed(n%1e6===0?0:1)+"M"; if(n>=1e4) return "₱"+(n/1e3).toFixed(n%1e3===0?0:1)+"k"; return "₱"+n.toLocaleString(); }
+function full(n){ return "₱"+Number(n||0).toLocaleString(); }
 
-function currentWeekIndex() {
-    const now = nowUTC();
-    for (let i = 0; i < state.weeksCount; i++) {
-        if (now <= weekDeadlineUTC(i)) return i;
-    }
-    return state.weeksCount - 1;
-}
-
-function isPastWeek(i) { return nowUTC() > weekDeadlineUTC(i); }
-function isFutureWeek(i) { return i > currentWeekIndex(); }
-
-function fmtManila(d, opts) {
-    return new Date(d).toLocaleDateString("en-PH", Object.assign({ timeZone: TZ }, opts || { weekday:"short", month:"short", day:"numeric", year:"numeric" }));
-}
-function fmtManilaShort(d) {
-    return new Date(d).toLocaleDateString("en-PH", { timeZone: TZ, weekday:"short", month:"short", day:"numeric", year:"numeric" });
-}
-function fmtManilaDT(d) {
-    return new Date(d).toLocaleString("en-PH", { timeZone: TZ, month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit", hour12:true });
-}
-
-function countdownStr(untilMs) {
-    const diff = untilMs - nowUTC();
-    if (diff <= 0) return "⚠ Deadline passed";
-    const days = Math.floor(diff / 86400000);
-    const hrs = Math.floor((diff % 86400000) / 3600000);
-    const mins = Math.floor((diff % 3600000) / 60000);
-    const secs = Math.floor((diff % 60000) / 1000);
-    if (days > 0) return `${days}d ${hrs}h ${mins}m`;
-    if (hrs > 0) return `${hrs}h ${mins}m ${secs}s`;
-    return `${mins}m ${secs}s`;
-}
-
-function memberPaid(mid) {
-    return (state.payments || []).filter(p => p.memberId === mid).reduce((s,p) => s + Number(p.amount||0), 0);
-}
-function memberWeekPaid(mid, wIdx) {
-    return (state.payments || []).filter(p => p.memberId === mid && Number(p.weekIndex) === wIdx).reduce((s,p) => s + Number(p.amount||0), 0);
-}
-function memberWeekPayments(mid, wIdx) {
-    return (state.payments || []).filter(p => p.memberId === mid && Number(p.weekIndex) === wIdx);
-}
-function isLatePayment(p) {
-    // A payment is "late" if timestamp is after that week's deadline
-    if (p.isLate) return true; // manual flag
-    const deadline = weekDeadlineUTC(Number(p.weekIndex));
-    return new Date(p.timestamp).getTime() > deadline;
-}
-function memberMissedWeeks(mid) {
-    const missed = [];
-    const cur = currentWeekIndex();
-    for (let i = 0; i < cur; i++) {
-        if (isPastWeek(i) && memberWeekPaid(mid, i) < state.rate) missed.push(i);
-    }
-    return missed;
-}
-
-function weekCheckStatus(mid, wIdx) {
-    const paid = memberWeekPaid(mid, wIdx);
-    const past = isPastWeek(wIdx);
-    const future = isFutureWeek(wIdx);
-    const payments = memberWeekPayments(mid, wIdx);
-    
-    if (paid >= state.rate) {
-        // Check if any payment was late
-        const hasLate = payments.some(p => isLatePayment(p));
-        return hasLate ? "late-paid" : "paid";
-    }
-    if (paid > 0) return "partial";
-    if (past) return "missed";
-    if (future) return "pending";
-    return "none";
-}
-
-function memberOverallStatus(mid, curIdx) {
-    const paid = memberPaid(mid);
-    const expected = state.rate * (curIdx + 1);
-    const target = state.rate * state.weeksCount;
-    if (paid >= target) return { text: "DONE", cls: "done" };
-    if (paid >= expected + state.rate) return { text: "AHEAD", cls: "ahead" };
-    if (paid < expected - state.rate) return { text: "BEHIND", cls: "behind" };
-    return { text: "ON TRACK", cls: "ontrack" };
-}
-
-const AVATARS = [
-    "linear-gradient(135deg,#0ea5e9,#0284c7)",
-    "linear-gradient(135deg,#14b8a6,#0f766e)",
-    "linear-gradient(135deg,#f59e0b,#d97706)",
-    "linear-gradient(135deg,#f43f5e,#be185d)",
-    "linear-gradient(135deg,#8b5cf6,#6d28d9)",
-    "linear-gradient(135deg,#84cc16,#65a30d)"
+var AV = [
+  "linear-gradient(135deg,#0ea5e9,#0284c7)",
+  "linear-gradient(135deg,#14b8a6,#0f766e)",
+  "linear-gradient(135deg,#f59e0b,#d97706)",
+  "linear-gradient(135deg,#f43f5e,#be185d)",
+  "linear-gradient(135deg,#8b5cf6,#6d28d9)",
+  "linear-gradient(135deg,#84cc16,#65a30d)"
 ];
 
 /* ================================================================
-   RENDER
+   Render
 ================================================================ */
-function updateLiveClock() {
-    const el = document.getElementById("live-clock");
-    if (!el) return;
-    el.textContent = new Date().toLocaleString("en-PH", {
-        timeZone: TZ, weekday:"short", month:"short", day:"numeric", year:"numeric",
-        hour:"numeric", minute:"2-digit", second:"2-digit", hour12:true
+function tickClock(){
+  try {
+    var el=document.getElementById("live-clock");
+    if (el) el.textContent = fmtClock();
+    var cd=document.getElementById("countdown");
+    if (cd) cd.textContent = countdown(weekDeadline(curWeek()));
+  } catch(e){}
+}
+
+function renderAll(){
+  try {
+    var cur = curWeek();
+    document.getElementById("trip-title").textContent = state.tripName;
+    document.getElementById("gcash-name").textContent = state.gcashName;
+    document.getElementById("gcash-num").textContent = state.gcashNumber;
+    document.getElementById("mari-name").textContent = state.mariName;
+    document.getElementById("mari-num").textContent = state.mariNumber;
+    document.getElementById("badge-txt").textContent = "Wk "+(cur+1)+"/"+state.weeksCount;
+
+    var target = state.rate*state.weeksCount*state.members.length;
+    var collected = (state.payments||[]).reduce(function(s,p){return s+Number(p.amount);},0);
+    var pct = target ? Math.min(100, Math.round(collected/target*100)) : 0;
+
+    document.getElementById("stat-target").textContent = full(target);
+    document.getElementById("stat-collected").textContent = full(collected);
+    document.getElementById("stat-pct").textContent = pct+"%";
+    document.getElementById("stat-bar").style.width = pct+"%";
+
+    var remaining = Math.max(0, target-collected);
+    var missed = state.members.reduce(function(s,m){return s+memMissed(m.id).length;},0);
+    var daysToTrip = Math.max(0, Math.ceil((weekDeadline(state.weeksCount-1)-nowMs())/86400000));
+    var pred = predictCompletion();
+
+    var chips = [];
+    chips.push({t: abbr(remaining)+" left"});
+    if (missed>0) chips.push({t:"⚠ "+missed+" missed", u:true});
+    if (daysToTrip>0 && daysToTrip<=365) chips.push({t: daysToTrip+"d to trip", u: daysToTrip<30});
+    if (pred && !pred.late) chips.push({t:"🎯 Fund by "+pred.date, p:true});
+    if (pred && pred.late) chips.push({t:"⚠ Behind pace", u:true});
+    if (pct>=100) chips.push({t:"🎉 Funded!", w:true});
+    document.getElementById("chips").innerHTML = chips.map(function(c){
+      return '<span class="chip'+(c.u?' urgent':'')+(c.w?' win':'')+(c.p?' predict':'')+'">'+c.t+'</span>';
+    }).join("");
+
+    tickClock();
+    renderMembers(cur);
+    renderTable(cur);
+    renderRecent();
+    checkMilestones(pct);
+  } catch(e){ console.warn(e); }
+  hideLoader();
+}
+
+function renderMembers(cur){
+  var g = document.getElementById("mem-grid");
+  if (!state.members.length){
+    g.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="emo">👥</div>No members<br><button class="btn btn-p" style="margin-top:10px" onclick="openModal(\'m-members\')">+ Add</button></div>';
+    return;
+  }
+  g.innerHTML = state.members.map(function(m,i){
+    var paid=memPaid(m.id), tgt=state.rate*state.weeksCount;
+    var pct = tgt ? Math.min(100, Math.round(paid/tgt*100)) : 0;
+    var col = AV[i%AV.length];
+    var st = memOverall(m.id,cur);
+    var wp = memWeekPaid(m.id,cur), done = wp>=state.rate;
+    var miss = memMissed(m.id), streak = memStreak(m.id);
+    return '<div class="mem'+(pct>=100?' done':'')+'">'+
+      '<div class="mem-hd">'+
+        '<div class="av" style="background:'+col+'">'+(m.name||"?").charAt(0).toUpperCase()+'</div>'+
+        '<span class="mem-nm">'+m.name+'</span>'+
+        (streak>=2?'<span class="streak">🔥'+streak+'</span>':'')+
+        '<span class="mem-tag '+st.c+'">'+st.t+'</span>'+
+      '</div>'+
+      '<div class="mem-amt">'+full(paid)+'</div>'+
+      '<div class="mem-sub">of '+full(tgt)+' · '+pct+'%</div>'+
+      (miss.length?'<div class="mem-warn">⚠ '+miss.length+' unpaid</div>':'')+
+      '<div class="mem-bar"><div class="mem-bar-fill" style="width:'+pct+'%;background:'+(pct>=100?'linear-gradient(90deg,#10b981,#059669)':col)+'"></div></div>'+
+      '<div class="mem-btns">'+
+        (done
+          ? '<button class="qbtn done">✓ Wk '+(cur+1)+'</button>'
+          : '<button class="qbtn" onclick="quickPay('+m.id+','+cur+')">+ Wk '+(cur+1)+' · ₱'+(state.rate-wp)+'</button>'
+        )+
+        (miss.length?'<button class="qbtn late" onclick="openPayment({memberId:'+m.id+',weekIndex:'+miss[0]+'},true)">⏰</button>':'')+
+      '</div>'+
+    '</div>';
+  }).join("");
+}
+
+function renderTable(cur){
+  var th=document.getElementById("tbl-h"), tb=document.getElementById("tbl-b"), tf=document.getElementById("tbl-f");
+  if (!state.members.length){ th.innerHTML=""; tb.innerHTML="<tr><td class='empty'>Add members</td></tr>"; tf.innerHTML=""; return; }
+  var h = "<tr><th>Wk</th><th style='text-align:left'>Due</th>";
+  state.members.forEach(function(m){ h += '<th title="'+m.name+'">'+(m.name.length>7?m.name.slice(0,6)+'…':m.name)+'</th>'; });
+  h += "<th>Pot</th></tr>";
+  th.innerHTML = h;
+
+  var b = "";
+  for (var w=0; w<state.weeksCount; w++){
+    var now = w===cur, past = isPast(w);
+    var sum = 0;
+    b += '<tr class="'+(now?'now':past?'past':'')+'">'+
+      '<td style="font-weight:900;color:var(--soft)">'+String(w+1).padStart(2,'0')+'</td>'+
+      '<td style="font-weight:700;text-align:left">'+fmtD(weekDate(w))+
+        (now?'<span class="now-b">NOW</span>':past?'<span class="past-b">past</span>':'<span class="up-b">soon</span>')+
+      '</td>';
+    state.members.forEach(function(m){
+      var paid = memWeekPaid(m.id,w); sum += paid;
+      var st = weekStatus(m.id,w);
+      var ca = past
+        ? "onclick='openPayment({memberId:"+m.id+",weekIndex:"+w+"},true)'"
+        : "onclick='openPayment({memberId:"+m.id+",weekIndex:"+w+"})'";
+      var p;
+      if (st==="paid")       p = '<span class="pill paid" '+ca+'>✓ '+abbr(paid)+'</span>';
+      else if (st==="late-paid") p = '<span class="pill late" '+ca+'>⏰ '+abbr(paid)+'</span>';
+      else if (st==="partial")   p = '<span class="pill part" '+ca+'>⚠ '+abbr(paid)+'</span>';
+      else if (st==="missed")    p = '<span class="pill add" '+ca+'>+ late</span>';
+      else if (st==="pending")   p = '<span class="pill pend" '+ca+'>⏳</span>';
+      else                       p = '<span class="pill add" '+ca+'>+</span>';
+      b += '<td>'+p+'</td>';
     });
-    const cur = currentWeekIndex();
-    const cdEl = document.getElementById("countdown-val");
-    if (cdEl) cdEl.textContent = countdownStr(weekDeadlineUTC(cur));
+    b += '<td style="font-weight:900;color:var(--palm)">'+abbr(sum)+'</td></tr>';
+  }
+  tb.innerHTML = b;
+
+  var f = '<tr><td></td><td style="text-align:left">TOTAL</td>';
+  state.members.forEach(function(m){ f += '<td style="color:var(--ocean-dk)">'+abbr(memPaid(m.id))+'</td>'; });
+  f += '<td style="color:var(--palm)">'+abbr((state.payments||[]).reduce(function(s,p){return s+Number(p.amount);},0))+'</td></tr>';
+  tf.innerHTML = f;
 }
 
-function renderAll() {
-    try {
-        const cur = currentWeekIndex();
-        document.getElementById("trip-title").textContent = state.tripName;
-        document.getElementById("trip-range").textContent =
-            `${fmtManila(weekDate(0))} – ${fmtManila(weekDate(state.weeksCount - 1))} · ${state.weeksCount} Fridays`;
-        document.getElementById("gcash-name").textContent = state.gcashName;
-        document.getElementById("gcash-num").textContent = state.gcashNumber;
-        document.getElementById("mari-name").textContent = state.mariName;
-        document.getElementById("mari-num").textContent = state.mariNumber;
-        document.getElementById("badge-txt").textContent = "Week " + (cur + 1) + " of " + state.weeksCount;
-
-        const target = state.rate * state.weeksCount * state.members.length;
-        const collected = (state.payments || []).reduce((s,p) => s + Number(p.amount), 0);
-        const pct = target ? Math.min(100, Math.round((collected/target)*100)) : 0;
-
-        document.getElementById("stat-target").textContent = "₱" + target.toLocaleString();
-        document.getElementById("stat-collected").textContent = "₱" + collected.toLocaleString();
-        document.getElementById("stat-pct").textContent = pct + "%";
-        document.getElementById("stat-bar").style.width = pct + "%";
-
-        const remaining = Math.max(0, target - collected);
-        const weeksLeft = state.weeksCount - cur - 1;
-        const daysToTrip = Math.max(0, Math.ceil((weekDeadlineUTC(state.weeksCount - 1) - nowUTC()) / 86400000));
-        const totalMissed = state.members.reduce((s, m) => s + memberMissedWeeks(m.id).length, 0);
-
-        const chips = [];
-        chips.push({ t: `📊 Wk ${cur + 1} / ${state.weeksCount}` });
-        chips.push({ t: `💰 ₱${remaining.toLocaleString()} left` });
-        if (weeksLeft > 0) chips.push({ t: `🗓️ ${weeksLeft} wks left` });
-        if (totalMissed > 0) chips.push({ t: `⚠️ ${totalMissed} missed slots`, u: true });
-        if (daysToTrip > 0 && daysToTrip <= 365) chips.push({ t: `⏰ ${daysToTrip} days to trip`, u: daysToTrip < 30 });
-        if (pct >= 100) chips.push({ t: "🎉 Fully funded!", s: true });
-        document.getElementById("hero-chips").innerHTML = chips.map(c =>
-            `<span class="hero-chip ${c.u?"urgent":""} ${c.s?"success":""}">${c.t}</span>`
-        ).join("");
-
-        updateLiveClock();
-        renderMemberGrid(cur);
-        renderTable(cur);
-        renderRecent();
-        checkMilestones(pct);
-    } catch(e) { console.error(e); }
-}
-
-function renderMemberGrid(cur) {
-    const grid = document.getElementById("member-grid");
-    if (!state.members.length) {
-        grid.innerHTML = '<div class="empty" style="grid-column:1/-1;"><div class="emo">👥</div>No members yet<br><button class="btn btn-primary" style="margin-top:10px" onclick="openModal(\'m-members\')">+ Add Members</button></div>';
-        return;
-    }
-    grid.innerHTML = state.members.map((m,i) => {
-        const paid = memberPaid(m.id);
-        const target = state.rate * state.weeksCount;
-        const pct = target ? Math.min(100, Math.round((paid/target)*100)) : 0;
-        const color = AVATARS[i % AVATARS.length];
-        const status = memberOverallStatus(m.id, cur);
-        const wPaid = memberWeekPaid(m.id, cur);
-        const wDone = wPaid >= state.rate;
-        const missed = memberMissedWeeks(m.id);
-        
-        return `<div class="mem-card ${pct >= 100 ? 'complete':''}">
-            <div class="mem-header">
-                <div class="avatar" style="background:${color}">${(m.name||"?")[0].toUpperCase()}</div>
-                <span class="mem-name">${m.name}</span>
-                <span class="mem-status ${status.cls}">${status.text}</span>
-            </div>
-            <div class="mem-amt">₱${paid.toLocaleString()}</div>
-            <div class="mem-sub">of ₱${target.toLocaleString()} · ${pct}%</div>
-            ${missed.length ? `<div class="mem-missed-info">⚠ ${missed.length} unpaid week${missed.length>1?'s':''}</div>` : ''}
-            <div class="mem-bar"><div class="mem-bar-fill" style="width:${pct}%;background:${pct >= 100 ? 'linear-gradient(90deg,#10b981,#059669)' : color};"></div></div>
-            <div class="mem-actions">
-                ${wDone 
-                    ? `<button class="quick-btn done">✓ Wk ${cur+1} paid</button>`
-                    : `<button class="quick-btn" onclick="quickPay(${m.id},${cur})">+ Wk ${cur+1} · ₱${state.rate - wPaid}</button>`}
-                ${missed.length ? `<button class="quick-btn late-pay" onclick="openPayment({memberId:${m.id},weekIndex:${missed[0]}},true)" title="Pay for oldest missed week">⏰</button>` : ''}
-            </div>
-        </div>`;
-    }).join("");
-}
-
-function renderTable(cur) {
-    const thead = document.getElementById("tbl-head");
-    const tbody = document.getElementById("tbl-body");
-    const tfoot = document.getElementById("tbl-foot");
-    if (!state.members.length) {
-        thead.innerHTML=""; tbody.innerHTML="<tr><td class='empty'>Add members first</td></tr>"; tfoot.innerHTML="";
-        return;
-    }
-    let h = "<tr><th>Wk</th><th style='text-align:left'>Due (Fri 11:59 PM)</th>";
-    state.members.forEach(m => { h += `<th title="${m.name}">${m.name.length > 8 ? m.name.slice(0,7) + '…' : m.name}</th>`; });
-    h += "<th>Pot</th></tr>";
-    thead.innerHTML = h;
-
-    let b = "";
-    for (let wIdx = 0; wIdx < state.weeksCount; wIdx++) {
-        const isNow = wIdx === cur;
-        const past = isPastWeek(wIdx);
-        const future = isFutureWeek(wIdx);
-        let rowSum = 0;
-        b += `<tr class="${isNow ? 'now-row' : past ? 'past-row' : future ? 'future-row' : ''}">
-            <td style="font-weight:900;color:var(--text-soft);">${String(wIdx + 1).padStart(2,'0')}</td>
-            <td style="font-weight:700;text-align:left;color:var(--text);">${fmtManilaShort(weekDate(wIdx))}${isNow ? '<span class="now-badge">NOW</span>' : past ? '<span class="past-badge">past</span>' : '<span class="future-badge">upcoming</span>'}</td>`;
-        state.members.forEach(m => {
-            const paid = memberWeekPaid(m.id, wIdx);
-            rowSum += paid;
-            const st = weekCheckStatus(m.id, wIdx);
-            let pill;
-            const clickAction = past 
-                ? `onclick='openPayment({memberId:${m.id},weekIndex:${wIdx}},true)'` 
-                : `onclick='openPayment({memberId:${m.id},weekIndex:${wIdx}})'`;
-            
-            if (st === "paid")         pill = `<span class="chk-pill paid" ${clickAction} title="Paid on time">✓ ₱${paid}</span>`;
-            else if (st === "late-paid") pill = `<span class="chk-pill late" ${clickAction} title="Paid after deadline">⏰ ₱${paid}</span>`;
-            else if (st === "partial")   pill = `<span class="chk-pill part" ${clickAction} title="Partial payment">⚠ ₱${paid}</span>`;
-            else if (st === "missed")    pill = `<span class="chk-pill add-btn" ${clickAction} title="Click to pay late">+ pay late</span>`;
-            else if (st === "pending")   pill = `<span class="chk-pill pending" ${clickAction} title="Upcoming week">⏳</span>`;
-            else                         pill = `<span class="chk-pill add-btn" ${clickAction} title="Log payment">+</span>`;
-            b += `<td>${pill}</td>`;
-        });
-        b += `<td style="font-weight:900;color:var(--success);">₱${rowSum.toLocaleString()}</td></tr>`;
-    }
-    tbody.innerHTML = b;
-
-    let f = `<tr><td></td><td style="text-align:left;color:var(--text);">TOTALS</td>`;
-    state.members.forEach(m => { f += `<td style="color:var(--primary-dk)">₱${memberPaid(m.id).toLocaleString()}</td>`; });
-    const grand = (state.payments || []).reduce((s,p) => s + Number(p.amount), 0);
-    f += `<td style="color:var(--success)">₱${grand.toLocaleString()}</td></tr>`;
-    tfoot.innerHTML = f;
-}
-
-function renderRecent() {
-    const list = document.getElementById("recent-list");
-    const pays = state.payments || [];
-    if (!pays.length) { list.innerHTML = `<div class="empty"><div class="emo">💸</div>No payments logged yet</div>`; return; }
-    list.innerHTML = pays.slice().sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 6).map(p => {
-        const m = state.members.find(x => x.id === p.memberId);
-        const color = m ? AVATARS[state.members.indexOf(m) % AVATARS.length] : AVATARS[0];
-        const late = isLatePayment(p);
-        return `<div class="recent-item">
-            <div class="avatar" style="background:${color}">${(m ? m.name : "?")[0].toUpperCase()}</div>
-            <div class="recent-body">
-                <div class="recent-name">${m ? m.name : "Unknown"} <span style="color:var(--text-soft);font-weight:700;">→ Wk ${Number(p.weekIndex) + 1}</span> ${late ? '<span class="tag-late">⏰ LATE</span>' : ''}</div>
-                <div class="recent-meta">${fmtManilaDT(p.timestamp)}${p.note ? ' · "' + p.note + '"' : ""}</div>
-            </div>
-            <span class="recent-amt">+₱${p.amount}</span>
-            <button class="icon-btn edit" onclick='openPayment(${JSON.stringify(p).replace(/'/g,"&#39;")})'>✎</button>
-            <button class="icon-btn del" onclick="deletePayment(${p.id})">✕</button>
-        </div>`;
-    }).join("");
+function renderRecent(){
+  var l = document.getElementById("recent");
+  var pays = state.payments||[];
+  if (!pays.length){ l.innerHTML = '<div class="empty"><div class="emo">💸</div>No payments yet</div>'; return; }
+  l.innerHTML = pays.slice().sort(function(a,b){return new Date(b.timestamp)-new Date(a.timestamp);}).slice(0,6).map(function(pay){
+    var m = state.members.find(function(x){return x.id===pay.memberId;});
+    var col = m ? AV[state.members.indexOf(m)%AV.length] : AV[0];
+    var late = isLate(pay);
+    return '<div class="recent-item">'+
+      '<div class="av" style="background:'+col+'">'+(m?m.name:"?").charAt(0).toUpperCase()+'</div>'+
+      '<div class="recent-body">'+
+        '<div class="recent-nm">'+(m?m.name:"Unknown")+' <span style="color:var(--soft);font-weight:700">→ Wk '+(Number(pay.weekIndex)+1)+'</span> '+(late?'<span class="tag">⏰ LATE</span>':'')+'</div>'+
+        '<div class="recent-mt">'+fmtDT(pay.timestamp)+(pay.note?' · "'+pay.note+'"':'')+'</div>'+
+      '</div>'+
+      '<span class="recent-a">+'+full(pay.amount)+'</span>'+
+      '<button class="ib edit" onclick=\'openPayment('+JSON.stringify(pay).replace(/'/g,"&#39;")+')\'>✎</button>'+
+      '<button class="ib del" onclick="deletePayment('+pay.id+')">✕</button>'+
+    '</div>';
+  }).join("");
 }
 
 /* ================================================================
-   PAYMENT MODAL
+   Payment modal
 ================================================================ */
-function setPayType(type) {
-    payType = type;
-    document.getElementById("tgl-normal").classList.toggle("active", type === "normal");
-    document.getElementById("tgl-late").classList.toggle("active", type === "late");
-    updateAutoBox();
+function setPayType(t){
+  payType = t;
+  document.getElementById("tgl-normal").classList.toggle("active", t==="normal");
+  document.getElementById("tgl-late").classList.toggle("active", t==="late");
+  updateAuto();
+}
+function updateAuto(){
+  try {
+    var b=document.getElementById("auto-box"), ic=document.getElementById("auto-ic");
+    var lbl=document.getElementById("auto-lbl"), dt=document.getElementById("auto-date"), wk=document.getElementById("auto-week");
+    var w = Number(document.getElementById("pay-week").value);
+    b.className = "auto " + (payType==="late" ? "late" : editingId ? "edit" : "now");
+    if (editingId){ ic.textContent="✎"; lbl.textContent="Editing"; dt.textContent=""; wk.textContent=""; return; }
+    if (payType==="late"){
+      ic.textContent="⏰"; lbl.textContent="LATE PAYMENT";
+      dt.textContent = "Now: "+new Date().toLocaleString("en-PH",{timeZone:TZ,month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true});
+      wk.textContent = "For: "+fmtD(weekDate(w))+" (Wk "+(w+1)+")";
+    } else {
+      ic.textContent="📅"; lbl.textContent="Manila Time";
+      dt.textContent = new Date().toLocaleString("en-PH",{timeZone:TZ,weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true});
+      wk.textContent = "Wk "+(w+1)+" · "+fmtD(weekDate(w));
+    }
+  } catch(e){}
+}
+function onWeekChange(){ updateAuto(); }
+
+function openPayment(edit, isLateBtn){
+  if (!state.members.length){ toast("Add member first","err"); openModal("m-members"); return; }
+  haptic();
+  var cur = curWeek(), tw = cur, tm = null;
+  if (edit){
+    if (edit.id) editingId = edit.id; else editingId = null;
+    if (edit.memberId !== undefined) tm = edit.memberId;
+    if (edit.weekIndex !== undefined) tw = edit.weekIndex;
+  } else editingId = null;
+  payType = (isLateBtn || (tw<cur && isPast(tw))) ? "late" : "normal";
+  setPayType(payType);
+  document.getElementById("pay-member").innerHTML = state.members.map(function(m){ return '<option value="'+m.id+'">'+m.name+'</option>'; }).join("");
+  document.getElementById("pay-week").innerHTML = Array.from({length:state.weeksCount}, function(_,i){
+    var b = i===cur ? " ← NOW" : isPast(i) ? " (past)" : i>cur ? " (soon)" : "";
+    return '<option value="'+i+'">Wk '+String(i+1).padStart(2,'0')+' · '+fmtD(weekDate(i))+b+'</option>';
+  }).join("");
+
+  if (edit && edit.id){
+    document.getElementById("pay-title").textContent = "Edit";
+    document.getElementById("pay-sub").textContent = fmtDT(edit.timestamp);
+    document.getElementById("pay-submit").textContent = "✓ Update";
+    document.getElementById("pay-mh").style.background = "linear-gradient(135deg,#f59e0b,#d97706)";
+    document.getElementById("pay-member").value = edit.memberId;
+    document.getElementById("pay-week").value = edit.weekIndex;
+    document.getElementById("pay-amount").value = edit.amount;
+    document.getElementById("pay-note").value = edit.note || "";
+  } else {
+    document.getElementById("pay-title").textContent = payType==="late" ? "⏰ Late Pay" : "Log Pay";
+    document.getElementById("pay-sub").textContent = payType==="late" ? "Catch-up" : "Auto-detected";
+    document.getElementById("pay-submit").textContent = payType==="late" ? "⏰ Save Late" : "✓ Save";
+    document.getElementById("pay-mh").style.background = payType==="late" ? "linear-gradient(135deg,#8b5cf6,#6d28d9)" : "linear-gradient(135deg,var(--ocean),var(--ocean-dk))";
+    if (tm !== null) document.getElementById("pay-member").value = tm;
+    document.getElementById("pay-week").value = tw;
+    var cp = tm!==null ? memWeekPaid(tm,tw) : 0;
+    document.getElementById("pay-amount").value = Math.max(1, state.rate-cp);
+    document.getElementById("pay-note").value = "";
+  }
+  var chips = Array.from(new Set([state.rate, state.rate*2, state.rate*3, 100, 300, 500])).slice(0,6);
+  document.getElementById("amt-chips").innerHTML = chips.map(function(v){
+    return '<button type="button" class="amt-c" onclick="document.getElementById(\'pay-amount\').value='+v+'">₱'+v+'</button>';
+  }).join("");
+  updateAuto();
+  openModal("m-payment");
 }
 
-function updateAutoBox() {
-    const box = document.getElementById("auto-box");
-    const ic = document.getElementById("auto-ic");
-    const lbl = document.getElementById("auto-lbl");
-    const dt = document.getElementById("auto-date");
-    const wk = document.getElementById("auto-week");
-    const wIdx = Number(document.getElementById("pay-week").value);
-    
-    box.className = "auto-box " + (payType === "late" ? "late" : editingPaymentId ? "edit" : "now");
-    
-    if (editingPaymentId) {
-        ic.textContent = "✎";
-        lbl.textContent = "Editing existing payment";
-        return;
-    }
-    
-    if (payType === "late") {
-        ic.textContent = "⏰";
-        lbl.textContent = "LATE PAYMENT (Catch-up)";
-        dt.textContent = "Paying now: " + new Date().toLocaleString("en-PH", { timeZone: TZ, month:"short", day:"numeric", hour:"numeric", minute:"2-digit", hour12:true });
-        wk.textContent = "For week: " + fmtManilaShort(weekDate(wIdx)) + " (Wk " + (wIdx+1) + ")";
-    } else {
-        ic.textContent = "📅";
-        lbl.textContent = "Current Manila Time";
-        dt.textContent = new Date().toLocaleString("en-PH", { timeZone: TZ, weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit", hour12:true });
-        wk.textContent = "Selected: Wk " + (wIdx+1) + " · " + fmtManilaShort(weekDate(wIdx));
-    }
+function quickPay(mid, w){
+  haptic([10,30,10]);
+  var paid = memWeekPaid(mid,w);
+  var amt = Math.max(1, state.rate-paid);
+  var mem = state.members.find(function(m){return m.id===mid;});
+  var past = isPast(w);
+  state.payments = state.payments || [];
+  state.payments.push({id:Date.now(), memberId:mid, weekIndex:w, amount:amt, note: past?"Late catch-up":"Quick", timestamp:new Date().toISOString(), isLate:past});
+  sync(); renderAll();
+  toast("⚡ "+mem.name+" · "+full(amt)+(past?" Late":""), past?"late":null);
+  if (hasConfetti && !device.reducedMotion) try{ confetti({particleCount:50,spread:60,origin:{y:.85}}); }catch(e){}
 }
 
-function onWeekChange() { updateAutoBox(); }
-
-function openPayment(edit, isLateBtn) {
-    if (!state.members.length) { toast("Add a member first","err"); openModal("m-members"); return; }
-    
-    const cur = currentWeekIndex();
-    let targetWeek = cur;
-    let targetMember = null;
-    
-    if (edit) {
-        if (edit.id) editingPaymentId = edit.id;
-        else editingPaymentId = null;
-        if (edit.memberId !== undefined) targetMember = edit.memberId;
-        if (edit.weekIndex !== undefined) targetWeek = edit.weekIndex;
-    } else {
-        editingPaymentId = null;
-    }
-    
-    // Auto-set late if past week
-    payType = (isLateBtn || (targetWeek < cur && isPastWeek(targetWeek))) ? "late" : "normal";
-    setPayType(payType);
-
-    document.getElementById("pay-member").innerHTML = state.members.map(m => `<option value="${m.id}">${m.name}</option>`).join("");
-    document.getElementById("pay-week").innerHTML = Array.from({length: state.weeksCount}, (_,i) => {
-        let badge = "";
-        if (i === cur) badge = " ← NOW";
-        else if (isPastWeek(i)) badge = " (past)";
-        else if (i > cur) badge = " (upcoming)";
-        return `<option value="${i}">Wk ${String(i+1).padStart(2,'0')} · ${fmtManilaShort(weekDate(i))}${badge}</option>`;
-    }).join("");
-
-    if (edit && edit.id) {
-        document.getElementById("pay-title").textContent = "Edit Payment";
-        document.getElementById("pay-sub").textContent = "Original: " + fmtManilaDT(edit.timestamp);
-        document.getElementById("pay-submit").textContent = "✓ Save Changes";
-        document.getElementById("pay-modal-hd").style.background = "linear-gradient(135deg,#f59e0b,#d97706)";
-        document.getElementById("pay-member").value = edit.memberId;
-        document.getElementById("pay-week").value = edit.weekIndex;
-        document.getElementById("pay-amount").value = edit.amount;
-        document.getElementById("pay-note").value = edit.note || "";
-    } else {
-        document.getElementById("pay-title").textContent = payType === "late" ? "⏰ Late Payment" : "Log a Payment";
-        document.getElementById("pay-sub").textContent = payType === "late" ? "Catch-up for missed week" : "Auto-detected from Manila time";
-        document.getElementById("pay-submit").textContent = payType === "late" ? "⏰ Save Late Payment" : "✓ Save Payment";
-        document.getElementById("pay-modal-hd").style.background = payType === "late" 
-            ? "linear-gradient(135deg,#8b5cf6,#6d28d9)" 
-            : "linear-gradient(135deg,var(--primary),var(--primary-dk))";
-        
-        if (targetMember !== null) document.getElementById("pay-member").value = targetMember;
-        document.getElementById("pay-week").value = targetWeek;
-        
-        // Calculate suggested amount
-        const currentPaid = targetMember !== null ? memberWeekPaid(targetMember, targetWeek) : 0;
-        const suggested = Math.max(1, state.rate - currentPaid);
-        document.getElementById("pay-amount").value = suggested;
-        document.getElementById("pay-note").value = "";
-    }
-    
-    const chips = [...new Set([state.rate, state.rate*2, state.rate*3, 100, 300, 500, 1000])].slice(0,7);
-    document.getElementById("amt-chips").innerHTML = chips.map(v =>
-        `<button type="button" class="amt-chip" onclick="document.getElementById('pay-amount').value=${v}">₱${v}</button>`
-    ).join("");
-    
-    updateAutoBox();
-    openModal("m-payment");
-}
-
-function quickPay(mid, wIdx) {
-    const paid = memberWeekPaid(mid, wIdx);
-    const amt = Math.max(1, state.rate - paid);
-    const mem = state.members.find(m => m.id === mid);
-    const past = isPastWeek(wIdx);
+function submitPayment(e){
+  e.preventDefault();
+  var mid = Number(document.getElementById("pay-member").value);
+  var w = Number(document.getElementById("pay-week").value);
+  var amt = Number(document.getElementById("pay-amount").value);
+  var note = document.getElementById("pay-note").value.trim();
+  if (!amt || amt<1){ toast("Invalid amount","err"); return; }
+  var data = {memberId:mid, weekIndex:w, amount:amt, note:note};
+  if (editingId){
+    var p = state.payments.find(function(x){return x.id===editingId;});
+    if (p){ Object.assign(p,data); p.isLate = isLate(p); }
+    toast("Updated");
+  } else {
     state.payments = state.payments || [];
-    state.payments.push({ 
-        id: Date.now(), 
-        memberId: mid, 
-        weekIndex: wIdx, 
-        amount: amt, 
-        note: past ? "Late catch-up" : "Quick pay", 
-        timestamp: new Date().toISOString(),
-        isLate: past
-    });
-    sync(); renderAll();
-    toast(`⚡ ${mem.name} · ₱${amt}${past ? ' (Late)' : ''}`, past ? "late" : null);
-    confetti({ particleCount: 50, spread: 60, origin: { y: 0.85 } });
+    var late = payType==="late" || isPast(w);
+    state.payments.push(Object.assign({id:Date.now(), timestamp:new Date().toISOString(), isLate:late}, data));
+    toast(late ? "⏰ Late saved" : "Saved 🌴", late?"late":"win");
+    if (hasConfetti && !device.reducedMotion) try{ confetti({particleCount:70,spread:70,origin:{y:.8},colors: late?['#8b5cf6','#a855f7','#c4b5fd']:undefined}); }catch(e){}
+  }
+  editingId = null;
+  sync(); renderAll(); closeModal("m-payment");
+  haptic([15,50,15]);
 }
 
-function submitPayment(e) {
-    e.preventDefault();
-    const memberId = Number(document.getElementById("pay-member").value);
-    const weekIndex = Number(document.getElementById("pay-week").value);
-    const amount = Number(document.getElementById("pay-amount").value);
-    const note = document.getElementById("pay-note").value.trim();
-    
-    if (!amount || amount < 1) { toast("Enter a valid amount","err"); return; }
-    
-    const data = { memberId, weekIndex, amount, note };
-    
-    if (editingPaymentId) {
-        const p = state.payments.find(x => x.id === editingPaymentId);
-        if (p) {
-            Object.assign(p, data);
-            p.isLate = isLatePayment(p);
-        }
-        toast("Payment updated!");
-    } else {
-        state.payments = state.payments || [];
-        const isLate = payType === "late" || isPastWeek(weekIndex);
-        state.payments.push(Object.assign({ 
-            id: Date.now(), 
-            timestamp: new Date().toISOString(),
-            isLate
-        }, data));
-        toast(isLate ? "⏰ Late payment saved!" : "Payment saved! 🌴", isLate ? "late" : null);
-        confetti({ particleCount: 70, spread: 70, origin: { y: 0.8 }, colors: isLate ? ['#8b5cf6','#a855f7','#c4b5fd'] : undefined });
-    }
-    editingPaymentId = null;
-    sync(); renderAll();
-    closeModal("m-payment");
-}
-
-function deletePayment(id) {
-    if (!confirm("Delete this payment?")) return;
-    state.payments = (state.payments || []).filter(p => p.id !== id);
+function deletePayment(id){
+  var p = state.payments.find(function(x){return x.id===id;});
+  if (!p) return;
+  haptic(20);
+  state.payments = state.payments.filter(function(x){return x.id!==id;});
+  sync(); renderAll();
+  if (document.getElementById("m-history").classList.contains("open")) renderHistory();
+  undoStack = {type:"payment", data:p};
+  toastUndo("Payment removed", function(){
+    state.payments.push(undoStack.data); undoStack=null;
     sync(); renderAll();
     if (document.getElementById("m-history").classList.contains("open")) renderHistory();
-    toast("Payment removed","warn");
+    toast("Restored ✓","win");
+  });
 }
 
-function addMember() {
-    const inp = document.getElementById("new-member");
-    const name = inp.value.trim();
-    if (!name) return toast("Enter a name","err");
-    if (state.members.some(m => m.name.toLowerCase() === name.toLowerCase())) return toast("Already exists","err");
-    const newId = (state.members.reduce((m,x) => Math.max(m,x.id), 0) || 0) + 1;
-    state.members.push({ id: newId, name });
-    inp.value = "";
-    sync(); renderMembersList(); renderAll();
-    toast(name + " added!");
+function addMember(){
+  var inp = document.getElementById("new-mem");
+  var n = inp.value.trim();
+  if (!n) return toast("Enter name","err");
+  if (state.members.some(function(m){return m.name.toLowerCase()===n.toLowerCase();})) return toast("Exists","err");
+  var id = (state.members.reduce(function(m,x){return Math.max(m,x.id);},0) || 0) + 1;
+  state.members.push({id:id, name:n});
+  inp.value = "";
+  sync(); renderMemList(); renderAll();
+  toast(n+" added","win");
+}
+function removeMember(id){
+  var m = state.members.find(function(x){return x.id===id;});
+  if (!m) return;
+  var cnt = state.payments.filter(function(p){return p.memberId===id;}).length;
+  if (!confirm("Remove "+m.name+(cnt?" and "+cnt+" pay(s)":"")+"?")) return;
+  var backup = {member:m, payments: state.payments.filter(function(p){return p.memberId===id;})};
+  state.members = state.members.filter(function(x){return x.id!==id;});
+  state.payments = state.payments.filter(function(p){return p.memberId!==id;});
+  sync(); renderMemList(); renderAll();
+  undoStack = {type:"member", data:backup};
+  toastUndo(m.name+" removed", function(){
+    state.members.push(undoStack.data.member);
+    undoStack.data.payments.forEach(function(p){ state.payments.push(p); });
+    undoStack = null;
+    sync(); renderMemList(); renderAll();
+    toast("Restored ✓","win");
+  });
+}
+function renderMemList(){
+  var l = document.getElementById("mem-list");
+  if (!state.members.length){ l.innerHTML = '<div class="empty"><div class="emo">👥</div>None</div>'; return; }
+  l.innerHTML = state.members.map(function(m,i){
+    return '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:14px;margin-bottom:8px">'+
+      '<div class="av" style="background:'+AV[i%AV.length]+'">'+m.name.charAt(0).toUpperCase()+'</div>'+
+      '<div style="flex:1"><div style="font-weight:800">'+m.name+'</div><div style="font-size:12px;color:var(--soft);font-weight:600">'+full(memPaid(m.id))+' · 🔥'+memStreak(m.id)+'</div></div>'+
+      '<button class="ib del" onclick="removeMember('+m.id+')">✕</button>'+
+    '</div>';
+  }).join("");
 }
 
-function removeMember(id) {
-    const m = state.members.find(x => x.id === id);
-    if (!m) return;
-    const cnt = state.payments.filter(p => p.memberId === id).length;
-    if (!confirm(`Remove ${m.name}${cnt ? ` and ${cnt} payment(s)` : ''}?`)) return;
-    state.members = state.members.filter(x => x.id !== id);
-    state.payments = state.payments.filter(p => p.memberId !== id);
-    sync(); renderMembersList(); renderAll();
-    toast(m.name + " removed","warn");
+function renderHistory(){
+  var f = document.getElementById("hist-filter").value;
+  var p = state.payments.slice().sort(function(a,b){return new Date(b.timestamp)-new Date(a.timestamp);});
+  if (f!=="all") p = p.filter(function(x){return x.memberId===Number(f);});
+  document.getElementById("hist-sub").textContent = p.length+" payment(s)";
+  var l = document.getElementById("hist-list");
+  if (!p.length){ l.innerHTML = '<div class="empty"><div class="emo">📭</div>Empty</div>'; return; }
+  l.innerHTML = p.map(function(pay){
+    var m = state.members.find(function(x){return x.id===pay.memberId;});
+    var col = m ? AV[state.members.indexOf(m)%AV.length] : AV[0];
+    var late = isLate(pay);
+    return '<div class="recent-item">'+
+      '<div class="av" style="background:'+col+'">'+(m?m.name:"?").charAt(0).toUpperCase()+'</div>'+
+      '<div class="recent-body">'+
+        '<div class="recent-nm">'+(m?m.name:"Unknown")+' <span style="color:var(--soft);font-weight:700">→ Wk '+(Number(pay.weekIndex)+1)+'</span> '+(late?'<span class="tag">⏰ LATE</span>':'')+'</div>'+
+        '<div class="recent-mt">'+fmtDT(pay.timestamp)+(pay.note?' · "'+pay.note+'"':'')+'</div>'+
+      '</div>'+
+      '<span class="recent-a">+'+full(pay.amount)+'</span>'+
+      '<button class="ib edit" onclick=\'openPayment('+JSON.stringify(pay).replace(/'/g,"&#39;")+');closeModal("m-history")\'>✎</button>'+
+      '<button class="ib del" onclick="deletePayment('+pay.id+')">✕</button>'+
+    '</div>';
+  }).join("");
 }
 
-function renderMembersList() {
-    const list = document.getElementById("members-list");
-    if (!state.members.length) { list.innerHTML = '<div class="empty"><div class="emo">👥</div>No members yet</div>'; return; }
-    list.innerHTML = state.members.map((m,i) => `
-        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;">
-            <div class="avatar" style="background:${AVATARS[i % AVATARS.length]}">${m.name[0].toUpperCase()}</div>
-            <div style="flex:1;">
-                <div style="font-weight:800;color:var(--text);">${m.name}</div>
-                <div style="font-size:12px;color:var(--text-soft);font-weight:600;">₱${memberPaid(m.id).toLocaleString()} paid</div>
-            </div>
-            <button class="icon-btn del" onclick="removeMember(${m.id})">✕</button>
-        </div>
-    `).join("");
+function openModal(id){
+  haptic();
+  if (id==="m-members") renderMemList();
+  if (id==="m-history"){
+    var f = document.getElementById("hist-filter");
+    f.innerHTML = '<option value="all">All</option>' + state.members.map(function(m){return '<option value="'+m.id+'">'+m.name+'</option>';}).join("");
+    renderHistory();
+  }
+  if (id==="m-settings"){
+    document.getElementById("set-name").value = state.tripName;
+    document.getElementById("set-rate").value = state.rate;
+    document.getElementById("set-start").value = state.startDate;
+    document.getElementById("set-weeks").value = state.weeksCount;
+    document.getElementById("set-gcash-num").value = state.gcashNumber;
+    document.getElementById("set-gcash-name").value = state.gcashName;
+    document.getElementById("set-mari-num").value = state.mariNumber;
+    document.getElementById("set-mari-name").value = state.mariName;
+  }
+  if (id==="m-qr") setTimeout(function(){ renderQR('gcash'); }, 50);
+  document.getElementById(id).classList.add("open");
+}
+function closeModal(id){ document.getElementById(id).classList.remove("open"); haptic(); }
+
+function saveSettings(e){
+  e.preventDefault();
+  state.tripName = document.getElementById("set-name").value.trim();
+  state.rate = Number(document.getElementById("set-rate").value);
+  state.startDate = document.getElementById("set-start").value;
+  state.weeksCount = Number(document.getElementById("set-weeks").value);
+  state.gcashNumber = document.getElementById("set-gcash-num").value.trim();
+  state.gcashName = document.getElementById("set-gcash-name").value.trim();
+  state.mariNumber = document.getElementById("set-mari-num").value.trim();
+  state.mariName = document.getElementById("set-mari-name").value.trim();
+  sync(); renderAll(); closeModal("m-settings");
+  toast("Saved","win");
 }
 
-function renderHistory() {
-    const filter = document.getElementById("hist-filter").value;
-    let pays = state.payments.slice().sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-    if (filter !== "all") pays = pays.filter(p => p.memberId === Number(filter));
-    document.getElementById("hist-sub").textContent = `${pays.length} payment(s)`;
-    const list = document.getElementById("hist-list");
-    if (!pays.length) { list.innerHTML = '<div class="empty"><div class="emo">📭</div>No payments</div>'; return; }
-    list.innerHTML = pays.map(p => {
-        const m = state.members.find(x => x.id === p.memberId);
-        const color = m ? AVATARS[state.members.indexOf(m) % AVATARS.length] : AVATARS[0];
-        const late = isLatePayment(p);
-        return `<div class="recent-item">
-            <div class="avatar" style="background:${color}">${(m ? m.name : "?")[0].toUpperCase()}</div>
-            <div class="recent-body">
-                <div class="recent-name">${m ? m.name : "Unknown"} <span style="color:var(--text-soft);font-weight:700;">→ Wk ${Number(p.weekIndex) + 1}</span> ${late ? '<span class="tag-late">⏰ LATE</span>' : ''}</div>
-                <div class="recent-meta">${fmtManilaDT(p.timestamp)}${p.note ? ' · "' + p.note + '"' : ""}</div>
-            </div>
-            <span class="recent-amt">+₱${p.amount}</span>
-            <button class="icon-btn edit" onclick='openPayment(${JSON.stringify(p).replace(/'/g,"&#39;")});closeModal("m-history")'>✎</button>
-            <button class="icon-btn del" onclick="deletePayment(${p.id})">✕</button>
-        </div>`;
-    }).join("");
-}
+/* ================================================================
+   QR — try local lib, fallback to Google image API, then text
+================================================================ */
+function renderQR(type){
+  try {
+    document.getElementById("qr-tgl-gcash").classList.toggle("active", type==='gcash');
+    document.getElementById("qr-tgl-mari").classList.toggle("active", type==='mari');
+    var num = type==='gcash' ? state.gcashNumber : state.mariNumber;
+    var nm  = type==='gcash' ? state.gcashName   : state.mariName;
+    document.getElementById("qr-name").textContent = (type==='gcash' ? 'GCash · ' : 'MariBank · ') + nm;
+    document.getElementById("qr-num").textContent = num;
 
-function openModal(id) {
-    if (id === "m-members") renderMembersList();
-    if (id === "m-history") {
-        const f = document.getElementById("hist-filter");
-        f.innerHTML = '<option value="all">All Members</option>' + state.members.map(m => `<option value="${m.id}">${m.name}</option>`).join("");
-        renderHistory();
+    var slot = document.getElementById("qr-slot");
+    slot.innerHTML = "";
+    if (hasQR && window.QRCode){
+      var c = document.createElement("canvas");
+      slot.appendChild(c);
+      QRCode.toCanvas(c, num, {width:240, margin:2, color:{dark:'#0284c7', light:'#ffffff'}}, function(){});
+    } else {
+      // fallback to Google Charts image API
+      var img = document.createElement("img");
+      img.width = 240; img.height = 240;
+      img.alt = "QR "+num;
+      img.src = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&color=0284c7&data="+encodeURIComponent(num);
+      img.onerror = function(){
+        slot.innerHTML = '<div class="qr-warn">QR unavailable offline.<br>Number:<br><b style="font-size:18px">'+num+'</b></div>';
+      };
+      slot.appendChild(img);
     }
-    if (id === "m-settings") {
-        document.getElementById("set-name").value = state.tripName;
-        document.getElementById("set-rate").value = state.rate;
-        document.getElementById("set-start").value = state.startDate;
-        document.getElementById("set-weeks").value = state.weeksCount;
-        document.getElementById("set-gcash-num").value = state.gcashNumber;
-        document.getElementById("set-gcash-name").value = state.gcashName;
-        document.getElementById("set-mari-num").value = state.mariNumber;
-        document.getElementById("set-mari-name").value = state.mariName;
-    }
-    document.getElementById(id).classList.add("open");
+  } catch(e){
+    document.getElementById("qr-slot").innerHTML = '<div class="qr-warn">QR unavailable.</div>';
+  }
 }
-function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+function showQR(type){ openModal("m-qr"); setTimeout(function(){ renderQR(type); }, 60); }
 
-function saveSettings(e) {
-    e.preventDefault();
-    state.tripName = document.getElementById("set-name").value.trim();
-    state.rate = Number(document.getElementById("set-rate").value);
-    state.startDate = document.getElementById("set-start").value;
-    state.weeksCount = Number(document.getElementById("set-weeks").value);
-    state.gcashNumber = document.getElementById("set-gcash-num").value.trim();
-    state.gcashName = document.getElementById("set-gcash-name").value.trim();
-    state.mariNumber = document.getElementById("set-mari-num").value.trim();
-    state.mariName = document.getElementById("set-mari-name").value.trim();
-    sync(); renderAll(); closeModal("m-settings");
-    toast("Settings saved!");
-}
-
-function copyMessengerSummary() {
-    const cur = currentWeekIndex();
-    const target = state.rate * state.weeksCount * state.members.length;
-    const collected = (state.payments || []).reduce((s,p) => s + Number(p.amount), 0);
-    const pct = target ? Math.round(collected/target*100) : 0;
-    const barLen = 10, filled = Math.round(pct/100*barLen);
-    const bar = "█".repeat(filled) + "░".repeat(barLen - filled);
-    
-    let txt = `🏝️ ${state.tripName.toUpperCase()}\n━━━━━━━━━━━━━━━━━━━━\n`;
-    txt += `${bar} ${pct}%\n💰 ₱${collected.toLocaleString()} / ₱${target.toLocaleString()}\n\n`;
-    txt += `📅 Week ${cur+1} of ${state.weeksCount} · Due ${fmtManilaShort(weekDate(cur))}\n`;
-    txt += `⏰ ${countdownStr(weekDeadlineUTC(cur))} left\n\n`;
-    txt += `💳 Payment Accounts:\n• GCash: ${state.gcashNumber} (${state.gcashName})\n• MariBank: ${state.mariNumber} (${state.mariName})\n`;
-    txt += `📝 Note: [Name] - Wk [#]\n━━━━━━━━━━━━━━━━━━━━\n`;
-    state.members.forEach(m => {
-        const paid = memberPaid(m.id);
-        const mT = state.rate * state.weeksCount;
-        const p = mT ? Math.round(paid/mT*100) : 0;
-        const missed = memberMissedWeeks(m.id).length;
-        const emoji = p >= 100 ? "✅" : p >= 75 ? "🟢" : p >= 50 ? "🟡" : "🔴";
-        const missTxt = missed > 0 ? ` ⚠${missed} miss` : '';
-        txt += `${emoji} ${m.name}: ₱${paid.toLocaleString()} / ₱${mT.toLocaleString()} (${p}%)${missTxt}\n`;
+/* ================================================================
+   Share / copy
+================================================================ */
+function copySummary(){
+  try {
+    var cur = curWeek();
+    var target = state.rate*state.weeksCount*state.members.length;
+    var collected = (state.payments||[]).reduce(function(s,p){return s+Number(p.amount);},0);
+    var pct = target ? Math.round(collected/target*100) : 0;
+    var bar = "█".repeat(Math.round(pct/10)) + "░".repeat(10-Math.round(pct/10));
+    var pred = predictCompletion();
+    var t = "🏝️ "+state.tripName.toUpperCase()+"\n━━━━━━━━━━━━━━━━━━━━\n";
+    t += bar+" "+pct+"%\n💰 "+full(collected)+" / "+full(target)+"\n\n";
+    t += "📅 Wk "+(cur+1)+"/"+state.weeksCount+" · "+fmtD(weekDate(cur))+"\n⏰ "+countdown(weekDeadline(cur))+"\n";
+    if (pred && !pred.late) t += "🎯 Funded by ~"+pred.date+"\n";
+    t += "\n💳 GCash: "+state.gcashNumber+" ("+state.gcashName+")\n💳 MariBank: "+state.mariNumber+" ("+state.mariName+")\n📝 Note: [Name] Wk[#]\n━━━━━━━━━━━━━━━━━━━━\n";
+    state.members.forEach(function(m){
+      var paid = memPaid(m.id), mT = state.rate*state.weeksCount;
+      var p = mT ? Math.round(paid/mT*100) : 0;
+      var miss = memMissed(m.id).length, stk = memStreak(m.id);
+      var e = p>=100?"✅":p>=75?"🟢":p>=50?"🟡":"🔴";
+      t += e+" "+m.name+": "+full(paid)+"/"+full(mT)+" ("+p+"%)"+(miss?" ⚠"+miss:"")+(stk>=2?" 🔥"+stk:"")+"\n";
     });
-    txt += `━━━━━━━━━━━━━━━━━━━━\n📆 Updated: ${new Date().toLocaleString("en-PH",{timeZone:TZ,month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit",hour12:true})}`;
-    navigator.clipboard.writeText(txt).then(() => toast("Copied for GC! 📋"), () => toast("Copy failed","err"));
+    t += "━━━━━━━━━━━━━━━━━━━━\n"+new Date().toLocaleString("en-PH",{timeZone:TZ,month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit",hour12:true});
+    navigator.clipboard.writeText(t).then(function(){ toast("Copied 📋","win"); }, function(){ toast("Copy failed","err"); });
+  } catch(e){ toast("Copy failed","err"); }
 }
+function copyGCash(){ try{ navigator.clipboard.writeText(state.gcashNumber||"").then(function(){ toast("GCash copied 📱"); }); }catch(e){} haptic(); }
+function copyMari(){ try{ navigator.clipboard.writeText(state.mariNumber||"").then(function(){ toast("MariBank copied 🏦"); }); }catch(e){} haptic(); }
 
-function copyGCash(){ navigator.clipboard.writeText(state.gcashNumber||"").then(()=>toast("GCash copied! 📱")); }
-function copyMari(){ navigator.clipboard.writeText(state.mariNumber||"").then(()=>toast("MariBank copied! 🏦")); }
-
-function exportBackup() {
-    const blob = new Blob([JSON.stringify(state,null,2)], { type: "application/json" });
-    const a = document.createElement("a");
+function exportBackup(){
+  try {
+    var blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+    var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `olango_backup_${new Date().toISOString().split("T")[0]}.json`;
+    a.download = "olango_"+new Date().toISOString().split("T")[0]+".json";
     a.click();
-    toast("Backup downloaded! 💾");
+    toast("Backup 💾","win");
+  } catch(e){ toast("Backup failed","err"); }
 }
 function importBackup(){ document.getElementById("import-input").click(); }
 function handleImport(e){
-    const file = e.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-        try {
-            const data = JSON.parse(ev.target.result);
-            if (!data.members) throw new Error();
-            if (!confirm("Replace all current data?")) return;
-            state = Object.assign({}, defaultState, data);
-            sync(); renderAll(); toast("Backup restored! ✓");
-        } catch { toast("Invalid backup file","err"); }
-    };
-    reader.readAsText(file);
-    e.target.value = "";
+  var f = e.target.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function(ev){
+    try {
+      var d = JSON.parse(ev.target.result);
+      if (!d.members) throw new Error();
+      if (!confirm("Replace all data?")) return;
+      state = Object.assign({}, defaultState, d);
+      sync(); renderAll(); toast("Restored ✓","win");
+    } catch(err){ toast("Invalid file","err"); }
+  };
+  r.readAsText(f); e.target.value = "";
+}
+function promptReset(){
+  if (!confirm("Reset EVERYTHING?")) return;
+  if (!confirm("Final warning")) return;
+  state = JSON.parse(JSON.stringify(defaultState));
+  sync(); renderAll(); toast("Reset","warn");
 }
 
-function promptReset() {
-    if (!confirm("Reset EVERYTHING? Make a backup first!")) return;
-    if (!confirm("Final warning — wipe all data?")) return;
-    state = JSON.parse(JSON.stringify(defaultState));
-    sync(); renderAll(); toast("Reset done","warn");
+function checkMilestones(pct){
+  [25,50,75,100].forEach(function(m){
+    if (pct>=m && !milestones.has(m)){
+      milestones.add(m);
+      if (milestones.size>1 || pct>5){
+        setTimeout(function(){
+          if (hasConfetti && !device.reducedMotion) try{ confetti({particleCount:100,spread:80,origin:{y:.6}}); }catch(e){}
+          toast("🎉 "+m+"% reached!","win");
+        }, 300);
+      }
+    }
+  });
 }
 
-function checkMilestones(pct) {
-    [25,50,75,100].forEach(m => {
-        if (pct >= m && !milestonesReached.has(m)) {
-            milestonesReached.add(m);
-            if (milestonesReached.size > 1 || pct > 5) {
-                setTimeout(() => {
-                    confetti({ particleCount:100, spread:80, origin:{y:0.6} });
-                    toast(`🎉 ${m}% Milestone reached!`);
-                }, 300);
-            }
-        }
-    });
-}
-
-function toast(msg,type) {
-    const box = document.getElementById("toast-box");
-    const el = document.createElement("div");
+function toast(msg,type){
+  try {
+    var box = document.getElementById("toast-box");
+    var el = document.createElement("div");
     el.className = "toast" + (type?" "+type:"");
     el.textContent = msg;
     box.appendChild(el);
-    setTimeout(() => el.remove(), 3200);
+    setTimeout(function(){ try{ el.remove(); }catch(e){} }, 3200);
+  } catch(e){}
+}
+function toastUndo(msg, undoFn){
+  try {
+    var box = document.getElementById("toast-box");
+    var el = document.createElement("div");
+    el.className = "toast warn";
+    el.innerHTML = '<span>'+msg+'</span>';
+    var btn = document.createElement("button");
+    btn.className = "toast-btn";
+    btn.textContent = "UNDO";
+    btn.onclick = function(){ undoFn(); el.remove(); };
+    el.appendChild(btn);
+    box.appendChild(el);
+    setTimeout(function(){ try{ el.remove(); }catch(e){} }, 10000);
+  } catch(e){}
+}
+
+function scrollTop(){ try{ window.scrollTo({top:0, behavior: device.reducedMotion?'auto':'smooth'}); }catch(e){} }
+
+if (device.isDesktop){
+  document.addEventListener("keydown", function(e){
+    if (e.target.matches("input,select,textarea")) return;
+    if (e.key==="n"||e.key==="N"){ e.preventDefault(); openPayment(); }
+    if (e.key==="l"||e.key==="L"){ e.preventDefault(); openPayment(null,true); }
+    if (e.key==="h"||e.key==="H"){ e.preventDefault(); openModal("m-history"); }
+    if (e.key==="m"||e.key==="M"){ e.preventDefault(); openModal("m-members"); }
+    if (e.key==="Escape"){ ["m-payment","m-members","m-history","m-settings","m-qr"].forEach(function(id){ closeModal(id); }); }
+  });
 }
 
 /* ================================================================
-   BOOT
+   BOOT — render UI first, everything else in background
 ================================================================ */
-document.addEventListener("DOMContentLoaded", () => {
-    renderAll();
-    initFirebase();
-    const target = state.rate * state.weeksCount * state.members.length;
-    const collected = (state.payments||[]).reduce((s,p) => s + Number(p.amount), 0);
-    const pct = target ? Math.round(collected/target*100) : 0;
-    [25,50,75,100].forEach(m => { if (pct >= m) milestonesReached.add(m); });
-});
+(function boot(){
+  // Render immediately from local cache — guaranteed UI in <100ms
+  try { renderAll(); } catch(e){}
+  hideLoader();
 
-setInterval(updateLiveClock, 1000);
-setInterval(renderAll, 30000);
+  // Load optional confetti (never blocks)
+  loadScript("https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js", 2500)
+    .then(function(ok){ hasConfetti = !!(ok && window.confetti); });
 
-// Save before closing
-window.addEventListener("beforeunload", () => { saveLocal(); });
+  // Load optional QR lib (never blocks; we have image fallback)
+  loadScript("https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js", 2500)
+    .then(function(ok){ hasQR = !!(ok && window.QRCode); });
+
+  // Load Firebase in background
+  initFirebase();
+
+  // Ticks
+  setInterval(tickClock, 1000);
+  setInterval(renderAll, 30000);
+  window.addEventListener("beforeunload", saveLocal);
+  window.addEventListener("orientationchange", function(){ setTimeout(renderAll,100); });
+})();
 </script>
 </body>
 </html>
