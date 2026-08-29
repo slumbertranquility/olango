@@ -17,6 +17,7 @@
   --border:#e7e5e0;--border-2:#f4f2ed;
   --ocean:#0ea5e9;--ocean-dk:#0284c7;--ocean-lt:#e0f2fe;
   --sun:#f59e0b;--palm:#10b981;--coral:#ef4444;--dusk:#8b5cf6;
+  --admin:#dc2626;--admin-dk:#991b1b;--admin-lt:#fee2e2;
   --shadow:0 2px 8px rgba(24,24,27,.04);--shadow-md:0 8px 24px rgba(24,24,27,.06);--shadow-lg:0 20px 40px rgba(24,24,27,.1);
   --r:16px;--r-lg:20px;--r-xl:24px;
   --safe-t:env(safe-area-inset-top,0);--safe-b:env(safe-area-inset-bottom,0);
@@ -31,12 +32,22 @@ html,body{
   width:100%;overflow-x:hidden;
 }
 body{min-height:100dvh;padding-top:var(--safe-t);padding-left:var(--safe-l);padding-right:var(--safe-r);overflow-x:hidden}
-button{font:inherit;cursor:pointer;border:none;background:none;color:inherit;transition:transform .15s cubic-bezier(.34,1.56,.64,1),background .15s;min-height:44px;min-width:44px}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit;transition:transform .15s cubic-bezier(.34,1.56,.64,1),background .15s;min-height:44px;min-width:44px;touch-action:manipulation}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ocean);outline-offset:2px}
 input,select{font:inherit;color:inherit;min-height:44px}
 input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 input[type=number]{-moz-appearance:textfield}
 ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#d4d4d8;border-radius:99px}
+
+body.is-admin{position:relative}
+body.is-admin::before{
+  content:"";position:fixed;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--admin),var(--sun),var(--admin));
+  background-size:200% 100%;z-index:9999;animation:adminBar 3s linear infinite;
+  pointer-events:none;
+}
+@keyframes adminBar{from{background-position:0% 0}to{background-position:200% 0}}
+body:not(.is-admin) .admin-only{display:none!important}
 
 .app{display:grid;grid-template-columns:1fr;min-height:100dvh;width:100%;max-width:100%;overflow-x:hidden}
 .sidebar{display:none;position:sticky;top:0;height:100dvh;padding:24px 16px;border-right:1px solid var(--border);background:var(--card);flex-direction:column}
@@ -44,10 +55,11 @@ input[type=number]{-moz-appearance:textfield}
 .sidebar nav{display:flex;flex-direction:column;gap:6px}
 .side-btn{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;font-size:14px;font-weight:600;color:var(--soft);width:100%;text-align:left}
 .side-btn:hover,.side-btn.active{background:var(--ocean-lt);color:var(--ocean-dk)}
+.side-btn.admin-btn{background:var(--admin-lt);color:var(--admin-dk)}
+.side-btn.admin-btn:hover{background:#fecaca}
 .side-btn .ic{font-size:20px;width:24px;text-align:center}
 .side-mode{margin-top:auto;padding:10px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--border);font-size:11px;color:var(--soft);font-weight:700;display:flex;align-items:center;gap:8px;cursor:pointer}
 
-/* ============ WEB MODE ============ */
 body.mode-web .app{grid-template-columns:220px 1fr}
 body.mode-web .sidebar{display:flex}
 body.mode-web .bottom-nav{display:none!important}
@@ -56,16 +68,12 @@ body.mode-web .toolbar{display:flex!important}
 @media(min-width:900px){body.mode-web main{padding:24px 32px 40px}}
 @media(min-width:1400px){body.mode-web .app{grid-template-columns:260px 1fr}}
 
-/* ============ MOBILE MODE ============ */
 body.mode-mobile{overflow-x:hidden}
 body.mode-mobile .app{grid-template-columns:1fr!important;max-width:100vw;width:100%;margin:0;overflow-x:hidden}
 body.mode-mobile .sidebar{display:none!important}
 body.mode-mobile .toolbar{display:none!important}
 body.mode-mobile .bottom-nav{display:flex!important}
-body.mode-mobile main{
-  padding:12px var(--pad-x) calc(var(--nav-h) + var(--safe-b) + 20px)!important;
-  max-width:100vw;width:100%;overflow-x:hidden;
-}
+body.mode-mobile main{padding:12px var(--pad-x) calc(var(--nav-h) + var(--safe-b) + 20px)!important;max-width:100vw;width:100%;overflow-x:hidden}
 body.mode-mobile .grid-mem{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 body.mode-mobile .pay-grid{grid-template-columns:1fr!important;gap:10px}
 body.mode-mobile .hero{padding:18px 16px;border-radius:var(--r-lg)}
@@ -101,7 +109,6 @@ main{padding:16px 14px calc(var(--nav-h)+var(--safe-b)+20px);max-width:1400px;ma
 #loader p{margin-top:14px;font-weight:700;color:var(--soft);font-size:13px}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 
-/* ============ ONBOARDING ============ */
 #onboard{position:fixed;inset:0;z-index:9998;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#fdfaf6,#f0f9ff 50%,#fef3c7);overflow-y:auto}
 #onboard.show{display:flex}
 .ob-content{max-width:520px;width:100%;text-align:center;animation:obSlide .4s cubic-bezier(.16,1,.3,1)}
@@ -127,9 +134,10 @@ main{padding:16px 14px calc(var(--nav-h)+var(--safe-b)+20px);max-width:1400px;ma
 .ob-back{background:none;border:none;color:var(--soft);font-size:12px;font-weight:700;padding:8px;margin-top:6px;cursor:pointer;text-decoration:underline}
 .ob-mem-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
 @media(min-width:420px){.ob-mem-grid{grid-template-columns:repeat(3,1fr)}}
-.ob-mem{background:#fff;border:2px solid var(--border);border-radius:14px;padding:12px 8px;cursor:pointer;transition:all .2s;text-align:center;box-shadow:var(--shadow)}
+.ob-mem{background:#fff;border:2px solid var(--border);border-radius:14px;padding:12px 8px;cursor:pointer;transition:all .2s;text-align:center;box-shadow:var(--shadow);position:relative}
 .ob-mem:hover,.ob-mem.selected{border-color:var(--ocean);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
 .ob-mem.selected{background:var(--ocean-lt)}
+.ob-mem.admin-mem::after{content:"Admin";position:absolute;top:-6px;right:-4px;background:var(--soft);color:#fff;font-size:8px;font-weight:800;padding:2px 6px;border-radius:99px;text-transform:uppercase;letter-spacing:.04em}
 .ob-mem-av{width:44px;height:44px;border-radius:12px;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:18px;margin:0 auto 6px}
 .ob-mem-nm{font-size:12px;font-weight:800}
 .ob-guest{background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #fbbf24;color:#78350f}
@@ -141,18 +149,28 @@ main{padding:16px 14px calc(var(--nav-h)+var(--safe-b)+20px);max-width:1400px;ma
 .ob-continue{width:100%;padding:13px;background:linear-gradient(135deg,var(--ocean),var(--ocean-dk));color:#fff;border-radius:12px;font-size:14px;font-weight:800;box-shadow:0 4px 14px rgba(14,165,233,.3);margin-top:4px}
 .ob-continue:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
 
-/* ============ HERO ============ */
+.ob-admin-pass{display:none;margin:14px 0;padding:16px;background:#fff;border:1px solid var(--border);border-radius:14px;text-align:left;box-shadow:var(--shadow)}
+.ob-admin-pass.show{display:block}
+.ob-admin-pass .row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.ob-admin-pass .row .av{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#14b8a6,#0f766e);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px}
+.ob-admin-pass .who-nm{font-weight:800;font-size:14px}
+.ob-admin-pass .who-role{font-size:11px;color:var(--soft);font-weight:600;margin-top:1px}
+.ob-admin-pass label{display:block;font-size:11px;font-weight:700;color:var(--soft);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.ob-admin-pass input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:11px;font-size:15px;font-weight:600;background:var(--bg)}
+.ob-admin-pass input:focus{outline:none;border-color:var(--ocean);background:#fff}
+
 .hero{
   position:relative;overflow:hidden;border-radius:var(--r-xl);
   background:linear-gradient(135deg,#0284c7 0%,#0d9488 55%,#10b981 100%);
-  color:#fff;padding:20px 18px;box-shadow:var(--shadow-lg);margin-bottom:14px;
-  width:100%;
+  color:#fff;padding:20px 18px;box-shadow:var(--shadow-lg);margin-bottom:14px;width:100%;
 }
+body.is-admin .hero{background:linear-gradient(135deg,#991b1b 0%,#c2410c 55%,#ea580c 100%)}
 .hero::before{content:"";position:absolute;top:-80px;right:-80px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.1);pointer-events:none}
 .hero-grid{position:relative;display:flex;flex-direction:column;gap:16px;z-index:2}
 @media(min-width:900px){body.mode-web .hero-grid{flex-direction:row;align-items:center;justify-content:space-between}}
 .badge-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.badge.admin-badge{background:rgba(255,255,255,.95);color:var(--admin);border:1px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.15);font-weight:900}
 .dot{width:6px;height:6px;background:#bef264;border-radius:50%;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .cloud{font-size:9px;font-weight:900;padding:4px 10px;border-radius:999px;text-transform:uppercase}
@@ -166,29 +184,18 @@ main{padding:16px 14px calc(var(--nav-h)+var(--safe-b)+20px);max-width:1400px;ma
 .chip{padding:5px 10px;border-radius:999px;background:rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.2);font-size:11px;font-weight:700}
 .chip.urgent{background:rgba(239,68,68,.35)}.chip.win{background:rgba(16,185,129,.35)}.chip.predict{background:rgba(139,92,246,.3)}
 
-/* ============ TARGET CARD ============ */
-.target{
-  background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.25);
-  border-radius:18px;padding:18px;min-width:0;width:100%;
-  box-sizing:border-box;
-}
+.target{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.25);border-radius:18px;padding:18px;min-width:0;width:100%;box-sizing:border-box}
 .target .l{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#ccfbf1}
 .target .a{font-size:clamp(24px,6vw,32px);font-weight:900;margin-top:2px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;word-break:break-word}
 .target .c{font-size:12px;margin-top:6px;color:#f1f5f9}.target .c b{color:#6ee7b7;font-weight:800}
-.bar{
-  height:10px;background:rgba(255,255,255,.2);border-radius:999px;
-  overflow:hidden;margin-top:12px;width:100%;max-width:100%;
-}
-.bar-fill{
-  height:100%;background:linear-gradient(90deg,#34d399,#6ee7b7);
-  border-radius:999px;transition:width 1s;position:relative;overflow:hidden;
-  max-width:100%;
-}
+.bar{height:10px;background:rgba(255,255,255,.2);border-radius:999px;overflow:hidden;margin-top:12px;width:100%;max-width:100%}
+.bar-fill{height:100%;background:linear-gradient(90deg,#34d399,#6ee7b7);border-radius:999px;transition:width 1s;position:relative;overflow:hidden;max-width:100%}
 .countdown{margin-top:12px;padding:10px 12px;background:rgba(255,255,255,.1);border-radius:12px}
 .countdown .l{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#fde68a}
 .countdown .v{font-size:14px;font-weight:900;font-variant-numeric:tabular-nums;margin-top:2px;word-break:break-word}
 .user-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,.2);border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .user-chip:hover{background:rgba(255,255,255,.3)}
+.user-chip.admin{background:rgba(255,255,255,.95);color:var(--admin);font-weight:900}
 
 .toolbar{display:none;gap:8px;flex-wrap:wrap;align-items:center;background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:var(--r);padding:8px;margin-bottom:14px;position:sticky;top:12px;z-index:30;box-shadow:var(--shadow)}
 .spacer{flex:1}
@@ -198,17 +205,12 @@ main{padding:16px 14px calc(var(--nav-h)+var(--safe-b)+20px);max-width:1400px;ma
 .btn-s{background:var(--card);border:1px solid var(--border);color:var(--text)}
 .btn-w{background:#fef2f2;border:1px solid #fecaca;color:#dc2626}
 .btn-l{background:#f5f3ff;border:1px solid #ddd6fe;color:#6d28d9}
+.btn-a{background:linear-gradient(135deg,var(--admin),var(--admin-dk));color:#fff;box-shadow:0 4px 12px rgba(220,38,38,.3)}
 .btn-ic{width:44px;height:44px;padding:0;justify-content:center;border-radius:12px;font-size:16px}
 
-/* ============ PAY CARDS ============ */
 .pay-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:14px;width:100%}
 @media(min-width:640px){.pay-grid{grid-template-columns:1fr 1fr}}
-.pay{
-  color:#fff;border-radius:var(--r-lg);padding:16px 18px;
-  position:relative;overflow:hidden;box-shadow:var(--shadow-md);
-  display:flex;flex-direction:column;gap:12px;
-  width:100%;min-width:0;box-sizing:border-box;
-}
+.pay{color:#fff;border-radius:var(--r-lg);padding:16px 18px;position:relative;overflow:hidden;box-shadow:var(--shadow-md);display:flex;flex-direction:column;gap:12px;width:100%;min-width:0;box-sizing:border-box}
 .pay.gcash{background:linear-gradient(135deg,#0284c7,#2563eb)}
 .pay.mari{background:linear-gradient(135deg,#ea580c,#f59e0b)}
 .pay::before{content:"";position:absolute;top:-40px;right:-40px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.1);pointer-events:none}
@@ -217,34 +219,26 @@ main{padding:16px 14px calc(var(--nav-h)+var(--safe-b)+20px);max-width:1400px;ma
 .pay-row{display:flex;justify-content:space-between;align-items:center;gap:10px;position:relative;z-index:1;min-width:0;width:100%}
 .pay-info{flex:1;min-width:0;overflow:hidden}
 .pay-name{font-weight:800;font-size:12px;opacity:.9;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pay-num{
-  font-size:clamp(16px,4.5vw,22px);
-  font-weight:900;color:#fff;text-align:left;
-  word-break:break-all;line-height:1.2;
-  overflow-wrap:break-word;max-width:100%;
-  letter-spacing:.02em;
-}
+.pay-num{font-size:clamp(16px,4.5vw,22px);font-weight:900;color:#fff;text-align:left;word-break:break-all;line-height:1.2;overflow-wrap:break-word;max-width:100%;letter-spacing:.02em}
 .pay-actions{display:flex;gap:6px;flex-shrink:0}
 .pay-btn{padding:7px 10px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:10px;font-size:11px;font-weight:800;color:#fff;min-height:36px;min-width:36px;display:flex;align-items:center;justify-content:center}
 
-/* ============ CARDS ============ */
-.card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow);
-  margin-bottom:14px;width:100%;box-sizing:border-box;overflow:hidden;
-}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow);margin-bottom:14px;width:100%;box-sizing:border-box;overflow:hidden}
 .sec{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap}
 .sec h2{font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
 .sec h2::before{content:"";width:4px;height:18px;border-radius:99px;background:var(--ocean)}
+body.is-admin .sec h2::before{background:var(--admin)}
 .sec-link{font-size:12px;font-weight:700;color:var(--ocean-dk);padding:6px 10px;border-radius:8px}
 
 .mem{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;min-width:0;overflow:hidden}
 .mem.done{border-color:var(--palm);background:#f0fdf4}
 .mem.is-me{border-color:var(--ocean);background:linear-gradient(135deg,#fff,#f0f9ff)}
+.mem.is-admin-user{border-color:var(--admin);background:linear-gradient(135deg,#fff,#fee2e2)}
 .mem-hd{display:flex;align-items:center;gap:6px;margin-bottom:8px;min-width:0;flex-wrap:wrap}
 .av{width:32px;height:32px;border-radius:10px;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
 .mem-nm{font-size:12px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
 .me-tag{font-size:8px;font-weight:900;padding:2px 5px;border-radius:5px;background:var(--ocean);color:#fff}
+.admin-tag{font-size:8px;font-weight:900;padding:2px 5px;border-radius:5px;background:var(--admin);color:#fff}
 .streak{font-size:10px;font-weight:800;color:var(--sun);background:#fef3c7;padding:2px 5px;border-radius:5px}
 .mem-tag{font-size:8px;font-weight:900;padding:2px 5px;border-radius:5px}
 .mem-tag.done{background:#d1fae5;color:#047857}.mem-tag.behind{background:#fee2e2;color:#dc2626}
@@ -256,18 +250,26 @@ main{padding:16px 14px calc(var(--nav-h)+var(--safe-b)+20px);max-width:1400px;ma
 .mem-bar-fill{height:100%;border-radius:99px;transition:width .6s;max-width:100%}
 .mem-btns{display:flex;gap:5px;margin-top:8px}
 .qbtn{flex:1;padding:7px 4px;background:var(--ocean-lt);color:var(--ocean-dk);border-radius:9px;font-size:11px;font-weight:800;min-height:34px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.qbtn.done{background:#d1fae5;color:#047857;cursor:default}
+.qbtn.done{background:#d1fae5;color:#047857;cursor:pointer}
 .qbtn.late{background:#f5f3ff;color:#6d28d9;flex:none;padding:7px 9px;min-width:38px}
+.qbtn.readonly{background:var(--border-2);color:var(--faint);cursor:not-allowed}
 
 .tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow);width:100%}
 .tbl-hd{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);gap:8px;flex-wrap:wrap}
-.tbl-hd h2{font-size:13px;font-weight:800}.tbl-sub{font-size:10px;color:var(--soft);font-weight:600}
+.tbl-hd h2{font-size:13px;font-weight:800;display:flex;align-items:center;gap:6px}
+.tbl-sub{font-size:10px;color:var(--soft);font-weight:600}
 .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%}
+.tbl-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.btn-edit-tl{padding:8px 14px;background:linear-gradient(135deg,var(--admin),var(--admin-dk));color:#fff;border-radius:10px;font-size:12px;font-weight:800;min-height:36px;display:inline-flex;align-items:center;gap:6px;box-shadow:0 3px 8px rgba(220,38,38,.25)}
+.btn-edit-tl:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(220,38,38,.35)}
 table{width:100%;min-width:520px;border-collapse:collapse}
 th{background:var(--bg);padding:9px 6px;font-size:10px;font-weight:800;color:var(--soft);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap}
 td{padding:8px 5px;font-size:11px;border-bottom:1px solid var(--border-2);text-align:center}
 tr.now td{background:rgba(14,165,233,.06)}tr.now td:first-child{border-left:3px solid var(--ocean)}tr.past{opacity:.7}
-.pill{display:inline-flex;padding:4px 7px;border-radius:7px;font-size:10px;font-weight:800;gap:2px;cursor:pointer;align-items:center;min-height:26px;min-width:36px;justify-content:center;white-space:nowrap}
+.pill{display:inline-flex;padding:4px 7px;border-radius:7px;font-size:10px;font-weight:800;gap:2px;cursor:pointer;align-items:center;min-height:26px;min-width:36px;justify-content:center;white-space:nowrap;transition:transform .1s;border:none;font-family:inherit;color:inherit}
+.pill:active{transform:scale(.9)}
+.pill.readonly{cursor:default;opacity:.9}
+.pill.readonly:active{transform:none}
 .pill.paid{background:#d1fae5;color:#047857}.pill.late{background:#ede9fe;color:#6d28d9}
 .pill.part{background:#fef3c7;color:#b45309}.pill.miss{background:#fee2e2;color:#dc2626}
 .pill.none{background:var(--border-2);color:var(--faint)}.pill.pend{background:#e0e7ff;color:#4338ca}
@@ -283,20 +285,50 @@ tfoot tr{background:var(--bg);font-weight:900}tfoot td{padding:11px 6px;border-t
 .recent-a{font-weight:900;color:var(--palm);font-size:14px;font-variant-numeric:tabular-nums;flex-shrink:0}
 .tag{background:#ede9fe;color:#6d28d9;font-size:9px;font-weight:900;padding:2px 6px;border-radius:6px}
 .tag.by{background:var(--ocean-lt);color:var(--ocean-dk)}
-.ib{width:34px;height:34px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;background:var(--bg);flex-shrink:0}
+.ib{width:34px;height:34px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;background:var(--bg);flex-shrink:0;cursor:pointer;border:none;color:inherit}
+.ib.del{background:#fef2f2;color:var(--coral)}
+.ib.edit{background:var(--ocean-lt);color:var(--ocean-dk)}
+.ib:disabled{opacity:.3;cursor:not-allowed}
 
-/* ============ MODAL ============ */
-.modal{position:fixed;inset:0;z-index:100;display:none}.modal.open{display:block}
-.modal-bg{position:absolute;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(8px)}
-.modal-w{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;padding-bottom:var(--safe-b)}
+.readonly-banner{background:linear-gradient(135deg,#dbeafe,#bfdbfe);border:1px solid #93c5fd;border-radius:var(--r);padding:10px 14px;margin-bottom:12px;font-size:12px;color:#1e40af;font-weight:700;display:flex;align-items:center;gap:8px}
+.readonly-banner .ic{font-size:16px}
+body.is-admin .readonly-banner{display:none}
+
+.tl-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.tl-toolbar .btn{flex:1;justify-content:center;min-width:120px}
+.tl-count{font-size:11px;color:var(--soft);font-weight:700;padding:0 4px 8px}
+.tl-item{display:flex;align-items:center;gap:8px;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px}
+.tl-item.late-item{border-left:3px solid var(--dusk)}
+.tl-order{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.tl-order .ib{width:26px;height:26px;font-size:12px;min-height:26px;min-width:26px;border-radius:6px}
+.tl-body{flex:1;min-width:0;overflow:hidden}
+.tl-nm{font-weight:800;font-size:13px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.tl-mt{font-size:10px;color:var(--soft);font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl-amt{font-weight:900;color:var(--palm);font-size:14px;flex-shrink:0;font-variant-numeric:tabular-nums;text-align:right;min-width:60px}
+.tl-actions{display:flex;gap:4px;flex-shrink:0}
+.tl-actions .ib{width:32px;height:32px;font-size:12px;min-height:32px;min-width:32px}
+.tl-empty{text-align:center;padding:40px 16px;color:var(--faint)}
+.tl-empty .emo{font-size:44px;margin-bottom:8px}
+
+/* MODALS - Fixed z-index & pointer events */
+.modal{position:fixed;inset:0;z-index:100;display:none;pointer-events:none}
+.modal.open{display:block;pointer-events:auto}
+.modal-bg{position:absolute;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(8px);z-index:1;cursor:pointer}
+.modal-w{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;padding-bottom:var(--safe-b);z-index:2}
 @media(min-width:640px){.modal-w{align-items:center;padding:20px}}
-.mc{pointer-events:auto;width:100%;max-width:520px;max-height:92dvh;background:var(--card);border-radius:20px 20px 0 0;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 -20px 40px rgba(0,0,0,.15);animation:slide .3s cubic-bezier(.16,1,.3,1)}
+.mc{pointer-events:auto;width:100%;max-width:520px;max-height:92dvh;background:var(--card);border-radius:20px 20px 0 0;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 -20px 40px rgba(0,0,0,.15);animation:slide .3s cubic-bezier(.16,1,.3,1);position:relative;z-index:3}
 @media(min-width:640px){.mc{border-radius:22px}}.mc.lg{max-width:680px}
 @keyframes slide{from{transform:translateY(50px);opacity:0}to{transform:translateY(0);opacity:1}}
-.mh{padding:14px 18px;background:linear-gradient(135deg,var(--ocean),var(--ocean-dk));color:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px}
+
+/* Confirmation modal MUST be above everything else */
+#m-confirm{z-index:200}
+
+.mh{padding:14px 18px;background:linear-gradient(135deg,var(--ocean),var(--ocean-dk));color:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative;z-index:4}
 .mh h3{font-size:16px;font-weight:800}.mh p{font-size:11px;opacity:.9;margin-top:2px}
-.mx{width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:50%;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.mb{padding:18px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px}
+.mx{width:40px;height:40px;background:rgba(255,255,255,.25);border-radius:50%;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;cursor:pointer;border:none;padding:0;line-height:1;position:relative;z-index:5;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.mx:hover{background:rgba(255,255,255,.4)}
+.mx:active{transform:scale(.9)}
+.mb{padding:18px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px;position:relative;z-index:2}
 .fg label{display:block;font-size:11px;font-weight:700;color:var(--soft);text-transform:uppercase;margin-bottom:6px;letter-spacing:.04em}
 .fg input,.fg select{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-weight:600;background:var(--bg)}
 .fg input:focus,.fg select:focus{border-color:var(--ocean);outline:none;background:#fff}
@@ -321,10 +353,6 @@ tfoot tr{background:var(--bg);font-weight:900}tfoot td{padding:11px 6px;border-t
 .qr-lbl{font-size:12px;color:var(--soft);font-weight:700}.qr-num{font-size:16px;font-weight:900;word-break:break-all}
 .qr-warn{font-size:12px;color:var(--soft);padding:20px;text-align:center;background:var(--border-2);border-radius:12px;font-weight:600}
 
-.pin-row{display:flex;gap:10px;justify-content:center;margin:12px 0}
-.pin-d{width:48px;height:56px;border:2px solid var(--border);border-radius:12px;text-align:center;font-size:24px;font-weight:900;background:var(--bg)}
-.pin-d:focus{border-color:var(--ocean);outline:none}
-
 .share-card{background:linear-gradient(135deg,#0284c7,#0d9488 50%,#10b981);color:#fff;border-radius:20px;padding:24px 20px;text-align:center;position:relative;overflow:hidden}
 .share-card h2{font-size:20px;font-weight:900;margin-bottom:4px;word-break:break-word}
 .share-card .pct{font-size:44px;font-weight:900;letter-spacing:-.02em;margin:12px 0}
@@ -337,20 +365,37 @@ tfoot tr{background:var(--bg);font-weight:900}tfoot td{padding:11px 6px;border-t
 body.mode-web .toast-box{bottom:24px;right:24px;left:auto;transform:none;width:auto}
 .toast{background:#18181b;color:#fff;padding:12px 16px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 12px 28px rgba(0,0,0,.25);animation:slide .3s;display:flex;align-items:center;gap:10px;pointer-events:auto}
 .toast.err{background:#dc2626}.toast.warn{background:#d97706}.toast.late{background:var(--dusk)}.toast.win{background:var(--palm)}
+.toast.admin{background:linear-gradient(135deg,var(--admin),var(--admin-dk))}
 .toast-btn{padding:5px 12px;background:rgba(255,255,255,.2);border-radius:8px;font-size:11px;font-weight:800;color:#fff;margin-left:auto;min-height:32px}
 
-.bottom-nav{
-  display:none;position:fixed;bottom:0;left:0;right:0;
-  height:calc(var(--nav-h)+var(--safe-b));padding-bottom:var(--safe-b);
-  z-index:40;background:rgba(255,255,255,.95);backdrop-filter:blur(16px);
-  border-top:1px solid var(--border);align-items:center;justify-content:space-around;
-  padding-left:var(--safe-l);padding-right:var(--safe-r);
-}
+.confirm-body{padding:20px;text-align:center}
+.confirm-ic{font-size:56px;margin-bottom:12px}
+.confirm-title{font-size:18px;font-weight:900;margin-bottom:6px}
+.confirm-msg{font-size:14px;color:var(--soft);font-weight:600;margin-bottom:8px;line-height:1.5}
+.confirm-detail{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px;margin:12px 0;font-size:12px;font-weight:700;text-align:left}
+.confirm-detail div{margin:3px 0}
+.confirm-detail b{color:var(--admin)}
+.confirm-btns{display:flex;gap:8px;padding:0 20px 20px}
+.confirm-btns button{flex:1;padding:13px;border-radius:12px;font-size:13px;font-weight:800;min-height:46px}
+
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:calc(var(--nav-h)+var(--safe-b));padding-bottom:var(--safe-b);z-index:40;background:rgba(255,255,255,.95);backdrop-filter:blur(16px);border-top:1px solid var(--border);align-items:center;justify-content:space-around;padding-left:var(--safe-l);padding-right:var(--safe-r)}
 .nav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex:1;font-size:10px;font-weight:700;color:var(--soft);height:100%;padding:6px 4px;min-height:44px}
 .nav-btn .ic{font-size:20px}
 .nav-btn.pri .ic{background:linear-gradient(135deg,var(--ocean),var(--ocean-dk));color:#fff;width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 6px 14px rgba(14,165,233,.4);margin-bottom:2px}
+body.is-admin .nav-btn.pri .ic{background:linear-gradient(135deg,var(--admin),var(--admin-dk));box-shadow:0 6px 14px rgba(220,38,38,.4)}
 
 .empty{text-align:center;padding:36px 16px;color:var(--faint)}.empty .emo{font-size:44px;margin-bottom:8px}
+
+/* Week Details entries */
+.wd-entry{display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px}
+.wd-entry.late-entry{border-left:3px solid var(--dusk);background:linear-gradient(90deg,#faf5ff,var(--bg))}
+.wd-entry-info{flex:1;min-width:0;overflow:hidden}
+.wd-entry-main{font-weight:900;font-size:16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.wd-entry-mt{font-size:11px;color:var(--soft);margin-top:2px;font-weight:600}
+.wd-entry-actions{display:flex;gap:6px;flex-shrink:0}
+.wd-entry-actions .ib{width:38px;height:38px;font-size:15px;min-height:38px;min-width:38px}
+.wd-info-box{background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd;border-radius:12px;padding:12px;margin-bottom:12px;font-size:12px;color:var(--ocean-dk);font-weight:700;display:flex;align-items:flex-start;gap:8px}
+.wd-info-box .ic{font-size:16px;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -369,19 +414,19 @@ body.mode-web .toast-box{bottom:24px;right:24px;left:auto;transform:none;width:a
       <p class="ob-sub">Step 1 of 2 · Pick your view</p>
       <p class="ob-q">How are you using this today?</p>
       <div class="ob-cards">
-        <button class="ob-card" id="ob-mobile" onclick="Olango.selectMode('mobile')">
+        <button type="button" class="ob-card" id="ob-mobile" data-mode="mobile">
           <span class="ob-icon">📱</span>
           <h3>Mobile</h3>
           <p>Bottom nav · thumb-friendly</p>
         </button>
-        <button class="ob-card" id="ob-web" onclick="Olango.selectMode('web')">
+        <button type="button" class="ob-card" id="ob-web" data-mode="web">
           <span class="ob-icon">💻</span>
           <h3>Web</h3>
           <p>Sidebar · wide tables</p>
         </button>
       </div>
       <p class="ob-hint">Suggested: <b id="ob-suggest">—</b></p>
-      <button class="ob-continue" id="ob-next-1" onclick="Olango.goStep2()" disabled>Continue →</button>
+      <button type="button" class="ob-continue" id="ob-next-1" disabled>Continue →</button>
     </div>
 
     <div id="step-2" style="display:none">
@@ -390,11 +435,24 @@ body.mode-web .toast-box{bottom:24px;right:24px;left:auto;transform:none;width:a
       <p class="ob-q">Tap your name</p>
       <div class="ob-mem-grid" id="ob-mem-grid"></div>
       <div class="ob-input-row">
-        <input type="text" id="ob-new-name" placeholder="Or type new name…" onkeypress="if(event.key==='Enter'){event.preventDefault();Olango.addAndSelect()}">
-        <button class="ob-btn" onclick="Olango.addAndSelect()">+ Add</button>
+        <input type="text" id="ob-new-name" placeholder="Or type new name…">
+        <button type="button" class="ob-btn" id="ob-add-btn">+ Add</button>
       </div>
-      <button class="ob-back" onclick="Olango.goStep1()">← Back</button>
-      <button class="ob-continue" id="ob-next-2" onclick="Olango.finishOnboard()" disabled>Enter App →</button>
+
+      <div class="ob-admin-pass" id="ob-admin-pass">
+        <div class="row">
+          <div class="av">K</div>
+          <div>
+            <div class="who-nm">Kurt</div>
+            <div class="who-role">Admin account</div>
+          </div>
+        </div>
+        <label for="ob-admin-input">Password</label>
+        <input type="password" id="ob-admin-input" placeholder="Enter password" autocomplete="off">
+      </div>
+
+      <button type="button" class="ob-back" id="ob-back-btn">← Back</button>
+      <button type="button" class="ob-continue" id="ob-next-2" disabled>Enter App →</button>
     </div>
   </div>
 </div>
@@ -405,17 +463,18 @@ body.mode-web .toast-box{bottom:24px;right:24px;left:auto;transform:none;width:a
 <aside class="sidebar">
   <div class="sidebar-logo">🌴</div>
   <nav>
-    <button class="side-btn active" onclick="Olango.scrollTop()"><span class="ic">🏠</span>Home</button>
-    <button class="side-btn" onclick="Olango.openPayment()"><span class="ic">➕</span>Log Pay</button>
-    <button class="side-btn" onclick="Olango.openPayment(null,true)"><span class="ic">⏰</span>Late</button>
-    <button class="side-btn" onclick="Olango.openModal('m-history')"><span class="ic">📜</span>History</button>
-    <button class="side-btn" onclick="Olango.openModal('m-members')"><span class="ic">👥</span>Members</button>
-    <button class="side-btn" onclick="Olango.openModal('m-share')"><span class="ic">🖼️</span>Share Card</button>
-    <button class="side-btn" onclick="Olango.openModal('m-qr')"><span class="ic">📱</span>QR</button>
-    <button class="side-btn" onclick="Olango.openModal('m-settings')"><span class="ic">⚙️</span>Settings</button>
-    <button class="side-btn" onclick="Olango.logout()"><span class="ic">🚪</span>Sign Out</button>
+    <button type="button" class="side-btn active" data-action="scrollTop"><span class="ic">🏠</span>Home</button>
+    <button type="button" class="side-btn admin-only" data-action="openPayment"><span class="ic">➕</span>Log Pay</button>
+    <button type="button" class="side-btn admin-only" data-action="openPaymentLate"><span class="ic">⏰</span>Late</button>
+    <button type="button" class="side-btn admin-btn admin-only" data-action="openModal" data-target="m-tracklist"><span class="ic">📋</span>Edit Tracklist</button>
+    <button type="button" class="side-btn" data-action="openModal" data-target="m-history"><span class="ic">📜</span>History</button>
+    <button type="button" class="side-btn admin-only" data-action="openModal" data-target="m-members"><span class="ic">👥</span>Members</button>
+    <button type="button" class="side-btn" data-action="openModal" data-target="m-share"><span class="ic">🖼️</span>Share Card</button>
+    <button type="button" class="side-btn" data-action="openModal" data-target="m-qr"><span class="ic">📱</span>QR</button>
+    <button type="button" class="side-btn" data-action="openModal" data-target="m-settings"><span class="ic">⚙️</span>Settings</button>
+    <button type="button" class="side-btn" data-action="logout"><span class="ic">🚪</span>Sign Out</button>
   </nav>
-  <button class="side-mode" onclick="Olango.switchMode()">🔄 <span id="side-mode-lbl">Web</span></button>
+  <button type="button" class="side-mode" data-action="switchMode">🔄 <span id="side-mode-lbl">Web</span></button>
 </aside>
 
 <main>
@@ -426,7 +485,8 @@ body.mode-web .toast-box{bottom:24px;right:24px;left:auto;transform:none;width:a
         <div class="badge"><span class="dot"></span><span id="badge-txt">—</span></div>
         <div id="cloud" class="cloud local">● Local</div>
         <div id="mode-badge" class="badge">📱</div>
-        <div class="user-chip" onclick="Olango.logout()" title="Sign out">👤 <span id="user-lbl">You</span></div>
+        <div id="admin-badge" class="badge admin-badge admin-only" style="display:none">👑 ADMIN MODE</div>
+        <div class="user-chip" id="user-chip" data-action="logout" title="Sign out">👤 <span id="user-lbl">You</span></div>
       </div>
       <h1 id="trip-title">🌴 Olango</h1>
       <div class="clock"><span class="d"></span><span id="live-clock">—</span></div>
@@ -442,146 +502,282 @@ body.mode-web .toast-box{bottom:24px;right:24px;left:auto;transform:none;width:a
   </div>
 </header>
 
+<div class="readonly-banner">
+  <span class="ic">👁️</span>
+  <span>You are in <b>read-only mode</b>. Only Kurt (Admin) can log or edit payments.</span>
+</div>
+
 <div class="toolbar">
-  <button class="btn btn-p" onclick="Olango.openPayment()">＋ Pay</button>
-  <button class="btn btn-l" onclick="Olango.openPayment(null,true)">⏰ Late</button>
-  <button class="btn btn-s btn-ic" onclick="Olango.openModal('m-share')">🖼️</button>
-  <button class="btn btn-s btn-ic" onclick="Olango.openModal('m-qr')">📱</button>
+  <button type="button" class="btn btn-a admin-only" data-action="openPayment">＋ Pay</button>
+  <button type="button" class="btn btn-l admin-only" data-action="openPaymentLate">⏰ Late</button>
+  <button type="button" class="btn btn-a admin-only" data-action="openModal" data-target="m-tracklist">📋 Edit Tracklist</button>
+  <button type="button" class="btn btn-s btn-ic" data-action="openModal" data-target="m-share">🖼️</button>
+  <button type="button" class="btn btn-s btn-ic" data-action="openModal" data-target="m-qr">📱</button>
   <div class="spacer"></div>
-  <button class="btn btn-s btn-ic" onclick="Olango.exportBackup()">💾</button>
-  <button class="btn btn-w btn-ic" onclick="Olango.promptReset()">↺</button>
+  <button type="button" class="btn btn-s btn-ic admin-only" data-action="exportBackup">💾</button>
+  <button type="button" class="btn btn-w btn-ic admin-only" data-action="promptReset">↺</button>
 </div>
 
 <div class="pay-grid">
   <div class="pay gcash">
     <span class="pay-tag">GCash</span>
     <div class="pay-row">
-      <div class="pay-info"><div class="pay-name" id="gcash-name">—</div><button class="pay-num" id="gcash-num" onclick="Olango.copyGCash()">—</button></div>
-      <div class="pay-actions"><button class="pay-btn" onclick="Olango.showQR('gcash')">⬜</button><button class="pay-btn" onclick="Olango.copyGCash()">📋</button></div>
+      <div class="pay-info"><div class="pay-name" id="gcash-name">—</div><button type="button" class="pay-num" id="gcash-num" data-action="copyGCash">—</button></div>
+      <div class="pay-actions"><button type="button" class="pay-btn" data-action="showQR" data-target="gcash">⬜</button><button type="button" class="pay-btn" data-action="copyGCash">📋</button></div>
     </div>
   </div>
   <div class="pay mari">
     <span class="pay-tag">MariBank</span>
     <div class="pay-row">
-      <div class="pay-info"><div class="pay-name" id="mari-name">—</div><button class="pay-num" id="mari-num" onclick="Olango.copyMari()">—</button></div>
-      <div class="pay-actions"><button class="pay-btn" onclick="Olango.showQR('mari')">⬜</button><button class="pay-btn" onclick="Olango.copyMari()">📋</button></div>
+      <div class="pay-info"><div class="pay-name" id="mari-name">—</div><button type="button" class="pay-num" id="mari-num" data-action="copyMari">—</button></div>
+      <div class="pay-actions"><button type="button" class="pay-btn" data-action="showQR" data-target="mari">⬜</button><button type="button" class="pay-btn" data-action="copyMari">📋</button></div>
     </div>
   </div>
 </div>
 
-<div class="sec"><h2>Members</h2><button class="sec-link" onclick="Olango.openModal('m-members')">Manage →</button></div>
+<div class="sec"><h2>Members</h2><button type="button" class="sec-link admin-only" data-action="openModal" data-target="m-members">Manage →</button></div>
 <div class="grid-mem" id="mem-grid"></div>
 
 <div class="tbl-wrap">
-  <div class="tbl-hd"><h2>📅 Checklist</h2><span class="tbl-sub">Tap · Manila</span></div>
+  <div class="tbl-hd">
+    <h2>📅 Checklist</h2>
+    <div class="tbl-actions">
+      <button type="button" class="btn-edit-tl admin-only" data-action="openModal" data-target="m-tracklist">📋 Edit Tracklist</button>
+      <span class="tbl-sub">Tap · Manila</span>
+    </div>
+  </div>
   <div class="tbl-scroll"><table><thead id="tbl-h"></thead><tbody id="tbl-b"></tbody><tfoot id="tbl-f"></tfoot></table></div>
 </div>
 
 <div class="card">
-  <div class="sec"><h2>Recent</h2><button class="sec-link" onclick="Olango.openModal('m-history')">All →</button></div>
+  <div class="sec"><h2>Recent</h2><button type="button" class="sec-link" data-action="openModal" data-target="m-history">All →</button></div>
   <div id="recent"></div>
 </div>
 </main>
 </div>
 
 <nav class="bottom-nav">
-  <button class="nav-btn" onclick="Olango.scrollTop()"><span class="ic">🏠</span>Home</button>
-  <button class="nav-btn" onclick="Olango.openModal('m-history')"><span class="ic">📜</span>Log</button>
-  <button class="nav-btn pri" onclick="Olango.openPayment()"><span class="ic">＋</span>Pay</button>
-  <button class="nav-btn" onclick="Olango.openModal('m-share')"><span class="ic">🖼️</span>Share</button>
-  <button class="nav-btn" onclick="Olango.openModal('m-settings')"><span class="ic">⚙️</span>More</button>
+  <button type="button" class="nav-btn" data-action="scrollTop"><span class="ic">🏠</span>Home</button>
+  <button type="button" class="nav-btn admin-only" data-action="openModal" data-target="m-tracklist"><span class="ic">📋</span>Tracklist</button>
+  <button type="button" class="nav-btn pri admin-only" data-action="openPayment"><span class="ic">＋</span>Pay</button>
+  <button type="button" class="nav-btn" data-action="openModal" data-target="m-history"><span class="ic">📜</span>Log</button>
+  <button type="button" class="nav-btn" data-action="openModal" data-target="m-settings"><span class="ic">⚙️</span>More</button>
 </nav>
 
-<div class="modal" id="m-payment"><div class="modal-bg" onclick="Olango.closeModal('m-payment')"></div><div class="modal-w"><div class="mc">
-<div class="mh" id="pay-mh"><div><h3 id="pay-title">Log Pay</h3><p id="pay-sub">—</p></div><button class="mx" onclick="Olango.closeModal('m-payment')">✕</button></div>
-<form class="mb" onsubmit="Olango.submitPayment(event)">
-<div class="auto now" id="auto-box"><div class="auto-ic" id="auto-ic">📅</div><div><div class="auto-l" id="auto-lbl">Manila</div><div class="auto-v" id="auto-date">—</div><div class="auto-s" id="auto-week">—</div></div></div>
-<div class="fg"><label>Type</label><div class="toggle"><div class="toggle-o active" id="tgl-normal" onclick="Olango.setPayType('normal')">On-time</div><div class="toggle-o late" id="tgl-late" onclick="Olango.setPayType('late')">⏰ Late</div></div></div>
-<div class="fg"><label>Member</label><select id="pay-member" required></select></div>
-<div class="fg"><label>Week</label><select id="pay-week" required onchange="Olango.onWeekChange()"></select></div>
-<div class="fg"><label>Amount ₱</label><input type="number" id="pay-amount" min="1" required inputmode="numeric"><div class="amt-chips" id="amt-chips"></div></div>
-<div class="fg"><label>Note</label><input type="text" id="pay-note" maxlength="120"></div>
-<button type="submit" class="btn btn-p" style="padding:14px;justify-content:center" id="pay-submit">✓ Save</button>
-</form>
-</div></div></div>
-
-<div class="modal" id="m-members"><div class="modal-bg" onclick="Olango.closeModal('m-members')"></div><div class="modal-w"><div class="mc">
-<div class="mh" style="background:linear-gradient(135deg,#0d9488,#14b8a6)"><div><h3>Members</h3></div><button class="mx" onclick="Olango.closeModal('m-members')">✕</button></div>
-<div class="mb"><div id="mem-list"></div>
-<div style="display:flex;gap:8px;margin-top:8px"><input type="text" id="new-mem" placeholder="Name…" style="flex:1;min-width:0;padding:12px;border:2px solid var(--border);border-radius:12px;background:var(--bg)" onkeypress="if(event.key==='Enter'){event.preventDefault();Olango.addMember()}"><button class="btn btn-p" onclick="Olango.addMember()">Add</button></div>
-</div></div></div></div>
-
-<div class="modal" id="m-history"><div class="modal-bg" onclick="Olango.closeModal('m-history')"></div><div class="modal-w"><div class="mc lg">
-<div class="mh" style="background:linear-gradient(135deg,#f59e0b,#d97706)"><div><h3>History</h3><p id="hist-sub">—</p></div>
-<div style="display:flex;gap:8px;align-items:center"><select id="hist-filter" onchange="Olango.renderHistory()" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700"><option value="all">All</option></select><button class="mx" onclick="Olango.closeModal('m-history')">✕</button></div>
-</div><div class="mb" id="hist-list"></div></div></div></div>
-
-<div class="modal" id="m-qr"><div class="modal-bg" onclick="Olango.closeModal('m-qr')"></div><div class="modal-w"><div class="mc">
-<div class="mh" style="background:linear-gradient(135deg,#0284c7,#2563eb)"><div><h3>Scan to Pay</h3></div><button class="mx" onclick="Olango.closeModal('m-qr')">✕</button></div>
-<div class="mb">
-<div class="toggle"><div class="toggle-o active" id="qr-tgl-gcash" onclick="Olango.renderQR('gcash')">GCash</div><div class="toggle-o" id="qr-tgl-mari" onclick="Olango.renderQR('mari')">MariBank</div></div>
-<div class="qr-box"><div id="qr-slot"></div><div class="qr-lbl" id="qr-name">—</div><div class="qr-num" id="qr-num">—</div></div>
-</div></div></div></div>
-
-<div class="modal" id="m-share"><div class="modal-bg" onclick="Olango.closeModal('m-share')"></div><div class="modal-w"><div class="mc">
-<div class="mh" style="background:linear-gradient(135deg,#10b981,#0d9488)"><div><h3>Share Card</h3><p>PNG for GC</p></div><button class="mx" onclick="Olango.closeModal('m-share')">✕</button></div>
-<div class="mb">
-<div id="share-preview" class="share-card">
-  <div style="font-size:28px;margin-bottom:4px">🌴</div>
-  <h2 id="sc-title">Olango Trip</h2>
-  <div style="font-size:12px;opacity:.9" id="sc-range">—</div>
-  <div class="pct" id="sc-pct">0%</div>
-  <div id="sc-amt" style="font-size:14px;font-weight:700">₱0 / ₱0</div>
-  <div class="bar-s"><div class="bar-s-f" id="sc-bar" style="width:0%"></div></div>
-  <div class="share-mem" id="sc-mems"></div>
-  <div style="margin-top:16px;font-size:11px;opacity:.8" id="sc-foot">—</div>
+<!-- WEEK DETAILS POPUP -->
+<div class="modal" id="m-week-details">
+  <div class="modal-bg" data-close="m-week-details"></div>
+  <div class="modal-w">
+    <div class="mc">
+      <div class="mh" style="background:linear-gradient(135deg,var(--admin),var(--admin-dk))">
+        <div><h3 id="wd-title">Week Details</h3><p id="wd-sub">Edit or remove entries</p></div>
+        <button type="button" class="mx" data-close="m-week-details" aria-label="Close">✕</button>
+      </div>
+      <div class="mb">
+        <div class="wd-info-box">
+          <span class="ic">💡</span>
+          <div>Tap <b>✎</b> to edit an entry or <b>✕</b> to remove it. Removing restores the unpaid state.</div>
+        </div>
+        <div id="wd-list"></div>
+        <button type="button" class="btn btn-a" style="width:100%;justify-content:center;margin-top:8px" id="wd-add-btn">＋ Add another payment here</button>
+      </div>
+    </div>
+  </div>
 </div>
-<button class="btn btn-p" style="padding:14px;justify-content:center" onclick="Olango.downloadShareCard()">📥 Download PNG</button>
-<button class="btn btn-s" style="justify-content:center" onclick="Olango.copySummary()">📋 Copy Text Instead</button>
-</div></div></div>
 
-<div class="modal" id="m-pin"><div class="modal-bg" onclick="Olango.closeModal('m-pin')"></div><div class="modal-w"><div class="mc">
-<div class="mh" style="background:linear-gradient(135deg,#334155,#0f172a)"><div><h3 id="pin-title">Enter PIN</h3><p id="pin-sub">4 digits</p></div><button class="mx" onclick="Olango.closeModal('m-pin')">✕</button></div>
-<div class="mb" style="align-items:center">
-<div class="pin-row">
-<input class="pin-d" id="pin0" maxlength="1" inputmode="numeric" autocomplete="off">
-<input class="pin-d" id="pin1" maxlength="1" inputmode="numeric" autocomplete="off">
-<input class="pin-d" id="pin2" maxlength="1" inputmode="numeric" autocomplete="off">
-<input class="pin-d" id="pin3" maxlength="1" inputmode="numeric" autocomplete="off">
+<div class="modal" id="m-tracklist">
+  <div class="modal-bg" data-close="m-tracklist"></div>
+  <div class="modal-w">
+    <div class="mc lg">
+      <div class="mh" style="background:linear-gradient(135deg,var(--admin),var(--admin-dk))">
+        <div><h3>📋 Edit Tracklist</h3><p>Add · Edit · Reorder · Remove entries</p></div>
+        <button type="button" class="mx" data-close="m-tracklist" aria-label="Close">✕</button>
+      </div>
+      <div class="mb">
+        <div class="tl-toolbar">
+          <button type="button" class="btn btn-a" data-action="openPayment">＋ Add New Entry</button>
+          <button type="button" class="btn btn-l" data-action="openPaymentLate">⏰ Add Late Entry</button>
+        </div>
+        <div class="tl-count" id="tl-count">—</div>
+        <div id="tl-list"></div>
+      </div>
+    </div>
+  </div>
 </div>
-<button class="btn btn-p" style="padding:14px;justify-content:center;width:100%" onclick="Olango.submitPin()">✓ Confirm</button>
-</div></div></div></div>
 
-<div class="modal" id="m-settings"><div class="modal-bg" onclick="Olango.closeModal('m-settings')"></div><div class="modal-w"><div class="mc">
-<div class="mh" style="background:linear-gradient(135deg,#334155,#0f172a)"><div><h3>Settings</h3></div><button class="mx" onclick="Olango.closeModal('m-settings')">✕</button></div>
-<form class="mb" onsubmit="Olango.saveSettings(event)">
-<div class="fg"><label>Layout</label><div class="toggle"><div class="toggle-o" id="set-mode-mobile" onclick="Olango.setModeInSettings('mobile')">📱 Mobile</div><div class="toggle-o" id="set-mode-web" onclick="Olango.setModeInSettings('web')">💻 Web</div></div></div>
-<div class="fg"><label>Signed in as</label><div style="padding:12px 14px;background:var(--bg);border:2px solid var(--border);border-radius:12px;font-weight:800" id="set-current-user">—</div><button type="button" class="btn btn-s" style="width:100%;justify-content:center;margin-top:8px" onclick="Olango.logout()">🚪 Sign Out</button></div>
-<div class="fg"><label>Trip Name</label><input type="text" id="set-name" required></div>
-<div class="fg"><label>Weekly Rate ₱</label><input type="number" id="set-rate" min="1" required></div>
-<div class="fg"><label>Start (First Friday)</label><input type="date" id="set-start" required></div>
-<div class="fg"><label>Total Weeks</label><input type="number" id="set-weeks" min="1" max="104" required></div>
-<div class="fg"><label>GCash #</label><input type="text" id="set-gcash-num" required></div>
-<div class="fg"><label>GCash Name</label><input type="text" id="set-gcash-name" required></div>
-<div class="fg"><label>MariBank #</label><input type="text" id="set-mari-num" required></div>
-<div class="fg"><label>MariBank Name</label><input type="text" id="set-mari-name" required></div>
-<div class="fg"><label>Admin PIN (4 digits, blank = off)</label><input type="password" id="set-pin" maxlength="4" inputmode="numeric" placeholder="Leave blank to keep / clear"></div>
-<div class="fg"><label>Reminders</label><button type="button" class="btn btn-s" style="width:100%;justify-content:center" onclick="Olango.enableNotifs()">🔔 Enable deadline alerts</button></div>
-<div style="display:flex;gap:8px">
-<button type="button" class="btn btn-s" style="flex:1;justify-content:center" onclick="Olango.exportBackup()">💾 Backup</button>
-<button type="button" class="btn btn-s" style="flex:1;justify-content:center" onclick="Olango.importBackup()">📤 Restore</button>
+<div class="modal" id="m-payment">
+  <div class="modal-bg" data-close="m-payment"></div>
+  <div class="modal-w">
+    <div class="mc">
+      <div class="mh" id="pay-mh">
+        <div><h3 id="pay-title">Log Pay</h3><p id="pay-sub">—</p></div>
+        <button type="button" class="mx" data-close="m-payment" aria-label="Close">✕</button>
+      </div>
+      <form class="mb" id="pay-form">
+        <div class="auto now" id="auto-box"><div class="auto-ic" id="auto-ic">📅</div><div><div class="auto-l" id="auto-lbl">Manila</div><div class="auto-v" id="auto-date">—</div><div class="auto-s" id="auto-week">—</div></div></div>
+        <div class="fg"><label>Type</label><div class="toggle"><div class="toggle-o active" id="tgl-normal" data-paytype="normal">On-time</div><div class="toggle-o late" id="tgl-late" data-paytype="late">⏰ Late</div></div></div>
+        <div class="fg"><label>Member</label><select id="pay-member" required></select></div>
+        <div class="fg"><label>Week</label><select id="pay-week" required></select></div>
+        <div class="fg"><label>Amount ₱</label><input type="number" id="pay-amount" min="1" required inputmode="numeric"><div class="amt-chips" id="amt-chips"></div></div>
+        <div class="fg"><label>Payment Date & Time</label><input type="datetime-local" id="pay-date"></div>
+        <div class="fg"><label>Note</label><input type="text" id="pay-note" maxlength="120"></div>
+        <button type="submit" class="btn btn-a" style="padding:14px;justify-content:center" id="pay-submit">✓ Save</button>
+      </form>
+    </div>
+  </div>
 </div>
-<button type="button" class="btn btn-w" style="justify-content:center" onclick="Olango.promptReset()">↺ Reset All</button>
-<button type="submit" class="btn btn-p" style="padding:14px;justify-content:center">✓ Save</button>
-</form>
-</div></div></div>
 
-<input type="file" id="import-input" accept=".json" style="display:none" onchange="Olango.handleImport(event)">
+<div class="modal" id="m-members">
+  <div class="modal-bg" data-close="m-members"></div>
+  <div class="modal-w">
+    <div class="mc">
+      <div class="mh" style="background:linear-gradient(135deg,#0d9488,#14b8a6)">
+        <div><h3>Members</h3><p>👑 Admin management</p></div>
+        <button type="button" class="mx" data-close="m-members" aria-label="Close">✕</button>
+      </div>
+      <div class="mb">
+        <div id="mem-list"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input type="text" id="new-mem" placeholder="Name…" style="flex:1;min-width:0;padding:12px;border:2px solid var(--border);border-radius:12px;background:var(--bg)">
+          <button type="button" class="btn btn-p" id="add-mem-btn">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="m-edit-member">
+  <div class="modal-bg" data-close="m-edit-member"></div>
+  <div class="modal-w">
+    <div class="mc">
+      <div class="mh" style="background:linear-gradient(135deg,var(--admin),var(--admin-dk))">
+        <div><h3>✎ Edit Member</h3><p>👑 Admin only</p></div>
+        <button type="button" class="mx" data-close="m-edit-member" aria-label="Close">✕</button>
+      </div>
+      <form class="mb" id="edit-mem-form">
+        <div class="fg"><label>Member Name</label><input type="text" id="edit-mem-name" required maxlength="30"></div>
+        <div class="fg" style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px">
+          <div style="font-size:11px;color:var(--soft);font-weight:700;text-transform:uppercase;margin-bottom:4px">ID (read-only)</div>
+          <div id="edit-mem-id" style="font-weight:800"></div>
+        </div>
+        <button type="submit" class="btn btn-a" style="padding:14px;justify-content:center">✓ Save Changes</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="m-history">
+  <div class="modal-bg" data-close="m-history"></div>
+  <div class="modal-w">
+    <div class="mc lg">
+      <div class="mh" style="background:linear-gradient(135deg,#f59e0b,#d97706)">
+        <div><h3>History</h3><p id="hist-sub">—</p></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="hist-filter" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700"><option value="all">All</option></select>
+          <button type="button" class="mx" data-close="m-history" aria-label="Close">✕</button>
+        </div>
+      </div>
+      <div class="mb" id="hist-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="m-qr">
+  <div class="modal-bg" data-close="m-qr"></div>
+  <div class="modal-w">
+    <div class="mc">
+      <div class="mh" style="background:linear-gradient(135deg,#0284c7,#2563eb)">
+        <div><h3>Scan to Pay</h3></div>
+        <button type="button" class="mx" data-close="m-qr" aria-label="Close">✕</button>
+      </div>
+      <div class="mb">
+        <div class="toggle"><div class="toggle-o active" id="qr-tgl-gcash" data-qrtype="gcash">GCash</div><div class="toggle-o" id="qr-tgl-mari" data-qrtype="mari">MariBank</div></div>
+        <div class="qr-box"><div id="qr-slot"></div><div class="qr-lbl" id="qr-name">—</div><div class="qr-num" id="qr-num">—</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="m-share">
+  <div class="modal-bg" data-close="m-share"></div>
+  <div class="modal-w">
+    <div class="mc">
+      <div class="mh" style="background:linear-gradient(135deg,#10b981,#0d9488)">
+        <div><h3>Share Card</h3><p>PNG for GC</p></div>
+        <button type="button" class="mx" data-close="m-share" aria-label="Close">✕</button>
+      </div>
+      <div class="mb">
+        <div id="share-preview" class="share-card">
+          <div style="font-size:28px;margin-bottom:4px">🌴</div>
+          <h2 id="sc-title">Olango Trip</h2>
+          <div style="font-size:12px;opacity:.9" id="sc-range">—</div>
+          <div class="pct" id="sc-pct">0%</div>
+          <div id="sc-amt" style="font-size:14px;font-weight:700">₱0 / ₱0</div>
+          <div class="bar-s"><div class="bar-s-f" id="sc-bar" style="width:0%"></div></div>
+          <div class="share-mem" id="sc-mems"></div>
+          <div style="margin-top:16px;font-size:11px;opacity:.8" id="sc-foot">—</div>
+        </div>
+        <button type="button" class="btn btn-p" style="padding:14px;justify-content:center" data-action="downloadShareCard">📥 Download PNG</button>
+        <button type="button" class="btn btn-s" style="justify-content:center" data-action="copySummary">📋 Copy Text Instead</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="m-settings">
+  <div class="modal-bg" data-close="m-settings"></div>
+  <div class="modal-w">
+    <div class="mc">
+      <div class="mh" style="background:linear-gradient(135deg,#334155,#0f172a)">
+        <div><h3>Settings</h3><p id="set-role-lbl">—</p></div>
+        <button type="button" class="mx" data-close="m-settings" aria-label="Close">✕</button>
+      </div>
+      <form class="mb" id="settings-form">
+        <div class="fg"><label>Layout</label><div class="toggle"><div class="toggle-o" id="set-mode-mobile" data-setmode="mobile">📱 Mobile</div><div class="toggle-o" id="set-mode-web" data-setmode="web">💻 Web</div></div></div>
+        <div class="fg"><label>Signed in as</label><div style="padding:12px 14px;background:var(--bg);border:2px solid var(--border);border-radius:12px;font-weight:800" id="set-current-user">—</div><button type="button" class="btn btn-s" style="width:100%;justify-content:center;margin-top:8px" data-action="logout">🚪 Sign Out</button></div>
+        <div class="admin-only">
+          <div class="fg"><label>Trip Name</label><input type="text" id="set-name" required></div>
+          <div class="fg"><label>Weekly Rate ₱</label><input type="number" id="set-rate" min="1" required></div>
+          <div class="fg"><label>Start (First Friday)</label><input type="date" id="set-start" required></div>
+          <div class="fg"><label>Total Weeks</label><input type="number" id="set-weeks" min="1" max="104" required></div>
+          <div class="fg"><label>GCash #</label><input type="text" id="set-gcash-num" required></div>
+          <div class="fg"><label>GCash Name</label><input type="text" id="set-gcash-name" required></div>
+          <div class="fg"><label>MariBank #</label><input type="text" id="set-mari-num" required></div>
+          <div class="fg"><label>MariBank Name</label><input type="text" id="set-mari-name" required></div>
+          <div class="fg"><label>Reminders</label><button type="button" class="btn btn-s" style="width:100%;justify-content:center" data-action="enableNotifs">🔔 Enable deadline alerts</button></div>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn btn-s" style="flex:1;justify-content:center" data-action="exportBackup">💾 Backup</button>
+            <button type="button" class="btn btn-s" style="flex:1;justify-content:center" data-action="importBackup">📤 Restore</button>
+          </div>
+          <button type="button" class="btn btn-w" style="justify-content:center" data-action="promptReset">↺ Reset All</button>
+          <button type="submit" class="btn btn-a" style="padding:14px;justify-content:center">✓ Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="m-confirm">
+  <div class="modal-bg" data-close="m-confirm"></div>
+  <div class="modal-w">
+    <div class="mc">
+      <div class="confirm-body">
+        <div class="confirm-ic" id="conf-ic">⚠️</div>
+        <div class="confirm-title" id="conf-title">Are you sure?</div>
+        <div class="confirm-msg" id="conf-msg">This action cannot be undone.</div>
+        <div id="conf-detail"></div>
+      </div>
+      <div class="confirm-btns">
+        <button type="button" class="btn btn-s" id="conf-cancel">Cancel</button>
+        <button type="button" class="btn btn-w" id="conf-ok">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="import-input" accept=".json" style="display:none">
 
 <script>
-/* ==========================================
-   FAILSAFE SPLASH LOADER
-   ========================================== */
 (function () {
   var loaderHidden = false;
   window.hideLoader = function () {
@@ -589,10 +785,7 @@ body.mode-web .toast-box{bottom:24px;right:24px;left:auto;transform:none;width:a
     loaderHidden = true;
     try {
       var el = document.getElementById("loader");
-      if (el) {
-        el.classList.add("hide");
-        setTimeout(function () { try { el.remove(); } catch (e) {} }, 600);
-      }
+      if (el) { el.classList.add("hide"); setTimeout(function () { try { el.remove(); } catch (e) {} }, 600); }
     } catch (e) {}
   };
   setTimeout(window.hideLoader, 3000);
@@ -602,13 +795,9 @@ body.mode-web .toast-box{bottom:24px;right:24px;left:auto;transform:none;width:a
   document.addEventListener("DOMContentLoaded", function () { setTimeout(window.hideLoader, 500); });
 })();
 
-/* ==========================================
-   OLANGO APPLICATION CORE (encapsulated)
-   ========================================== */
 var Olango = (function () {
   'use strict';
 
-  /* ---------- CONFIG & CONSTANTS ---------- */
   var firebaseConfig = {
     apiKey: "AIzaSyAdu2G69SBviKXD6jMFGssb_1LcTXIgaf0",
     authDomain: "olangotrip.firebaseapp.com",
@@ -622,29 +811,22 @@ var Olango = (function () {
 
   var STORAGE_KEY  = "olango_trip_v5";
   var MODE_KEY     = "olango_mode_session";
-  var PIN_HASH_KEY = "olango_pin_hash_v5";
   var WHO_KEY      = "olango_who_session";
+  var ROLE_KEY     = "olango_role_session";
   var TZ           = "Asia/Manila";
+  var ADMIN_NAME   = "Kurt";
+  var ADMIN_PASSWORD = "090875754";
 
   var CHEERS = ["Sulit! 🎉", "Trip vibes! 🌴", "Ipon warrior! 💪", "Nice one! ✨", "Barkada proud! 🙌", "Almost there! 🚀", "Cha-ching! 💰"];
-  var AV = [
-    "linear-gradient(135deg,#0ea5e9,#0284c7)",
-    "linear-gradient(135deg,#14b8a6,#0f766e)",
-    "linear-gradient(135deg,#f59e0b,#d97706)",
-    "linear-gradient(135deg,#f43f5e,#be185d)",
-    "linear-gradient(135deg,#8b5cf6,#6d28d9)",
-    "linear-gradient(135deg,#84cc16,#65a30d)"
-  ];
+  var AV = ["linear-gradient(135deg,#0ea5e9,#0284c7)","linear-gradient(135deg,#14b8a6,#0f766e)","linear-gradient(135deg,#f59e0b,#d97706)","linear-gradient(135deg,#f43f5e,#be185d)","linear-gradient(135deg,#8b5cf6,#6d28d9)","linear-gradient(135deg,#84cc16,#65a30d)"];
 
   var defaultState = {
     tripName: "🌴 Olango Island Trip",
     rate: 30,
     startDate: "2026-08-28",
     weeksCount: 17,
-    gcashName: "KXI",
-    gcashNumber: "09939336295",
-    mariName: "KXI",
-    mariNumber: "13397715774",
+    gcashName: "KXI", gcashNumber: "09939336295",
+    mariName: "KXI", mariNumber: "13397715774",
     members: [
       { id: 1, name: "Fatima" },
       { id: 2, name: "Kurt" },
@@ -655,73 +837,98 @@ var Olango = (function () {
     lastUpdated: 0
   };
 
-  /* ---------- RUNTIME STATE ---------- */
   var DOM = {};
   var DB = null, dbRef = null;
   var isOnline = false;
   var editingId = null;
+  var editingMemberId = null;
   var payType = "normal";
   var syncTO = null;
   var milestones = new Set();
   var undoStack = null;
-  var pinAction = null;
   var pendingMode = null, pendingWho = null;
-
-  var flags = { hasConfetti: false, hasQR: false, hasHtml2Canvas: false, pinUnlocked: false };
-
+  var confirmCallback = null;
+  var currentWeekDetails = null;
+  var flags = { hasConfetti: false, hasQR: false, hasHtml2Canvas: false };
   var device = {
     isTouch: ('ontouchstart' in window) || navigator.maxTouchPoints > 0,
     reducedMotion: window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches
   };
 
-  /* ---------- HELPERS ---------- */
+  function isAdmin() { try { return sessionStorage.getItem(ROLE_KEY) === "admin"; } catch (e) { return false; } }
+
+  function requireAdmin(actionName) {
+    if (!isAdmin()) { toast("🔒 Admin only: " + (actionName || "this action"), "err"); haptic([30, 50, 30]); return false; }
+    return true;
+  }
+
+  function applyAdminUI() {
+    var admin = isAdmin();
+    document.body.classList.toggle("is-admin", admin);
+    var badge = document.getElementById("admin-badge");
+    if (badge) badge.style.display = admin ? "" : "none";
+    var chip = document.getElementById("user-chip");
+    if (chip) chip.classList.toggle("admin", admin);
+    var lbl = document.getElementById("set-role-lbl");
+    if (lbl) lbl.textContent = admin ? "👑 Admin Mode" : "👁️ Read-Only";
+  }
+
   function esc(s) {
-    return String(s == null ? "" : s)
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   }
-
-  function haptic(pattern) {
-    if (device.isTouch && navigator.vibrate) {
-      try { navigator.vibrate(pattern || 10); } catch (e) {}
-    }
-  }
-
+  function haptic(pattern) { if (device.isTouch && navigator.vibrate) { try { navigator.vibrate(pattern || 10); } catch (e) {} } }
   function loadScript(src, ms) {
     return new Promise(function (resolve) {
       try {
         var s = document.createElement("script"), done = false;
         var cb = function (ok) { if (done) return; done = true; resolve(!!ok); };
         s.src = src; s.async = true;
-        s.onload = function () { cb(true); };
-        s.onerror = function () { cb(false); };
+        s.onload = function () { cb(true); }; s.onerror = function () { cb(false); };
         document.head.appendChild(s);
         setTimeout(function () { cb(false); }, ms || 3500);
       } catch (e) { resolve(false); }
     });
   }
 
-  function hashSHA256(str) {
-    if (!str) return Promise.resolve("");
-    try {
-      var bytes = new TextEncoder().encode(str);
-      return crypto.subtle.digest("SHA-256", bytes).then(function (buf) {
-        return Array.from(new Uint8Array(buf)).map(function (b) {
-          return b.toString(16).padStart(2, '0');
-        }).join('');
-      }).catch(function () { return ""; });
-    } catch (e) { return Promise.resolve(""); }
-  }
-
   function cacheDOMSelectors() {
-    [
-      "cloud","trip-title","gcash-name","gcash-num","mari-name","mari-num","badge-txt","mode-badge","side-mode-lbl",
+    ["cloud","trip-title","gcash-name","gcash-num","mari-name","mari-num","badge-txt","mode-badge","side-mode-lbl",
       "stat-target","stat-collected","stat-pct","stat-bar","countdown","chips","live-clock","user-lbl",
       "mem-grid","tbl-h","tbl-b","tbl-f","recent","toast-box","onboard","ob-suggest","ob-mobile","ob-web",
-      "ob-next-1","ob-next-2","ob-mem-grid","ob-new-name","set-current-user","set-mode-mobile","set-mode-web",
-      "pay-member","pay-week","pay-amount","pay-note","pay-title","pay-sub","pay-submit","pay-mh","amt-chips","auto-box",
-      "mem-list","hist-filter","hist-sub","hist-list","qr-slot","qr-name","qr-num","share-preview"
+      "ob-next-1","ob-next-2","ob-mem-grid","ob-new-name","ob-admin-pass","ob-admin-input",
+      "set-current-user","set-mode-mobile","set-mode-web",
+      "pay-member","pay-week","pay-amount","pay-note","pay-date","pay-title","pay-sub","pay-submit","pay-mh","amt-chips","auto-box",
+      "mem-list","hist-filter","hist-sub","hist-list","qr-slot","qr-name","qr-num","share-preview",
+      "conf-ic","conf-title","conf-msg","conf-detail","conf-ok","conf-cancel",
+      "edit-mem-name","edit-mem-id","admin-badge","tl-list","tl-count",
+      "wd-title","wd-sub","wd-list","wd-add-btn"
     ].forEach(function (id) { DOM[id] = document.getElementById(id); });
+  }
+
+  /* ---------- CONFIRM MODAL ---------- */
+  function confirmAction(opts, onOk) {
+    confirmCallback = onOk;
+    if (DOM["conf-ic"]) DOM["conf-ic"].textContent = opts.icon || "⚠️";
+    if (DOM["conf-title"]) DOM["conf-title"].textContent = opts.title || "Are you sure?";
+    if (DOM["conf-msg"]) DOM["conf-msg"].textContent = opts.msg || "This action cannot be undone.";
+    if (DOM["conf-detail"]) DOM["conf-detail"].innerHTML = opts.detail || "";
+    if (DOM["conf-ok"]) { 
+      DOM["conf-ok"].textContent = opts.okText || "Confirm"; 
+      DOM["conf-ok"].className = "btn " + (opts.okClass || "btn-w"); 
+    }
+    var m = document.getElementById("m-confirm");
+    if (m) m.classList.add("open");
+  }
+  function acceptConfirm() { 
+    var cb = confirmCallback; 
+    confirmCallback = null; 
+    var m = document.getElementById("m-confirm"); 
+    if (m) m.classList.remove("open"); 
+    if (cb) cb(); 
+  }
+  function cancelConfirm() { 
+    confirmCallback = null; 
+    var m = document.getElementById("m-confirm"); 
+    if (m) m.classList.remove("open"); 
   }
 
   /* ---------- STORAGE ---------- */
@@ -729,24 +936,15 @@ var Olango = (function () {
   function saveSessionMode(m) { try { sessionStorage.setItem(MODE_KEY, m); } catch (e) {} }
   function getSessionWho() { try { return sessionStorage.getItem(WHO_KEY) || ""; } catch (e) { return ""; } }
   function saveSessionWho(n) { try { sessionStorage.setItem(WHO_KEY, n); } catch (e) {} }
-  function clearSession() { try { sessionStorage.removeItem(MODE_KEY); sessionStorage.removeItem(WHO_KEY); } catch (e) {} }
+  function saveSessionRole(r) { try { sessionStorage.setItem(ROLE_KEY, r); } catch (e) {} }
+  function clearSession() { try { sessionStorage.removeItem(MODE_KEY); sessionStorage.removeItem(WHO_KEY); sessionStorage.removeItem(ROLE_KEY); } catch (e) {} }
 
   function loadLocal() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return Object.assign({}, defaultState, JSON.parse(raw));
-    } catch (e) {}
+    try { var raw = localStorage.getItem(STORAGE_KEY); if (raw) return Object.assign({}, defaultState, JSON.parse(raw)); } catch (e) {}
     return JSON.parse(JSON.stringify(defaultState));
   }
-
   var state = loadLocal();
-
-  function saveLocal() {
-    try {
-      state.lastUpdated = Date.now();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (e) {}
-  }
+  function saveLocal() { try { state.lastUpdated = Date.now(); localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {} }
 
   function sync() {
     saveLocal();
@@ -754,11 +952,8 @@ var Olango = (function () {
     clearTimeout(syncTO);
     setCloudStatus("saving");
     syncTO = setTimeout(function () {
-      try {
-        dbRef.set(state)
-          .then(function () { setCloudStatus(true); })
-          .catch(function () { setCloudStatus(false); });
-      } catch (e) { setCloudStatus(false); }
+      try { dbRef.set(state).then(function () { setCloudStatus(true); }).catch(function () { setCloudStatus(false); }); }
+      catch (e) { setCloudStatus(false); }
     }, 400);
   }
 
@@ -772,79 +967,7 @@ var Olango = (function () {
     } catch (e) {}
   }
 
-  /* ---------- SECURITY / PIN ---------- */
-  function getStoredPinHash() { try { return localStorage.getItem(PIN_HASH_KEY) || ""; } catch (e) { return ""; } }
-
-  function registerPin(pinStr) {
-    if (!pinStr) { try { localStorage.removeItem(PIN_HASH_KEY); } catch (e) {} return Promise.resolve(); }
-    return hashSHA256(pinStr).then(function (h) {
-      try { localStorage.setItem(PIN_HASH_KEY, h); } catch (e) {}
-    });
-  }
-
-  function clearPinBoxes() {
-    for (var i = 0; i < 4; i++) {
-      var el = document.getElementById("pin" + i);
-      if (el) el.value = "";
-    }
-  }
-
-  function requirePin(action, title) {
-    if (!getStoredPinHash() || flags.pinUnlocked) { action(); return; }
-    pinAction = action;
-    var t = document.getElementById("pin-title");
-    if (t) t.textContent = title || "Enter PIN";
-    clearPinBoxes();
-    openModal("m-pin");
-    setTimeout(function () { var f = document.getElementById("pin0"); if (f) f.focus(); }, 200);
-  }
-
-  function setupPinInputListeners() {
-    for (var i = 0; i < 4; i++) {
-      (function (idx) {
-        var el = document.getElementById("pin" + idx);
-        if (!el) return;
-        el.addEventListener("input", function () {
-          this.value = this.value.replace(/\D/g, "").slice(0, 1);
-          if (this.value && idx < 3) {
-            var n = document.getElementById("pin" + (idx + 1)); if (n) n.focus();
-          }
-          if (idx === 3 && this.value) submitPin();
-        });
-        el.addEventListener("keydown", function (e) {
-          if (e.key === "Backspace" && !this.value && idx > 0) {
-            var p = document.getElementById("pin" + (idx - 1));
-            if (p) { p.focus(); p.value = ""; }
-          }
-        });
-      })(i);
-    }
-  }
-
-  function submitPin() {
-    var entered = "";
-    for (var i = 0; i < 4; i++) {
-      var el = document.getElementById("pin" + i);
-      if (el) entered += el.value;
-    }
-    if (entered.length < 4) { toast("Enter 4 digits", "err"); return; }
-    var stored = getStoredPinHash();
-    hashSHA256(entered).then(function (h) {
-      if (h && h === stored) {
-        flags.pinUnlocked = true;
-        closeModal("m-pin");
-        if (pinAction) { var a = pinAction; pinAction = null; a(); }
-        toast("Unlocked ✓", "win");
-      } else {
-        toast("Wrong PIN", "err");
-        haptic([30, 50, 30]);
-        clearPinBoxes();
-        var f = document.getElementById("pin0"); if (f) f.focus();
-      }
-    });
-  }
-
-  /* ---------- LAYOUT MODE ---------- */
+  /* ---------- MODE ---------- */
   function applyMode(m) {
     document.body.classList.remove("mode-web", "mode-mobile");
     document.body.classList.add("mode-" + m);
@@ -853,140 +976,68 @@ var Olango = (function () {
     if (DOM["set-mode-mobile"]) DOM["set-mode-mobile"].classList.toggle("active", m === "mobile");
     if (DOM["set-mode-web"]) DOM["set-mode-web"].classList.toggle("active", m === "web");
   }
-
-  function detectDeviceSuggestion() {
-    return (window.innerWidth < 768 || (device.isTouch && window.innerWidth < 1024)) ? "mobile" : "web";
-  }
-
+  function detectDeviceSuggestion() { return (window.innerWidth < 768 || (device.isTouch && window.innerWidth < 1024)) ? "mobile" : "web"; }
   function switchMode() {
     var next = (getSessionMode() || "mobile") === "web" ? "mobile" : "web";
-    saveSessionMode(next);
-    applyMode(next);
-    toast("Switched to " + (next === "web" ? "💻 Web" : "📱 Mobile"), "win");
-    haptic();
+    saveSessionMode(next); applyMode(next);
+    toast("Switched to " + (next === "web" ? "💻 Web" : "📱 Mobile"), "win"); haptic();
   }
+  function setModeInSettings(m) { saveSessionMode(m); applyMode(m); toast("Layout: " + (m === "web" ? "💻 Web" : "📱 Mobile"), "win"); }
 
-  function setModeInSettings(m) {
-    saveSessionMode(m);
-    applyMode(m);
-    toast("Layout: " + (m === "web" ? "💻 Web" : "📱 Mobile"), "win");
-  }
-
-  /* ---------- TIME (MANILA) ---------- */
+  /* ---------- TIME ---------- */
   function nowMs() { return Date.now(); }
-
-  function weekDeadline(i) {
-    var p = state.startDate.split("-").map(Number);
-    var dt = new Date(Date.UTC(p[0], p[1] - 1, p[2], 15, 59, 59, 999));
-    dt.setUTCDate(dt.getUTCDate() + 7 * i);
-    return dt.getTime();
-  }
-
-  function weekDate(i) {
-    var p = state.startDate.split("-").map(Number);
-    var dt = new Date(Date.UTC(p[0], p[1] - 1, p[2], 4, 0, 0));
-    dt.setUTCDate(dt.getUTCDate() + 7 * i);
-    return dt;
-  }
-
-  function curWeek() {
-    var n = nowMs();
-    for (var i = 0; i < state.weeksCount; i++) if (n <= weekDeadline(i)) return i;
-    return state.weeksCount - 1;
-  }
-
+  function weekDeadline(i) { var p = state.startDate.split("-").map(Number); var dt = new Date(Date.UTC(p[0], p[1] - 1, p[2], 15, 59, 59, 999)); dt.setUTCDate(dt.getUTCDate() + 7 * i); return dt.getTime(); }
+  function weekDate(i) { var p = state.startDate.split("-").map(Number); var dt = new Date(Date.UTC(p[0], p[1] - 1, p[2], 4, 0, 0)); dt.setUTCDate(dt.getUTCDate() + 7 * i); return dt; }
+  function curWeek() { var n = nowMs(); for (var i = 0; i < state.weeksCount; i++) if (n <= weekDeadline(i)) return i; return state.weeksCount - 1; }
   function isPast(i) { return nowMs() > weekDeadline(i); }
   function isFuture(i) { return i > curWeek(); }
-
-  function fmtD(d) {
-    try { return new Date(d).toLocaleDateString("en-PH", { timeZone: TZ, weekday: "short", month: "short", day: "numeric" }); }
-    catch (e) { return ""; }
-  }
-  function fmtDT(d) {
-    try { return new Date(d).toLocaleString("en-PH", { timeZone: TZ, month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true }); }
-    catch (e) { return ""; }
-  }
-  function fmtClock() {
-    try { return new Date().toLocaleString("en-PH", { timeZone: TZ, weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true }); }
-    catch (e) { return ""; }
-  }
-
+  function fmtD(d) { try { return new Date(d).toLocaleDateString("en-PH", { timeZone: TZ, weekday: "short", month: "short", day: "numeric" }); } catch (e) { return ""; } }
+  function fmtDT(d) { try { return new Date(d).toLocaleString("en-PH", { timeZone: TZ, month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true }); } catch (e) { return ""; } }
+  function fmtClock() { try { return new Date().toLocaleString("en-PH", { timeZone: TZ, weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true }); } catch (e) { return ""; } }
+  function toDateTimeLocal(iso) { try { var d = new Date(iso); var off = d.getTimezoneOffset(); var local = new Date(d.getTime() - off * 60000); return local.toISOString().slice(0, 16); } catch (e) { return ""; } }
   function countdown(target) {
     var diff = target - nowMs();
     if (diff <= 0) return "⚠ Passed";
-    var d = Math.floor(diff / 86400000),
-        h = Math.floor(diff % 86400000 / 3600000),
-        m = Math.floor(diff % 3600000 / 60000),
-        s = Math.floor(diff % 60000 / 1000);
+    var d = Math.floor(diff / 86400000), h = Math.floor(diff % 86400000 / 3600000), m = Math.floor(diff % 3600000 / 60000), s = Math.floor(diff % 60000 / 1000);
     if (d > 0) return d + "d " + h + "h " + m + "m";
     if (h > 0) return h + "h " + m + "m " + s + "s";
     return m + "m " + s + "s";
   }
 
   /* ---------- METRICS ---------- */
-  function memPaid(mid) {
-    return (state.payments || []).reduce(function (s, p) {
-      return p.memberId === mid ? s + Number(p.amount || 0) : s;
-    }, 0);
-  }
-
-  function memWeekPaid(mid, w) {
-    return (state.payments || []).reduce(function (s, p) {
-      return (p.memberId === mid && Number(p.weekIndex) === w) ? s + Number(p.amount || 0) : s;
-    }, 0);
-  }
-
-  function isPaymentLate(p) {
-    if (p.isLate) return true;
-    return new Date(p.timestamp).getTime() > weekDeadline(Number(p.weekIndex));
-  }
-
-  function memMissed(mid) {
-    var arr = [], cur = curWeek();
-    for (var i = 0; i < cur; i++) if (isPast(i) && memWeekPaid(mid, i) < state.rate) arr.push(i);
-    return arr;
-  }
-
+  function memPaid(mid) { return (state.payments || []).reduce(function (s, p) { return p.memberId === mid ? s + Number(p.amount || 0) : s; }, 0); }
+  function memWeekPaid(mid, w) { return (state.payments || []).reduce(function (s, p) { return (p.memberId === mid && Number(p.weekIndex) === w) ? s + Number(p.amount || 0) : s; }, 0); }
+  function memWeekPayments(mid, w) { return (state.payments || []).filter(function(p) { return p.memberId === mid && Number(p.weekIndex) === w; }); }
+  function isPaymentLate(p) { if (p.isLate) return true; return new Date(p.timestamp).getTime() > weekDeadline(Number(p.weekIndex)); }
+  function memMissed(mid) { var arr = [], cur = curWeek(); for (var i = 0; i < cur; i++) if (isPast(i) && memWeekPaid(mid, i) < state.rate) arr.push(i); return arr; }
   function weekStatus(mid, w) {
     var paid = memWeekPaid(mid, w);
-    var pays = (state.payments || []).filter(function (p) {
-      return p.memberId === mid && Number(p.weekIndex) === w;
-    });
+    var pays = memWeekPayments(mid, w);
     if (paid >= state.rate) return pays.some(isPaymentLate) ? "late-paid" : "paid";
     if (paid > 0) return "partial";
     if (isPast(w)) return "missed";
     if (isFuture(w)) return "pending";
     return "none";
   }
-
   function memOverall(mid, cur) {
-    var paid = memPaid(mid),
-        exp = state.rate * (cur + 1),
-        tgt = state.rate * state.weeksCount;
+    var paid = memPaid(mid), exp = state.rate * (cur + 1), tgt = state.rate * state.weeksCount;
     if (paid >= tgt) return { t: "DONE", c: "done" };
     if (paid >= exp + state.rate) return { t: "AHEAD", c: "ahead" };
     if (paid < exp - state.rate) return { t: "BEHIND", c: "behind" };
     return { t: "OK", c: "ok" };
   }
-
   function memStreak(mid) {
     var cur = curWeek(), s = 0;
     for (var i = cur - 1; i >= 0; i--) {
       if (!isPast(i)) continue;
       var paid = memWeekPaid(mid, i);
-      var pays = (state.payments || []).filter(function (p) {
-        return p.memberId === mid && Number(p.weekIndex) === i;
-      });
+      var pays = memWeekPayments(mid, i);
       if (paid >= state.rate && !pays.some(isPaymentLate)) s++;
       else break;
     }
     return s;
   }
-
-  function totalCollected() {
-    return (state.payments || []).reduce(function (s, p) { return s + Number(p.amount || 0); }, 0);
-  }
-
+  function totalCollected() { return (state.payments || []).reduce(function (s, p) { return s + Number(p.amount || 0); }, 0); }
   function predictCompletion() {
     var target = state.rate * state.weeksCount * state.members.length;
     var collected = totalCollected();
@@ -1000,21 +1051,27 @@ var Olango = (function () {
     if (fin >= state.weeksCount) return { late: true };
     return { date: fmtD(weekDate(fin)), late: false };
   }
-
-  function abbr(n) {
-    n = Number(n || 0);
-    if (n >= 1e6) return "₱" + (n / 1e6).toFixed(n % 1e6 === 0 ? 0 : 1) + "M";
-    if (n >= 1e4) return "₱" + (n / 1e3).toFixed(n % 1e3 === 0 ? 0 : 1) + "k";
-    return "₱" + n.toLocaleString();
-  }
+  function abbr(n) { n = Number(n || 0); if (n >= 1e6) return "₱" + (n / 1e6).toFixed(n % 1e6 === 0 ? 0 : 1) + "M"; if (n >= 1e4) return "₱" + (n / 1e3).toFixed(n % 1e3 === 0 ? 0 : 1) + "k"; return "₱" + n.toLocaleString(); }
   function full(n) { return "₱" + Number(n || 0).toLocaleString(); }
 
+  function sortPaymentsList(pays) {
+    return (pays || []).slice().sort(function (a, b) {
+      var aOrd = (a.manualOrder != null) ? Number(a.manualOrder) : new Date(a.timestamp).getTime();
+      var bOrd = (b.manualOrder != null) ? Number(b.manualOrder) : new Date(b.timestamp).getTime();
+      return bOrd - aOrd;
+    });
+  }
+
   /* ---------- RENDERERS ---------- */
-  function tickClock() {
-    try {
-      if (DOM["live-clock"]) DOM["live-clock"].textContent = fmtClock();
-      if (DOM["countdown"]) DOM["countdown"].textContent = countdown(weekDeadline(curWeek()));
-    } catch (e) {}
+  function tickClock() { try { if (DOM["live-clock"]) DOM["live-clock"].textContent = fmtClock(); if (DOM["countdown"]) DOM["countdown"].textContent = countdown(weekDeadline(curWeek())); } catch (e) {} }
+
+  function refreshAllViews() {
+    renderAll();
+    if (tracklistIsOpen()) renderTracklistEditor();
+    if (historyIsOpen()) renderHistory();
+    if (weekDetailsIsOpen() && currentWeekDetails) {
+      openWeekDetails(currentWeekDetails.mid, currentWeekDetails.wk, true);
+    }
   }
 
   function renderAll() {
@@ -1048,11 +1105,7 @@ var Olango = (function () {
       if (pred && pred.late) chips.push({ t: "⚠ Behind", u: true });
       if (pct >= 100) chips.push({ t: "🎉 Funded!", w: true });
 
-      if (DOM["chips"]) {
-        DOM["chips"].innerHTML = chips.map(function (c) {
-          return '<span class="chip' + (c.u ? ' urgent' : '') + (c.w ? ' win' : '') + (c.p ? ' predict' : '') + '">' + c.t + '</span>';
-        }).join("");
-      }
+      if (DOM["chips"]) DOM["chips"].innerHTML = chips.map(function (c) { return '<span class="chip' + (c.u ? ' urgent' : '') + (c.w ? ' win' : '') + (c.p ? ' predict' : '') + '">' + c.t + '</span>'; }).join("");
 
       tickClock();
       renderMembers(cur);
@@ -1060,38 +1113,32 @@ var Olango = (function () {
       renderRecent();
       checkMilestones(pct);
       updateWhoUI();
+      applyAdminUI();
     } catch (e) { console.warn(e); }
     if (window.hideLoader) window.hideLoader();
   }
 
   function renderMembers(cur) {
-    var g = DOM["mem-grid"];
-    if (!g) return;
-    var me = getSessionWho();
-
-    if (!state.members.length) {
-      g.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="emo">👥</div>No members<br>' +
-                    '<button class="btn btn-p" style="margin-top:10px" onclick="Olango.openModal(\'m-members\')">+ Add</button></div>';
-      return;
-    }
+    var g = DOM["mem-grid"]; if (!g) return;
+    var me = getSessionWho(); var admin = isAdmin();
+    if (!state.members.length) { g.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="emo">👥</div>No members</div>'; return; }
 
     g.innerHTML = state.members.map(function (m, i) {
-      var paid = memPaid(m.id),
-          tgt = state.rate * state.weeksCount,
-          pct = tgt ? Math.min(100, Math.round(paid / tgt * 100)) : 0,
-          col = AV[i % AV.length],
-          st = memOverall(m.id, cur),
-          wp = memWeekPaid(m.id, cur),
-          done = wp >= state.rate,
-          miss = memMissed(m.id),
-          streak = memStreak(m.id),
-          isMe = m.name === me,
-          barBg = pct >= 100 ? 'linear-gradient(90deg,#10b981,#059669)' : col;
+      var paid = memPaid(m.id), tgt = state.rate * state.weeksCount, pct = tgt ? Math.min(100, Math.round(paid / tgt * 100)) : 0,
+          col = AV[i % AV.length], st = memOverall(m.id, cur), wp = memWeekPaid(m.id, cur), done = wp >= state.rate,
+          miss = memMissed(m.id), streak = memStreak(m.id), isMe = m.name === me,
+          isAdminUser = m.name === ADMIN_NAME, barBg = pct >= 100 ? 'linear-gradient(90deg,#10b981,#059669)' : col;
 
-      return '<div class="mem' + (pct >= 100 ? ' done' : '') + (isMe ? ' is-me' : '') + '">' +
+      var btns = admin
+        ? ((done ? '<button type="button" class="qbtn done" data-action="weekDetails" data-mid="' + m.id + '" data-wk="' + cur + '">✓ Wk ' + (cur + 1) + '</button>' : '<button type="button" class="qbtn" data-action="quickPay" data-mid="' + m.id + '" data-wk="' + cur + '">+ ₱' + (state.rate - wp) + '</button>') +
+           (miss.length ? '<button type="button" class="qbtn late" data-action="payLate" data-mid="' + m.id + '" data-wk="' + miss[0] + '">⏰</button>' : ''))
+        : '<button type="button" class="qbtn readonly" disabled>👁️ View only</button>';
+
+      return '<div class="mem' + (pct >= 100 ? ' done' : '') + (isMe ? ' is-me' : '') + (isAdminUser ? ' is-admin-user' : '') + '">' +
         '<div class="mem-hd">' +
           '<div class="av" style="background:' + col + '">' + esc((m.name || "?").charAt(0).toUpperCase()) + '</div>' +
           '<span class="mem-nm">' + esc(m.name) + '</span>' +
+          (isAdminUser ? '<span class="admin-tag">👑</span>' : '') +
           (isMe ? '<span class="me-tag">YOU</span>' : '') +
           (streak >= 2 ? '<span class="streak">🔥' + streak + '</span>' : '') +
           '<span class="mem-tag ' + st.c + '">' + st.t + '</span>' +
@@ -1100,14 +1147,7 @@ var Olango = (function () {
         '<div class="mem-sub">of ' + full(tgt) + ' · ' + pct + '%</div>' +
         (miss.length ? '<div class="mem-warn">⚠ ' + miss.length + ' unpaid</div>' : '') +
         '<div class="mem-bar"><div class="mem-bar-fill" style="width:' + pct + '%;background:' + barBg + '"></div></div>' +
-        '<div class="mem-btns">' +
-          (done
-            ? '<button class="qbtn done">✓ Wk ' + (cur + 1) + '</button>'
-            : '<button class="qbtn" onclick="Olango.quickPay(' + m.id + ',' + cur + ')">+ ₱' + (state.rate - wp) + '</button>') +
-          (miss.length
-            ? '<button class="qbtn late" onclick="Olango.openPayment({memberId:' + m.id + ',weekIndex:' + miss[0] + '},true)">⏰</button>'
-            : '') +
-        '</div>' +
+        '<div class="mem-btns">' + btns + '</div>' +
       '</div>';
     }).join("");
   }
@@ -1115,51 +1155,53 @@ var Olango = (function () {
   function renderTable(cur) {
     var th = DOM["tbl-h"], tb = DOM["tbl-b"], tf = DOM["tbl-f"];
     if (!th || !tb || !tf) return;
-
-    if (!state.members.length) {
-      th.innerHTML = "";
-      tb.innerHTML = "<tr><td class='empty'>Add members</td></tr>";
-      tf.innerHTML = "";
-      return;
-    }
+    var admin = isAdmin();
+    if (!state.members.length) { th.innerHTML = ""; tb.innerHTML = "<tr><td class='empty'>Add members</td></tr>"; tf.innerHTML = ""; return; }
 
     var h = "<tr><th>Wk</th><th style='text-align:left'>Due</th>";
-    state.members.forEach(function (m) {
-      h += '<th title="' + esc(m.name) + '">' + esc(m.name.length > 6 ? m.name.slice(0, 5) + '…' : m.name) + '</th>';
-    });
-    h += "<th>Pot</th></tr>";
-    th.innerHTML = h;
+    state.members.forEach(function (m) { h += '<th title="' + esc(m.name) + '">' + esc(m.name.length > 6 ? m.name.slice(0, 5) + '…' : m.name) + '</th>'; });
+    h += "<th>Pot</th></tr>"; th.innerHTML = h;
 
     var rows = [];
     for (var w = 0; w < state.weeksCount; w++) {
       var isNow = w === cur, past = isPast(w), sum = 0;
       var cls = isNow ? 'now' : (past ? 'past' : '');
       var flag = isNow ? '<span class="now-b">NOW</span>' : (past ? '<span class="past-b">past</span>' : '<span class="up-b">soon</span>');
+      var row = '<tr class="' + cls + '"><td style="font-weight:900;color:var(--soft)">' + String(w + 1).padStart(2, '0') + '</td><td style="font-weight:700;text-align:left">' + fmtD(weekDate(w)) + flag + '</td>';
 
-      var row = '<tr class="' + cls + '">' +
-        '<td style="font-weight:900;color:var(--soft)">' + String(w + 1).padStart(2, '0') + '</td>' +
-        '<td style="font-weight:700;text-align:left">' + fmtD(weekDate(w)) + flag + '</td>';
-
-      /* eslint-disable no-loop-func */
       (function (wk) {
         state.members.forEach(function (m) {
-          var paid = memWeekPaid(m.id, wk);
+          var paysForWk = memWeekPayments(m.id, wk);
+          var paid = paysForWk.reduce(function(s, p) { return s + Number(p.amount); }, 0);
           sum += paid;
+          
           var st = weekStatus(m.id, wk);
-          var click = past
-            ? "onclick='Olango.openPayment({memberId:" + m.id + ",weekIndex:" + wk + "},true)'"
-            : "onclick='Olango.openPayment({memberId:" + m.id + ",weekIndex:" + wk + "})'";
+          var attrs = "";
+          
+          if (admin) {
+            if (paysForWk.length > 0) {
+              attrs = 'data-action="weekDetails" data-mid="' + m.id + '" data-wk="' + wk + '"';
+            } else if (past) {
+              attrs = 'data-action="payLate" data-mid="' + m.id + '" data-wk="' + wk + '"';
+            } else {
+              attrs = 'data-action="payNew" data-mid="' + m.id + '" data-wk="' + wk + '"';
+            }
+          }
+          
+          var ro = admin ? "" : " readonly"; 
+          var tag = admin ? "button" : "span";
+          var typeAttr = admin ? ' type="button"' : '';
           var pill;
-          if (st === "paid")            pill = '<span class="pill paid" ' + click + '>✓ ' + abbr(paid) + '</span>';
-          else if (st === "late-paid")  pill = '<span class="pill late" ' + click + '>⏰ ' + abbr(paid) + '</span>';
-          else if (st === "partial")    pill = '<span class="pill part" ' + click + '>⚠ ' + abbr(paid) + '</span>';
-          else if (st === "missed")     pill = '<span class="pill add" ' + click + '>+ late</span>';
-          else if (st === "pending")    pill = '<span class="pill pend" ' + click + '>⏳</span>';
-          else                          pill = '<span class="pill add" ' + click + '>+</span>';
+          
+          if (st === "paid") pill = '<' + tag + typeAttr + ' class="pill paid' + ro + '" ' + attrs + '>✓ ' + abbr(paid) + '</' + tag + '>';
+          else if (st === "late-paid") pill = '<' + tag + typeAttr + ' class="pill late' + ro + '" ' + attrs + '>⏰ ' + abbr(paid) + '</' + tag + '>';
+          else if (st === "partial") pill = '<' + tag + typeAttr + ' class="pill part' + ro + '" ' + attrs + '>⚠ ' + abbr(paid) + '</' + tag + '>';
+          else if (st === "missed") pill = admin ? '<button type="button" class="pill add" ' + attrs + '>+ late</button>' : '<span class="pill miss readonly">✕</span>';
+          else if (st === "pending") pill = '<' + tag + typeAttr + ' class="pill pend' + ro + '" ' + attrs + '>⏳</' + tag + '>';
+          else pill = admin ? '<button type="button" class="pill add" ' + attrs + '>+</button>' : '<span class="pill none readonly">—</span>';
           row += '<td>' + pill + '</td>';
         });
       })(w);
-      /* eslint-enable no-loop-func */
 
       row += '<td style="font-weight:900;color:var(--palm)">' + abbr(sum) + '</td></tr>';
       rows.push(row);
@@ -1167,9 +1209,7 @@ var Olango = (function () {
     tb.innerHTML = rows.join("");
 
     var f = '<tr><td></td><td style="text-align:left">TOTAL</td>';
-    state.members.forEach(function (m) {
-      f += '<td style="color:var(--ocean-dk)">' + abbr(memPaid(m.id)) + '</td>';
-    });
+    state.members.forEach(function (m) { f += '<td style="color:var(--ocean-dk)">' + abbr(memPaid(m.id)) + '</td>'; });
     f += '<td style="color:var(--palm)">' + abbr(totalCollected()) + '</td></tr>';
     tf.innerHTML = f;
   }
@@ -1179,71 +1219,155 @@ var Olango = (function () {
     var col = m ? AV[state.members.indexOf(m) % AV.length] : AV[0];
     var late = isPaymentLate(pay);
     var by = pay.loggedBy ? '<span class="tag by">by ' + esc(pay.loggedBy) + '</span>' : '';
-    var payload = JSON.stringify(pay).replace(/'/g, "&#39;");
-    var editCall = closeHistory
-      ? 'Olango.openPayment(' + payload + '); Olango.closeModal("m-history")'
-      : 'Olango.openPayment(' + payload + ')';
+    var admin = isAdmin();
+    var adminBtns = admin ? '<button type="button" class="ib edit" title="Edit" data-action="editPayment" data-pid="' + pay.id + '" data-close="' + (closeHistory ? 'm-history' : '') + '">✎</button><button type="button" class="ib del" title="Delete" data-action="deletePayment" data-pid="' + pay.id + '">✕</button>' : '';
 
     return '<div class="recent-item">' +
       '<div class="av" style="background:' + col + '">' + esc((m ? m.name : "?").charAt(0).toUpperCase()) + '</div>' +
       '<div class="recent-body">' +
-        '<div class="recent-nm">' + esc(m ? m.name : "Unknown") +
-          ' <span style="color:var(--soft);font-weight:700">→ Wk ' + (Number(pay.weekIndex) + 1) + '</span> ' +
-          (late ? '<span class="tag">⏰ LATE</span>' : '') + by +
-        '</div>' +
+        '<div class="recent-nm">' + esc(m ? m.name : "Unknown") + ' <span style="color:var(--soft);font-weight:700">→ Wk ' + (Number(pay.weekIndex) + 1) + '</span> ' + (late ? '<span class="tag">⏰ LATE</span>' : '') + by + '</div>' +
         '<div class="recent-mt">' + fmtDT(pay.timestamp) + (pay.note ? ' · "' + esc(pay.note) + '"' : '') + '</div>' +
       '</div>' +
-      '<span class="recent-a">+' + full(pay.amount) + '</span>' +
-      '<button class="ib" onclick=\'' + editCall + '\'>✎</button>' +
-      '<button class="ib" onclick="Olango.deletePayment(' + pay.id + ')">✕</button>' +
+      '<span class="recent-a">+' + full(pay.amount) + '</span>' + adminBtns +
     '</div>';
   }
 
   function renderRecent() {
-    var l = DOM["recent"];
-    if (!l) return;
+    var l = DOM["recent"]; if (!l) return;
     var pays = state.payments || [];
+    if (!pays.length) { l.innerHTML = '<div class="empty"><div class="emo">💸</div>No payments yet</div>'; return; }
+    l.innerHTML = sortPaymentsList(pays).slice(0, 6).map(function (p) { return paymentRowHTML(p, false); }).join("");
+  }
+
+  /* ---------- WEEK DETAILS POPUP ---------- */
+  function weekDetailsIsOpen() {
+    var m = document.getElementById("m-week-details");
+    return m && m.classList.contains("open");
+  }
+
+  function openWeekDetails(mid, wk, keepOpen) {
+    if (!requireAdmin("edit entries")) return;
+    var mem = state.members.find(function(m) { return m.id === mid; });
+    if (!mem) return;
+
+    currentWeekDetails = { mid: mid, wk: wk };
+
+    if (DOM["wd-title"]) DOM["wd-title"].textContent = mem.name + " · Wk " + (wk + 1);
+    if (DOM["wd-sub"]) DOM["wd-sub"].textContent = "Due: " + fmtD(weekDate(wk));
+
+    var pays = memWeekPayments(mid, wk).sort(function(a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
+
+    var list = DOM["wd-list"];
+    if (list) {
+      if (pays.length === 0) {
+        list.innerHTML = '<div class="empty"><div class="emo">📭</div>No payments recorded this week yet</div>';
+      } else {
+        list.innerHTML = pays.map(function(p) {
+          var late = isPaymentLate(p);
+          var by = p.loggedBy ? ' · logged by ' + esc(p.loggedBy) : '';
+          return '<div class="wd-entry' + (late ? ' late-entry' : '') + '">' +
+            '<div class="wd-entry-info">' +
+              '<div class="wd-entry-main">' + (late ? '⏰' : '✓') + ' ₱' + p.amount + (late ? ' <span class="tag">LATE</span>' : '') + '</div>' +
+              '<div class="wd-entry-mt">' + fmtDT(p.timestamp) + by + (p.note ? ' · "' + esc(p.note) + '"' : '') + '</div>' +
+            '</div>' +
+            '<div class="wd-entry-actions">' +
+              '<button type="button" class="ib edit" title="Edit amount/date" data-action="editPayment" data-pid="' + p.id + '">✎</button>' +
+              '<button type="button" class="ib del" title="Remove this payment" data-action="deletePayment" data-pid="' + p.id + '">✕</button>' +
+            '</div>' +
+          '</div>';
+        }).join("");
+      }
+    }
+
+    var addBtn = DOM["wd-add-btn"];
+    if (addBtn) {
+      addBtn.setAttribute("data-mid", mid);
+      addBtn.setAttribute("data-wk", wk);
+    }
+
+    if (!keepOpen) {
+      var m = document.getElementById("m-week-details");
+      if (m) m.classList.add("open");
+      haptic();
+    }
+  }
+
+  /* ---------- TRACKLIST EDITOR ---------- */
+  function tracklistIsOpen() { var m = document.getElementById("m-tracklist"); return m && m.classList.contains("open"); }
+  function historyIsOpen() { var m = document.getElementById("m-history"); return m && m.classList.contains("open"); }
+
+  function renderTracklistEditor() {
+    var list = DOM["tl-list"]; var count = DOM["tl-count"];
+    if (!list) return;
+    var pays = sortPaymentsList(state.payments || []);
+    if (count) count.textContent = pays.length + " entrie(s) · use ↑↓ to reorder";
     if (!pays.length) {
-      l.innerHTML = '<div class="empty"><div class="emo">💸</div>No payments yet</div>';
+      list.innerHTML = '<div class="tl-empty"><div class="emo">📋</div><div style="font-weight:700;margin-bottom:4px">No entries yet</div><div style="font-size:12px">Tap "＋ Add New Entry" above to create one.</div></div>';
       return;
     }
-    l.innerHTML = pays.slice()
-      .sort(function (a, b) { return new Date(b.timestamp) - new Date(a.timestamp); })
-      .slice(0, 6)
-      .map(function (p) { return paymentRowHTML(p, false); })
-      .join("");
+    list.innerHTML = pays.map(function (p, i) {
+      var m = state.members.find(function (x) { return x.id === p.memberId; });
+      var col = m ? AV[state.members.indexOf(m) % AV.length] : AV[0];
+      var late = isPaymentLate(p);
+      var upDis = i === 0 ? ' disabled' : '';
+      var dnDis = i === pays.length - 1 ? ' disabled' : '';
+      return '<div class="tl-item' + (late ? ' late-item' : '') + '">' +
+        '<div class="tl-order">' +
+          '<button type="button" class="ib" title="Move up" data-action="movePayment" data-pid="' + p.id + '" data-dir="1"' + upDis + '>↑</button>' +
+          '<button type="button" class="ib" title="Move down" data-action="movePayment" data-pid="' + p.id + '" data-dir="-1"' + dnDis + '>↓</button>' +
+        '</div>' +
+        '<div class="av" style="background:' + col + '">' + esc((m ? m.name : "?").charAt(0).toUpperCase()) + '</div>' +
+        '<div class="tl-body">' +
+          '<div class="tl-nm">' + esc(m ? m.name : "Unknown") + ' <span style="color:var(--soft);font-weight:700">· Wk ' + (Number(p.weekIndex) + 1) + '</span>' + (late ? ' <span class="tag">⏰ LATE</span>' : '') + '</div>' +
+          '<div class="tl-mt">' + fmtDT(p.timestamp) + (p.note ? ' · "' + esc(p.note) + '"' : '') + '</div>' +
+        '</div>' +
+        '<div class="tl-amt">' + full(p.amount) + '</div>' +
+        '<div class="tl-actions">' +
+          '<button type="button" class="ib edit" title="Edit" data-action="editPayment" data-pid="' + p.id + '">✎</button>' +
+          '<button type="button" class="ib del" title="Delete" data-action="deletePayment" data-pid="' + p.id + '">✕</button>' +
+        '</div>' +
+      '</div>';
+    }).join("");
+  }
+
+  function movePayment(id, direction) {
+    if (!requireAdmin("reorder tracklist")) return;
+    var sorted = sortPaymentsList(state.payments);
+    var idx = -1;
+    for (var i = 0; i < sorted.length; i++) { if (sorted[i].id === id) { idx = i; break; } }
+    if (idx < 0) return;
+    var swapIdx = idx - direction; 
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+
+    var a = sorted[idx], b = sorted[swapIdx];
+    var aOrd = (a.manualOrder != null) ? Number(a.manualOrder) : new Date(a.timestamp).getTime();
+    var bOrd = (b.manualOrder != null) ? Number(b.manualOrder) : new Date(b.timestamp).getTime();
+    a.manualOrder = bOrd; b.manualOrder = aOrd;
+
+    sync(); refreshAllViews(); haptic(8);
   }
 
   /* ---------- ONBOARDING ---------- */
   function startOnboarding() {
     pendingMode = null; pendingWho = null;
-
     var s1 = document.getElementById("step-1"), s2 = document.getElementById("step-2");
-    if (s1) s1.style.display = "";
-    if (s2) s2.style.display = "none";
-
+    if (s1) s1.style.display = ""; if (s2) s2.style.display = "none";
     var d1 = document.getElementById("step-dot-1"), d2 = document.getElementById("step-dot-2");
-    if (d1) d1.className = "ob-step active";
-    if (d2) d2.className = "ob-step";
-
-    ["ob-mobile", "ob-web"].forEach(function (id) {
-      if (DOM[id]) DOM[id].classList.remove("selected", "rec");
-    });
-
+    if (d1) d1.className = "ob-step active"; if (d2) d2.className = "ob-step";
+    ["ob-mobile", "ob-web"].forEach(function (id) { if (DOM[id]) DOM[id].classList.remove("selected", "rec"); });
     if (DOM["ob-next-1"]) DOM["ob-next-1"].disabled = true;
-    if (DOM["ob-next-2"]) DOM["ob-next-2"].disabled = true;
-
+    if (DOM["ob-next-2"]) { DOM["ob-next-2"].disabled = true; DOM["ob-next-2"].textContent = "Enter App →"; }
+    if (DOM["ob-admin-pass"]) DOM["ob-admin-pass"].classList.remove("show");
+    if (DOM["ob-admin-input"]) DOM["ob-admin-input"].value = "";
     var s = detectDeviceSuggestion();
     if (DOM["ob-suggest"]) DOM["ob-suggest"].textContent = s === "mobile" ? "📱 Mobile" : "💻 Web";
     if (DOM["ob-" + s]) DOM["ob-" + s].classList.add("rec");
     if (DOM["onboard"]) DOM["onboard"].classList.add("show");
-
     if (window.hideLoader) window.hideLoader();
   }
 
   function selectMode(m) {
-    pendingMode = m;
-    haptic();
+    pendingMode = m; haptic();
     if (DOM["ob-mobile"]) DOM["ob-mobile"].classList.toggle("selected", m === "mobile");
     if (DOM["ob-web"]) DOM["ob-web"].classList.toggle("selected", m === "web");
     if (DOM["ob-next-1"]) DOM["ob-next-1"].disabled = false;
@@ -1252,87 +1376,93 @@ var Olango = (function () {
   function goStep2() {
     if (!pendingMode) return;
     var s1 = document.getElementById("step-1"), s2 = document.getElementById("step-2");
-    if (s1) s1.style.display = "none";
-    if (s2) s2.style.display = "";
+    if (s1) s1.style.display = "none"; if (s2) s2.style.display = "";
     var d1 = document.getElementById("step-dot-1"), d2 = document.getElementById("step-dot-2");
-    if (d1) d1.className = "ob-step done";
-    if (d2) d2.className = "ob-step active";
+    if (d1) d1.className = "ob-step done"; if (d2) d2.className = "ob-step active";
     renderObMembers();
   }
 
   function goStep1() {
     var s1 = document.getElementById("step-1"), s2 = document.getElementById("step-2");
-    if (s1) s1.style.display = "";
-    if (s2) s2.style.display = "none";
+    if (s1) s1.style.display = ""; if (s2) s2.style.display = "none";
     var d1 = document.getElementById("step-dot-1"), d2 = document.getElementById("step-dot-2");
-    if (d1) d1.className = "ob-step active";
-    if (d2) d2.className = "ob-step";
+    if (d1) d1.className = "ob-step active"; if (d2) d2.className = "ob-step";
+    if (DOM["ob-admin-pass"]) DOM["ob-admin-pass"].classList.remove("show");
+    if (DOM["ob-next-2"]) DOM["ob-next-2"].textContent = "Enter App →";
   }
 
   function renderObMembers() {
-    var g = DOM["ob-mem-grid"];
-    if (!g) return;
+    var g = DOM["ob-mem-grid"]; if (!g) return;
     var html = state.members.map(function (m, i) {
-      var safe = m.name.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-      return '<button class="ob-mem" data-nm="' + esc(m.name) + '" onclick="Olango.selectWho(\'' + safe + '\')">' +
+      var isAdminMem = m.name === ADMIN_NAME;
+      return '<button type="button" class="ob-mem' + (isAdminMem ? ' admin-mem' : '') + '" data-nm="' + esc(m.name) + '">' +
         '<div class="ob-mem-av" style="background:' + AV[i % AV.length] + '">' + esc(m.name.charAt(0).toUpperCase()) + '</div>' +
         '<div class="ob-mem-nm">' + esc(m.name) + '</div>' +
       '</button>';
     }).join("");
-    html += '<button class="ob-mem ob-guest" data-nm="Guest" onclick="Olango.selectWho(\'Guest\')">' +
-              '<div class="ob-mem-av">👤</div><div class="ob-mem-nm">Guest</div></button>';
+    html += '<button type="button" class="ob-mem ob-guest" data-nm="Guest"><div class="ob-mem-av">👤</div><div class="ob-mem-nm">Guest</div></button>';
     g.innerHTML = html;
   }
 
   function selectWho(n) {
-    pendingWho = n;
-    haptic();
-    document.querySelectorAll(".ob-mem").forEach(function (el) {
-      el.classList.toggle("selected", el.dataset.nm === n);
-    });
-    if (DOM["ob-next-2"]) DOM["ob-next-2"].disabled = false;
+    pendingWho = n; haptic();
+    document.querySelectorAll(".ob-mem").forEach(function (el) { el.classList.toggle("selected", el.dataset.nm === n); });
+    if (n === ADMIN_NAME) {
+      if (DOM["ob-admin-pass"]) DOM["ob-admin-pass"].classList.add("show");
+      if (DOM["ob-next-2"]) { DOM["ob-next-2"].disabled = true; DOM["ob-next-2"].textContent = "Login"; }
+      setTimeout(function () { if (DOM["ob-admin-input"]) DOM["ob-admin-input"].focus(); }, 200);
+    } else {
+      if (DOM["ob-admin-pass"]) DOM["ob-admin-pass"].classList.remove("show");
+      if (DOM["ob-admin-input"]) DOM["ob-admin-input"].value = "";
+      if (DOM["ob-next-2"]) { DOM["ob-next-2"].disabled = false; DOM["ob-next-2"].textContent = "Enter App →"; }
+    }
   }
 
-  function nextMemberId() {
-    return (state.members.reduce(function (a, x) { return Math.max(a, Number(x.id) || 0); }, 0) || 0) + 1;
-  }
+  function nextMemberId() { return (state.members.reduce(function (a, x) { return Math.max(a, Number(x.id) || 0); }, 0) || 0) + 1; }
 
   function addAndSelect() {
-    var inp = DOM["ob-new-name"];
-    if (!inp) return;
+    var inp = DOM["ob-new-name"]; if (!inp) return;
     var n = inp.value.trim();
     if (!n) { toast("Enter a name", "err"); return; }
-    if (state.members.some(function (m) { return m.name.toLowerCase() === n.toLowerCase(); })) {
-      selectWho(n); return;
-    }
+    if (n.toLowerCase() === ADMIN_NAME.toLowerCase()) { toast("Reserved name", "err"); return; }
+    if (state.members.some(function (m) { return m.name.toLowerCase() === n.toLowerCase(); })) { selectWho(n); return; }
     state.members.push({ id: nextMemberId(), name: n });
-    sync();
-    inp.value = "";
-    renderObMembers();
+    sync(); inp.value = ""; renderObMembers();
     setTimeout(function () { selectWho(n); }, 50);
     toast(n + " added", "win");
   }
 
   function finishOnboard() {
     if (!pendingMode || !pendingWho) return;
-    saveSessionMode(pendingMode);
-    saveSessionWho(pendingWho);
-    applyMode(pendingMode);
+    if (pendingWho === ADMIN_NAME) {
+      var pass = DOM["ob-admin-input"] ? DOM["ob-admin-input"].value : "";
+      if (pass !== ADMIN_PASSWORD) {
+        toast("Wrong password", "err"); haptic([30, 50, 30]);
+        if (DOM["ob-admin-input"]) { DOM["ob-admin-input"].value = ""; DOM["ob-admin-input"].focus(); }
+        return;
+      }
+      saveSessionRole("admin");
+    } else { saveSessionRole("member"); }
+    saveSessionMode(pendingMode); saveSessionWho(pendingWho);
+    applyMode(pendingMode); applyAdminUI();
     if (DOM["onboard"]) DOM["onboard"].classList.remove("show");
     renderAll();
-    setTimeout(function () { toast("Welcome, " + pendingWho + "! 🌴", "win"); }, 300);
+    setTimeout(function () {
+      if (pendingWho === ADMIN_NAME) toast("👑 Admin Mode · Welcome, Kurt!", "admin");
+      else toast("Welcome, " + pendingWho + "!", "win");
+    }, 300);
   }
 
-  function logout() {
-    if (!confirm("Sign out?")) return;
-    clearSession();
-    location.reload();
+  function logout() { 
+    confirmAction({ 
+      icon: "🚪", title: "Sign Out?", msg: "You will need to log in again.", 
+      okText: "Sign Out", okClass: "btn-w" 
+    }, function () { clearSession(); location.reload(); }); 
   }
-
   function updateWhoUI() {
-    var w = getSessionWho() || "Guest";
-    if (DOM["user-lbl"]) DOM["user-lbl"].textContent = w;
-    if (DOM["set-current-user"]) DOM["set-current-user"].textContent = "👤 " + w;
+    var w = getSessionWho() || "Guest"; var admin = isAdmin();
+    if (DOM["user-lbl"]) DOM["user-lbl"].textContent = w + (admin ? " 👑" : "");
+    if (DOM["set-current-user"]) DOM["set-current-user"].textContent = "👤 " + w + (admin ? " (Admin)" : " (Member)");
   }
 
   /* ---------- PAYMENT FORM ---------- */
@@ -1346,21 +1476,11 @@ var Olango = (function () {
 
   function updateAutoBanner() {
     try {
-      var b = DOM["auto-box"],
-          ic = document.getElementById("auto-ic"),
-          lbl = document.getElementById("auto-lbl"),
-          dt = document.getElementById("auto-date"),
-          wkEl = document.getElementById("auto-week");
+      var b = DOM["auto-box"], ic = document.getElementById("auto-ic"), lbl = document.getElementById("auto-lbl"), dt = document.getElementById("auto-date"), wkEl = document.getElementById("auto-week");
       if (!b || !ic || !lbl || !dt || !wkEl || !DOM["pay-week"]) return;
-
       var w = Number(DOM["pay-week"].value);
       b.className = "auto " + (payType === "late" ? "late" : (editingId ? "edit" : "now"));
-
-      if (editingId) {
-        ic.textContent = "✎"; lbl.textContent = "Editing";
-        dt.textContent = ""; wkEl.textContent = "";
-        return;
-      }
+      if (editingId) { ic.textContent = "✎"; lbl.textContent = "Admin Editing"; dt.textContent = ""; wkEl.textContent = ""; return; }
       if (payType === "late") {
         ic.textContent = "⏰"; lbl.textContent = "LATE";
         dt.textContent = "Now: " + new Date().toLocaleString("en-PH", { timeZone: TZ, month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true });
@@ -1373,43 +1493,18 @@ var Olango = (function () {
     } catch (e) {}
   }
 
-  function onWeekChange() { updateAutoBanner(); }
-
   function openPayment(edit, isLateBtn) {
-    if (!state.members.length) {
-      toast("Add member first", "err");
-      openModal("m-members");
-      return;
-    }
+    if (!requireAdmin("log/edit payments")) return;
+    if (!state.members.length) { toast("Add member first", "err"); openModal("m-members"); return; }
     haptic();
-
     var cur = curWeek(), tw = cur, tm = null;
-
-    if (edit) {
-      editingId = edit.id ? edit.id : null;
-      if (edit.memberId !== undefined) tm = edit.memberId;
-      if (edit.weekIndex !== undefined) tw = edit.weekIndex;
-    } else {
-      editingId = null;
-    }
+    if (edit) { editingId = edit.id ? edit.id : null; if (edit.memberId !== undefined) tm = edit.memberId; if (edit.weekIndex !== undefined) tw = edit.weekIndex; } else editingId = null;
 
     payType = (isLateBtn || (tw < cur && isPast(tw))) ? "late" : "normal";
     setPayType(payType);
 
-    if (DOM["pay-member"]) {
-      DOM["pay-member"].innerHTML = state.members.map(function (m) {
-        return '<option value="' + m.id + '">' + esc(m.name) + '</option>';
-      }).join("");
-    }
-
-    if (!edit || !edit.id) {
-      var me = getSessionWho();
-      if (me && me !== "Guest") {
-        var meMem = state.members.find(function (m) { return m.name === me; });
-        if (meMem && tm === null) tm = meMem.id;
-      }
-    }
-
+    if (DOM["pay-member"]) DOM["pay-member"].innerHTML = state.members.map(function (m) { return '<option value="' + m.id + '">' + esc(m.name) + '</option>'; }).join("");
+    if (!edit || !edit.id) { var me = getSessionWho(); if (me && me !== "Guest") { var meMem = state.members.find(function (m) { return m.name === me; }); if (meMem && tm === null) tm = meMem.id; } }
     if (DOM["pay-week"]) {
       DOM["pay-week"].innerHTML = Array.from({ length: state.weeksCount }, function (_, i) {
         var b = i === cur ? " ← NOW" : (isPast(i) ? " (past)" : (i > cur ? " (soon)" : ""));
@@ -1418,564 +1513,404 @@ var Olango = (function () {
     }
 
     if (edit && edit.id) {
-      if (DOM["pay-title"]) DOM["pay-title"].textContent = "Edit";
+      if (DOM["pay-title"]) DOM["pay-title"].textContent = "✎ Edit Payment";
       if (DOM["pay-sub"]) DOM["pay-sub"].textContent = fmtDT(edit.timestamp);
       if (DOM["pay-submit"]) DOM["pay-submit"].textContent = "✓ Update";
-      if (DOM["pay-mh"]) DOM["pay-mh"].style.background = "linear-gradient(135deg,#f59e0b,#d97706)";
+      if (DOM["pay-mh"]) DOM["pay-mh"].style.background = "linear-gradient(135deg,var(--admin),var(--admin-dk))";
       if (DOM["pay-member"]) DOM["pay-member"].value = edit.memberId;
       if (DOM["pay-week"]) DOM["pay-week"].value = edit.weekIndex;
       if (DOM["pay-amount"]) DOM["pay-amount"].value = edit.amount;
+      if (DOM["pay-date"]) DOM["pay-date"].value = toDateTimeLocal(edit.timestamp);
       if (DOM["pay-note"]) DOM["pay-note"].value = edit.note || "";
     } else {
       if (DOM["pay-title"]) DOM["pay-title"].textContent = payType === "late" ? "⏰ Late Pay" : "Log Pay";
-      if (DOM["pay-sub"]) DOM["pay-sub"].textContent = payType === "late" ? "Catch-up" : "Auto";
+      if (DOM["pay-sub"]) DOM["pay-sub"].textContent = payType === "late" ? "Catch-up" : "Admin Entry";
       if (DOM["pay-submit"]) DOM["pay-submit"].textContent = payType === "late" ? "⏰ Save Late" : "✓ Save";
-      if (DOM["pay-mh"]) DOM["pay-mh"].style.background = payType === "late"
-        ? "linear-gradient(135deg,#8b5cf6,#6d28d9)"
-        : "linear-gradient(135deg,var(--ocean),var(--ocean-dk))";
+      if (DOM["pay-mh"]) DOM["pay-mh"].style.background = payType === "late" ? "linear-gradient(135deg,#8b5cf6,#6d28d9)" : "linear-gradient(135deg,var(--admin),var(--admin-dk))";
       if (DOM["pay-member"] && tm !== null) DOM["pay-member"].value = tm;
       if (DOM["pay-week"]) DOM["pay-week"].value = tw;
       var cp = tm !== null ? memWeekPaid(tm, tw) : 0;
       if (DOM["pay-amount"]) DOM["pay-amount"].value = Math.max(1, state.rate - cp);
+      if (DOM["pay-date"]) DOM["pay-date"].value = toDateTimeLocal(new Date().toISOString());
       if (DOM["pay-note"]) DOM["pay-note"].value = "";
     }
 
     var chips = Array.from(new Set([state.rate, state.rate * 2, state.rate * 3, 100, 300, 500])).slice(0, 6);
-    if (DOM["amt-chips"]) {
-      DOM["amt-chips"].innerHTML = chips.map(function (v) {
-        return '<button type="button" class="amt-c" onclick="document.getElementById(\'pay-amount\').value=' + v + '">₱' + v + '</button>';
-      }).join("");
-    }
+    if (DOM["amt-chips"]) DOM["amt-chips"].innerHTML = chips.map(function (v) { return '<button type="button" class="amt-c" data-amt="' + v + '">₱' + v + '</button>'; }).join("");
 
     updateAutoBanner();
     openModal("m-payment");
   }
 
   function quickPay(mid, w) {
-    haptic([10, 30, 10]);
-    var paid = memWeekPaid(mid, w);
-    var amt = Math.max(1, state.rate - paid);
-    var mem = state.members.find(function (m) { return m.id === mid; });
-    var past = isPast(w);
-
-    state.payments = state.payments || [];
-    state.payments.push({
-      id: Date.now(),
-      memberId: mid,
-      weekIndex: w,
-      amount: amt,
-      note: past ? "Late catch-up" : "Quick",
-      timestamp: new Date().toISOString(),
-      isLate: past,
-      loggedBy: getSessionWho() || "Guest"
+    if (!requireAdmin("log payments")) return;
+    var mem = state.members.find(function (m) { return m.id === mid; }); if (!mem) return;
+    var paid = memWeekPaid(mid, w); var amt = Math.max(1, state.rate - paid); var past = isPast(w);
+    confirmAction({
+      icon: past ? "⏰" : "💰", title: past ? "Log Late Payment?" : "Log Payment?", msg: "Confirm this quick payment.",
+      detail: '<div class="confirm-detail"><div>Member: <b>' + esc(mem.name) + '</b></div><div>Week: <b>' + (w + 1) + '</b></div><div>Amount: <b>' + full(amt) + '</b></div>' + (past ? '<div>Type: <b>⏰ LATE</b></div>' : '') + '</div>',
+      okText: past ? "⏰ Save Late" : "✓ Save", okClass: past ? "btn-l" : "btn-a"
+    }, function () {
+      haptic([10, 30, 10]);
+      state.payments = state.payments || [];
+      state.payments.push({ id: Date.now(), memberId: mid, weekIndex: w, amount: amt, note: past ? "Late catch-up" : "Quick", timestamp: new Date().toISOString(), isLate: past, loggedBy: getSessionWho() || "Admin" });
+      sync(); refreshAllViews();
+      toast(CHEERS[Math.floor(Math.random() * CHEERS.length)] + " " + mem.name + " · " + full(amt) + (past ? " Late" : ""), past ? "late" : "win");
+      if (flags.hasConfetti && !device.reducedMotion) { try { confetti({ particleCount: 50, spread: 60, origin: { y: .85 } }); } catch (e) {} }
     });
-
-    sync();
-    renderAll();
-    toast(CHEERS[Math.floor(Math.random() * CHEERS.length)] + " " + (mem ? mem.name : "") + " · " + full(amt) + (past ? " Late" : ""), past ? "late" : "win");
-
-    if (flags.hasConfetti && !device.reducedMotion) {
-      try { confetti({ particleCount: 50, spread: 60, origin: { y: .85 } }); } catch (e) {}
-    }
   }
 
   function submitPayment(e) {
     e.preventDefault();
-    var mid = Number(DOM["pay-member"].value);
-    var w = Number(DOM["pay-week"].value);
-    var amt = Number(DOM["pay-amount"].value);
-    var note = DOM["pay-note"].value.trim();
-
+    if (!requireAdmin("save payments")) return;
+    var mid = Number(DOM["pay-member"].value); var w = Number(DOM["pay-week"].value);
+    var amt = Number(DOM["pay-amount"].value); var note = DOM["pay-note"].value.trim();
+    var dateVal = DOM["pay-date"] ? DOM["pay-date"].value : ""; var ts = dateVal ? new Date(dateVal).toISOString() : new Date().toISOString();
     if (!amt || amt < 1) { toast("Invalid amount", "err"); return; }
+    var mem = state.members.find(function (m) { return m.id === mid; }); var isEdit = !!editingId;
 
-    var data = { memberId: mid, weekIndex: w, amount: amt, note: note };
-
-    if (editingId) {
-      var p = state.payments.find(function (x) { return x.id === editingId; });
-      if (p) { Object.assign(p, data); p.isLate = isPaymentLate(p); }
-      toast("Updated");
-    } else {
-      state.payments = state.payments || [];
-      var late = payType === "late" || isPast(w);
-      state.payments.push(Object.assign({
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        isLate: late,
-        loggedBy: getSessionWho() || "Guest"
-      }, data));
-      toast(late ? "⏰ Late saved" : CHEERS[Math.floor(Math.random() * CHEERS.length)], late ? "late" : "win");
-      if (flags.hasConfetti && !device.reducedMotion) {
-        try {
-          confetti({
-            particleCount: 70, spread: 70, origin: { y: .8 },
-            colors: late ? ['#8b5cf6', '#a855f7', '#c4b5fd'] : undefined
-          });
-        } catch (err) {}
+    confirmAction({
+      icon: isEdit ? "✎" : "💰", title: isEdit ? "Save Changes?" : "Save Payment?", msg: isEdit ? "This will update the payment record." : "This will add a new payment.",
+      detail: '<div class="confirm-detail"><div>Member: <b>' + esc(mem ? mem.name : "?") + '</b></div><div>Week: <b>' + (w + 1) + '</b></div><div>Amount: <b>' + full(amt) + '</b></div><div>Date: <b>' + fmtDT(ts) + '</b></div>' + (note ? '<div>Note: <b>' + esc(note) + '</b></div>' : '') + '</div>',
+      okText: isEdit ? "✓ Update" : "✓ Save", okClass: "btn-a"
+    }, function () {
+      var data = { memberId: mid, weekIndex: w, amount: amt, note: note, timestamp: ts };
+      if (editingId) {
+        var p = state.payments.find(function (x) { return x.id === editingId; });
+        if (p) { Object.assign(p, data); p.isLate = isPaymentLate(p); }
+        toast("✎ Payment updated", "admin");
+      } else {
+        state.payments = state.payments || []; var late = payType === "late" || isPast(w);
+        state.payments.push(Object.assign({ id: Date.now(), isLate: late, loggedBy: getSessionWho() || "Admin" }, data));
+        toast(late ? "⏰ Late saved" : CHEERS[Math.floor(Math.random() * CHEERS.length)], late ? "late" : "win");
+        if (flags.hasConfetti && !device.reducedMotion) { try { confetti({ particleCount: 70, spread: 70, origin: { y: .8 }, colors: late ? ['#8b5cf6', '#a855f7', '#c4b5fd'] : undefined }); } catch (err) {} }
       }
-    }
-
-    editingId = null;
-    sync();
-    renderAll();
-    closeModal("m-payment");
-    haptic([15, 50, 15]);
-  }
-
-  function historyIsOpen() {
-    var h = document.getElementById("m-history");
-    return h && h.classList.contains("open");
+      editingId = null; sync(); 
+      closeModal("m-payment");
+      refreshAllViews();
+      haptic([15, 50, 15]);
+    });
   }
 
   function deletePayment(id) {
-    var p = state.payments.find(function (x) { return x.id === id; });
-    if (!p) return;
-    requirePin(function () {
+    if (!requireAdmin("delete payments")) return;
+    var p = state.payments.find(function (x) { return x.id === id; }); if (!p) return;
+    var mem = state.members.find(function (m) { return m.id === p.memberId; });
+    var late = isPaymentLate(p);
+
+    confirmAction({
+      icon: "🗑️", 
+      title: late ? "Remove Late Mark?" : "Remove Payment?", 
+      msg: "This will restore the unpaid state. You can undo it briefly.",
+      detail: '<div class="confirm-detail"><div>Member: <b>' + esc(mem ? mem.name : "?") + '</b></div><div>Week: <b>' + (Number(p.weekIndex) + 1) + '</b></div><div>Amount: <b>' + full(p.amount) + '</b></div><div>Date: <b>' + fmtDT(p.timestamp) + '</b></div>' + (late ? '<div>Type: <b>⏰ LATE</b></div>' : '') + '</div>',
+      okText: "🗑️ Remove", okClass: "btn-w"
+    }, function () {
       haptic(20);
       state.payments = state.payments.filter(function (x) { return x.id !== id; });
-      sync();
-      renderAll();
-      if (historyIsOpen()) renderHistory();
+      sync(); 
+      refreshAllViews();
+      
       undoStack = { type: "payment", data: p };
       toastUndo("Payment removed", function () {
         if (!undoStack) return;
-        state.payments.push(undoStack.data);
-        undoStack = null;
-        sync();
-        renderAll();
-        if (historyIsOpen()) renderHistory();
+        state.payments.push(undoStack.data); undoStack = null;
+        sync(); refreshAllViews();
         toast("Restored ✓", "win");
       });
-    }, "PIN to delete");
+    });
   }
 
   /* ---------- MEMBERS ---------- */
   function addMember() {
-    var inp = document.getElementById("new-mem");
-    if (!inp) return;
+    if (!requireAdmin("add members")) return;
+    var inp = document.getElementById("new-mem"); if (!inp) return;
     var n = inp.value.trim();
     if (!n) return toast("Enter name", "err");
-    if (state.members.some(function (m) { return m.name.toLowerCase() === n.toLowerCase(); })) {
-      return toast("Exists", "err");
-    }
+    if (n.toLowerCase() === ADMIN_NAME.toLowerCase()) return toast("Reserved name", "err");
+    if (state.members.some(function (m) { return m.name.toLowerCase() === n.toLowerCase(); })) return toast("Exists", "err");
     state.members.push({ id: nextMemberId(), name: n });
-    inp.value = "";
-    sync();
-    renderMemList();
-    renderAll();
+    inp.value = ""; sync(); renderMemList(); renderAll();
     toast(n + " added", "win");
   }
 
-  function removeMember(id) {
-    var m = state.members.find(function (x) { return x.id === id; });
-    if (!m) return;
-    requirePin(function () {
-      var cnt = state.payments.filter(function (p) { return p.memberId === id; }).length;
-      if (!confirm("Remove " + m.name + (cnt ? " and " + cnt + " pay(s)" : "") + "?")) return;
+  function editMember(id) {
+    if (!requireAdmin("edit members")) return;
+    var m = state.members.find(function (x) { return x.id === id; }); if (!m) return;
+    editingMemberId = id;
+    if (DOM["edit-mem-name"]) DOM["edit-mem-name"].value = m.name;
+    if (DOM["edit-mem-id"]) DOM["edit-mem-id"].textContent = "#" + m.id;
+    var modal = document.getElementById("m-edit-member"); if (modal) modal.classList.add("open");
+  }
 
+  function submitEditMember(e) {
+    e.preventDefault();
+    if (!requireAdmin("edit members")) return;
+    var id = editingMemberId; if (!id) return;
+    var m = state.members.find(function (x) { return x.id === id; }); if (!m) return;
+    var newName = DOM["edit-mem-name"].value.trim();
+    if (!newName) { toast("Name required", "err"); return; }
+    if (m.name !== ADMIN_NAME && newName.toLowerCase() === ADMIN_NAME.toLowerCase()) { toast("Reserved name", "err"); return; }
+    if (state.members.some(function (x) { return x.id !== id && x.name.toLowerCase() === newName.toLowerCase(); })) { toast("Name exists", "err"); return; }
+    var oldName = m.name;
+    confirmAction({
+      icon: "✎", title: "Update Member?", msg: "This will rename the member.",
+      detail: '<div class="confirm-detail"><div>From: <b>' + esc(oldName) + '</b></div><div>To: <b>' + esc(newName) + '</b></div></div>',
+      okText: "✓ Update", okClass: "btn-a"
+    }, function () {
+      m.name = newName; editingMemberId = null;
+      sync(); renderMemList(); refreshAllViews();
+      closeModal("m-edit-member"); toast("Updated ✓", "admin");
+    });
+  }
+
+  function removeMember(id) {
+    if (!requireAdmin("remove members")) return;
+    var m = state.members.find(function (x) { return x.id === id; }); if (!m) return;
+    if (m.name === ADMIN_NAME) { toast("Cannot remove Admin", "err"); return; }
+    var cnt = state.payments.filter(function (p) { return p.memberId === id; }).length;
+    confirmAction({
+      icon: "🗑️", title: "Remove Member?", msg: "This will delete the member and all their payments.",
+      detail: '<div class="confirm-detail"><div>Member: <b>' + esc(m.name) + '</b></div><div>Payments to delete: <b>' + cnt + '</b></div></div>',
+      okText: "🗑️ Remove", okClass: "btn-w"
+    }, function () {
       var backup = { member: m, payments: state.payments.filter(function (p) { return p.memberId === id; }) };
       state.members = state.members.filter(function (x) { return x.id !== id; });
       state.payments = state.payments.filter(function (p) { return p.memberId !== id; });
-      sync();
-      renderMemList();
-      renderAll();
+      sync(); renderMemList(); refreshAllViews();
       undoStack = { type: "member", data: backup };
-
       toastUndo(m.name + " removed", function () {
         if (!undoStack) return;
         state.members.push(undoStack.data.member);
         undoStack.data.payments.forEach(function (p) { state.payments.push(p); });
         undoStack = null;
-        sync();
-        renderMemList();
-        renderAll();
+        sync(); renderMemList(); refreshAllViews();
         toast("Restored ✓", "win");
       });
-    }, "PIN to remove");
+    });
   }
 
   function renderMemList() {
-    var l = DOM["mem-list"];
-    if (!l) return;
-    if (!state.members.length) {
-      l.innerHTML = '<div class="empty"><div class="emo">👥</div>None</div>';
-      return;
-    }
+    var l = DOM["mem-list"]; if (!l) return;
+    if (!state.members.length) { l.innerHTML = '<div class="empty"><div class="emo">👥</div>None</div>'; return; }
     l.innerHTML = state.members.map(function (m, i) {
-      return '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:14px;margin-bottom:8px">' +
+      var isAdminMem = m.name === ADMIN_NAME;
+      var actions = '<button type="button" class="ib edit" title="Edit" data-action="editMember" data-mid="' + m.id + '">✎</button>' + (isAdminMem ? '' : '<button type="button" class="ib del" title="Remove" data-action="removeMember" data-mid="' + m.id + '">✕</button>');
+      return '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border:1px solid ' + (isAdminMem ? 'var(--admin)' : 'var(--border)') + ';border-radius:14px;margin-bottom:8px">' +
         '<div class="av" style="background:' + AV[i % AV.length] + '">' + esc(m.name.charAt(0).toUpperCase()) + '</div>' +
-        '<div style="flex:1;min-width:0">' +
-          '<div style="font-weight:800">' + esc(m.name) + '</div>' +
-          '<div style="font-size:12px;color:var(--soft);font-weight:600">' + full(memPaid(m.id)) + ' · 🔥' + memStreak(m.id) + '</div>' +
-        '</div>' +
-        '<button class="ib" onclick="Olango.removeMember(' + m.id + ')">✕</button>' +
+        '<div style="flex:1;min-width:0"><div style="font-weight:800">' + esc(m.name) + (isAdminMem ? ' <span class="admin-tag">👑 ADMIN</span>' : '') + '</div><div style="font-size:12px;color:var(--soft);font-weight:600">' + full(memPaid(m.id)) + ' · 🔥' + memStreak(m.id) + '</div></div>' + actions +
       '</div>';
     }).join("");
   }
 
   /* ---------- HISTORY ---------- */
   function renderHistory() {
-    var f = DOM["hist-filter"];
-    var filterVal = f ? f.value : "all";
+    var f = DOM["hist-filter"]; var filterVal = f ? f.value : "all";
     var list = DOM["hist-list"], sub = DOM["hist-sub"];
-
-    var pays = (state.payments || []).slice()
-      .sort(function (a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
-
-    if (filterVal !== "all") {
-      pays = pays.filter(function (x) { return x.memberId === Number(filterVal); });
-    }
-
-    if (sub) sub.textContent = pays.length + " payment(s)";
+    var pays = sortPaymentsList(state.payments || []);
+    if (filterVal !== "all") pays = pays.filter(function (x) { return x.memberId === Number(filterVal); });
+    if (sub) sub.textContent = pays.length + " payment(s) · " + (isAdmin() ? "👑 Admin" : "👁️ Read-only");
     if (!list) return;
-    if (!pays.length) {
-      list.innerHTML = '<div class="empty"><div class="emo">📭</div>Empty</div>';
-      return;
-    }
+    if (!pays.length) { list.innerHTML = '<div class="empty"><div class="emo">📭</div>Empty</div>'; return; }
     list.innerHTML = pays.map(function (p) { return paymentRowHTML(p, true); }).join("");
   }
 
   /* ---------- MODALS ---------- */
   function openModal(id) {
+    if ((id === "m-payment" || id === "m-members" || id === "m-edit-member" || id === "m-tracklist") && !requireAdmin("open this")) return;
     haptic();
-
     if (id === "m-members") renderMemList();
-
+    if (id === "m-tracklist") renderTracklistEditor();
     if (id === "m-history") {
       var f = DOM["hist-filter"];
-      if (f) {
-        f.innerHTML = '<option value="all">All</option>' + state.members.map(function (m) {
-          return '<option value="' + m.id + '">' + esc(m.name) + '</option>';
-        }).join("");
-      }
+      if (f) f.innerHTML = '<option value="all">All</option>' + state.members.map(function (m) { return '<option value="' + m.id + '">' + esc(m.name) + '</option>'; }).join("");
       renderHistory();
     }
-
     if (id === "m-settings") {
       var setV = function (sel, val) { var el = document.getElementById(sel); if (el) el.value = val; };
-      setV("set-name", state.tripName);
-      setV("set-rate", state.rate);
-      setV("set-start", state.startDate);
-      setV("set-weeks", state.weeksCount);
-      setV("set-gcash-num", state.gcashNumber);
-      setV("set-gcash-name", state.gcashName);
-      setV("set-mari-num", state.mariNumber);
-      setV("set-mari-name", state.mariName);
-      setV("set-pin", ""); // never expose stored PIN
-
+      setV("set-name", state.tripName); setV("set-rate", state.rate); setV("set-start", state.startDate); setV("set-weeks", state.weeksCount);
+      setV("set-gcash-num", state.gcashNumber); setV("set-gcash-name", state.gcashName);
+      setV("set-mari-num", state.mariNumber); setV("set-mari-name", state.mariName);
       var mode = getSessionMode() || "mobile";
       if (DOM["set-mode-mobile"]) DOM["set-mode-mobile"].classList.toggle("active", mode === "mobile");
       if (DOM["set-mode-web"]) DOM["set-mode-web"].classList.toggle("active", mode === "web");
-      if (DOM["set-current-user"]) DOM["set-current-user"].textContent = "👤 " + (getSessionWho() || "Guest");
+      updateWhoUI();
     }
-
     if (id === "m-share") buildShareCard();
     if (id === "m-qr") setTimeout(function () { renderQR('gcash'); }, 50);
-
-    var m = document.getElementById(id);
-    if (m) m.classList.add("open");
+    var m = document.getElementById(id); if (m) m.classList.add("open");
   }
 
-  function closeModal(id) {
-    var m = document.getElementById(id);
-    if (m) m.classList.remove("open");
-    haptic();
+  function closeModal(id) { 
+    var m = document.getElementById(id); 
+    if (m) m.classList.remove("open"); 
+    if (id === "m-week-details") currentWeekDetails = null;
+    haptic(); 
   }
 
   /* ---------- SETTINGS ---------- */
   function saveSettings(e) {
     e.preventDefault();
-    state.tripName   = document.getElementById("set-name").value.trim();
-    state.rate       = Number(document.getElementById("set-rate").value);
-    state.startDate  = document.getElementById("set-start").value;
-    state.weeksCount = Number(document.getElementById("set-weeks").value);
-    state.gcashNumber = document.getElementById("set-gcash-num").value.trim();
-    state.gcashName   = document.getElementById("set-gcash-name").value.trim();
-    state.mariNumber  = document.getElementById("set-mari-num").value.trim();
-    state.mariName    = document.getElementById("set-mari-name").value.trim();
-
-    var raw = document.getElementById("set-pin").value.replace(/\D/g, "").slice(0, 4);
-    var finish = function () {
-      flags.pinUnlocked = false;
-      sync();
-      renderAll();
-      closeModal("m-settings");
-      toast("Saved", "win");
+    if (!isAdmin()) { toast("🔒 Admin only", "err"); closeModal("m-settings"); return; }
+    var newState = {
+      tripName: document.getElementById("set-name").value.trim(), rate: Number(document.getElementById("set-rate").value),
+      startDate: document.getElementById("set-start").value, weeksCount: Number(document.getElementById("set-weeks").value),
+      gcashNumber: document.getElementById("set-gcash-num").value.trim(), gcashName: document.getElementById("set-gcash-name").value.trim(),
+      mariNumber: document.getElementById("set-mari-num").value.trim(), mariName: document.getElementById("set-mari-name").value.trim()
     };
-
-    if (raw && raw.length !== 4) { toast("PIN must be 4 digits", "err"); return; }
-    if (raw) registerPin(raw).then(finish);
-    else finish(); // blank = keep existing PIN untouched
+    confirmAction({ icon: "⚙️", title: "Save Settings?", msg: "This will update trip configuration for all members.", okText: "✓ Save", okClass: "btn-a" },
+      function () { Object.assign(state, newState); sync(); refreshAllViews(); closeModal("m-settings"); toast("Settings saved ✓", "admin"); });
   }
 
-  /* ---------- QR + COPY ---------- */
+  /* ---------- QR ---------- */
   function renderQR(type) {
     try {
       var tg = document.getElementById("qr-tgl-gcash"), tm = document.getElementById("qr-tgl-mari");
-      if (tg) tg.classList.toggle("active", type === 'gcash');
-      if (tm) tm.classList.toggle("active", type === 'mari');
-
-      var num = type === 'gcash' ? state.gcashNumber : state.mariNumber;
-      var nm  = type === 'gcash' ? state.gcashName : state.mariName;
-
+      if (tg) tg.classList.toggle("active", type === 'gcash'); if (tm) tm.classList.toggle("active", type === 'mari');
+      var num = type === 'gcash' ? state.gcashNumber : state.mariNumber, nm = type === 'gcash' ? state.gcashName : state.mariName;
       if (DOM["qr-name"]) DOM["qr-name"].textContent = (type === 'gcash' ? 'GCash · ' : 'MariBank · ') + nm;
       if (DOM["qr-num"]) DOM["qr-num"].textContent = num;
-
-      var slot = DOM["qr-slot"];
-      if (!slot) return;
-      slot.innerHTML = "";
-
+      var slot = DOM["qr-slot"]; if (!slot) return; slot.innerHTML = "";
       if (flags.hasQR && window.QRCode) {
-        var c = document.createElement("canvas");
-        slot.appendChild(c);
+        var c = document.createElement("canvas"); slot.appendChild(c);
         QRCode.toCanvas(c, num, { width: 240, margin: 2, color: { dark: '#0284c7', light: '#ffffff' } }, function () {});
       } else {
-        var img = document.createElement("img");
-        img.width = 240; img.height = 240; img.alt = "QR";
+        var img = document.createElement("img"); img.width = 240; img.height = 240; img.alt = "QR";
         img.src = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&color=0284c7&data=" + encodeURIComponent(num);
-        img.onerror = function () {
-          slot.innerHTML = '<div class="qr-warn">QR offline.<br><b style="font-size:18px">' + esc(num) + '</b></div>';
-        };
+        img.onerror = function () { slot.innerHTML = '<div class="qr-warn">QR offline.<br><b style="font-size:18px">' + esc(num) + '</b></div>'; };
         slot.appendChild(img);
       }
-    } catch (e) {
-      if (DOM["qr-slot"]) DOM["qr-slot"].innerHTML = '<div class="qr-warn">QR unavailable.</div>';
-    }
+    } catch (e) { if (DOM["qr-slot"]) DOM["qr-slot"].innerHTML = '<div class="qr-warn">QR unavailable.</div>'; }
   }
-
-  function showQR(type) {
-    openModal("m-qr");
-    setTimeout(function () { renderQR(type); }, 60);
-  }
+  function showQR(type) { openModal("m-qr"); setTimeout(function () { renderQR(type); }, 60); }
 
   /* ---------- SHARE ---------- */
   function buildShareCard() {
     var target = state.rate * state.weeksCount * state.members.length;
-    var collected = totalCollected();
-    var pct = target ? Math.min(100, Math.round(collected / target * 100)) : 0;
-
+    var collected = totalCollected(); var pct = target ? Math.min(100, Math.round(collected / target * 100)) : 0;
     var set = function (id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; };
-    set("sc-title", state.tripName);
-    set("sc-range", fmtD(weekDate(0)) + " – " + fmtD(weekDate(state.weeksCount - 1)));
-    set("sc-pct", pct + "%");
-    set("sc-amt", full(collected) + " / " + full(target));
-
-    var bar = document.getElementById("sc-bar");
-    if (bar) bar.style.width = pct + "%";
-
+    set("sc-title", state.tripName); set("sc-range", fmtD(weekDate(0)) + " – " + fmtD(weekDate(state.weeksCount - 1)));
+    set("sc-pct", pct + "%"); set("sc-amt", full(collected) + " / " + full(target));
+    var bar = document.getElementById("sc-bar"); if (bar) bar.style.width = pct + "%";
     var mems = document.getElementById("sc-mems");
-    if (mems) {
-      mems.innerHTML = state.members.map(function (m) {
-        var p = memPaid(m.id), t = state.rate * state.weeksCount;
-        return '<span>' + esc(m.name) + ' ' + (t ? Math.round(p / t * 100) : 0) + '%</span>';
-      }).join("");
-    }
-
+    if (mems) mems.innerHTML = state.members.map(function (m) { var p = memPaid(m.id), t = state.rate * state.weeksCount; return '<span>' + esc(m.name) + ' ' + (t ? Math.round(p / t * 100) : 0) + '%</span>'; }).join("");
     set("sc-foot", new Date().toLocaleString("en-PH", { timeZone: TZ, month: "short", day: "numeric", year: "numeric" }) + " · Manila");
   }
 
   function downloadShareCard() {
-    var node = DOM["share-preview"];
-    if (!node) return;
+    var node = DOM["share-preview"]; if (!node) return;
     if (flags.hasHtml2Canvas && window.html2canvas) {
       html2canvas(node, { backgroundColor: null, scale: 2 }).then(function (canvas) {
-        var a = document.createElement("a");
-        a.download = "olango_" + Date.now() + ".png";
-        a.href = canvas.toDataURL("image/png");
-        a.click();
+        var a = document.createElement("a"); a.download = "olango_" + Date.now() + ".png"; a.href = canvas.toDataURL("image/png"); a.click();
         toast("PNG saved 📥", "win");
       }).catch(function () { toast("Capture failed", "err"); });
     } else {
       toast("Loading PNG lib…", "warn");
       loadScript("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js", 4000).then(function (ok) {
         flags.hasHtml2Canvas = !!(ok && window.html2canvas);
-        if (flags.hasHtml2Canvas) downloadShareCard();
-        else toast("Use Copy instead", "err");
+        if (flags.hasHtml2Canvas) downloadShareCard(); else toast("Use Copy instead", "err");
       });
     }
   }
 
   function copySummary() {
     try {
-      var cur = curWeek();
-      var target = state.rate * state.weeksCount * state.members.length;
-      var collected = totalCollected();
-      var pct = target ? Math.round(collected / target * 100) : 0;
-      var filled = Math.round(pct / 10);
-      var bar = "█".repeat(filled) + "░".repeat(Math.max(0, 10 - filled));
-      var pred = predictCompletion();
-
-      var t = "🏝️ " + state.tripName.toUpperCase() + "\n━━━━━━━━━━━━━━━━━━━━\n" +
-              bar + " " + pct + "%\n💰 " + full(collected) + " / " + full(target) + "\n\n" +
-              "📅 Wk " + (cur + 1) + "/" + state.weeksCount + " · " + fmtD(weekDate(cur)) + "\n" +
-              "⏰ " + countdown(weekDeadline(cur)) + "\n";
-
+      var cur = curWeek(); var target = state.rate * state.weeksCount * state.members.length;
+      var collected = totalCollected(); var pct = target ? Math.round(collected / target * 100) : 0;
+      var filled = Math.round(pct / 10); var bar = "█".repeat(filled) + "░".repeat(Math.max(0, 10 - filled)); var pred = predictCompletion();
+      var t = "🏝️ " + state.tripName.toUpperCase() + "\n━━━━━━━━━━━━━━━━━━━━\n" + bar + " " + pct + "%\n💰 " + full(collected) + " / " + full(target) + "\n\n📅 Wk " + (cur + 1) + "/" + state.weeksCount + " · " + fmtD(weekDate(cur)) + "\n⏰ " + countdown(weekDeadline(cur)) + "\n";
       if (pred && !pred.late) t += "🎯 Funded by ~" + pred.date + "\n";
-
-      t += "\n💳 GCash: " + state.gcashNumber + " (" + state.gcashName + ")\n" +
-           "💳 MariBank: " + state.mariNumber + " (" + state.mariName + ")\n" +
-           "📝 Note: [Name] Wk[#]\n━━━━━━━━━━━━━━━━━━━━\n";
-
+      t += "\n💳 GCash: " + state.gcashNumber + " (" + state.gcashName + ")\n💳 MariBank: " + state.mariNumber + " (" + state.mariName + ")\n📝 Note: [Name] Wk[#]\n━━━━━━━━━━━━━━━━━━━━\n";
       state.members.forEach(function (m) {
-        var paid = memPaid(m.id), mT = state.rate * state.weeksCount;
-        var p = mT ? Math.round(paid / mT * 100) : 0;
-        var miss = memMissed(m.id).length, stk = memStreak(m.id);
-        var e = p >= 100 ? "✅" : (p >= 75 ? "🟢" : (p >= 50 ? "🟡" : "🔴"));
-        t += e + " " + m.name + ": " + full(paid) + "/" + full(mT) + " (" + p + "%)" +
-             (miss ? " ⚠" + miss : "") + (stk >= 2 ? " 🔥" + stk : "") + "\n";
+        var paid = memPaid(m.id), mT = state.rate * state.weeksCount; var p = mT ? Math.round(paid / mT * 100) : 0;
+        var miss = memMissed(m.id).length, stk = memStreak(m.id); var e = p >= 100 ? "✅" : (p >= 75 ? "🟢" : (p >= 50 ? "🟡" : "🔴"));
+        t += e + " " + m.name + ": " + full(paid) + "/" + full(mT) + " (" + p + "%)" + (miss ? " ⚠" + miss : "") + (stk >= 2 ? " 🔥" + stk : "") + "\n";
       });
-
-      t += "━━━━━━━━━━━━━━━━━━━━\n" + new Date().toLocaleString("en-PH", {
-        timeZone: TZ, month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true
-      });
-
-      navigator.clipboard.writeText(t).then(
-        function () { toast("Copied 📋", "win"); },
-        function () { toast("Copy failed", "err"); }
-      );
+      t += "━━━━━━━━━━━━━━━━━━━━\n" + new Date().toLocaleString("en-PH", { timeZone: TZ, month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true });
+      navigator.clipboard.writeText(t).then(function () { toast("Copied 📋", "win"); }, function () { toast("Copy failed", "err"); });
     } catch (e) { toast("Copy failed", "err"); }
   }
 
-  function copyGCash() {
-    try { navigator.clipboard.writeText(state.gcashNumber || "").then(function () { toast("GCash copied 📱"); }); } catch (e) {}
-    haptic();
-  }
-  function copyMari() {
-    try { navigator.clipboard.writeText(state.mariNumber || "").then(function () { toast("MariBank copied 🏦"); }); } catch (e) {}
-    haptic();
-  }
+  function copyGCash() { try { navigator.clipboard.writeText(state.gcashNumber || "").then(function () { toast("GCash copied 📱"); }); } catch (e) {} haptic(); }
+  function copyMari() { try { navigator.clipboard.writeText(state.mariNumber || "").then(function () { toast("MariBank copied 🏦"); }); } catch (e) {} haptic(); }
 
-  /* ---------- BACKUP / RESTORE ---------- */
+  /* ---------- BACKUP ---------- */
   function exportBackup() {
+    if (!requireAdmin("export backup")) return;
     try {
       var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement("a");
-      a.href = url;
-      a.download = "olango_" + new Date().toISOString().split("T")[0] + ".json";
-      a.click();
-      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-      toast("Backup 💾", "win");
+      var url = URL.createObjectURL(blob); var a = document.createElement("a"); a.href = url; a.download = "olango_" + new Date().toISOString().split("T")[0] + ".json"; a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000); toast("Backup 💾", "win");
     } catch (e) { toast("Backup failed", "err"); }
   }
-
-  function importBackup() {
-    var inp = document.getElementById("import-input");
-    if (inp) inp.click();
-  }
-
+  function importBackup() { if (!requireAdmin("restore backup")) return; var inp = document.getElementById("import-input"); if (inp) inp.click(); }
   function handleImport(e) {
-    var f = e.target.files[0];
-    if (!f) return;
-    var r = new FileReader();
+    if (!requireAdmin("restore backup")) return;
+    var f = e.target.files[0]; if (!f) return; var r = new FileReader();
     r.onload = function (ev) {
       try {
-        var d = JSON.parse(ev.target.result);
-        if (!d || !Array.isArray(d.members)) throw new Error("bad file");
-        if (!confirm("Replace all data?")) return;
-        state = Object.assign({}, defaultState, d);
-        sync();
-        renderAll();
-        toast("Restored ✓", "win");
+        var d = JSON.parse(ev.target.result); if (!d || !Array.isArray(d.members)) throw new Error("bad file");
+        confirmAction({ icon: "📤", title: "Restore Backup?", msg: "This will REPLACE all current data with the backup file.", okText: "📤 Restore", okClass: "btn-w" },
+          function () { state = Object.assign({}, defaultState, d); sync(); refreshAllViews(); toast("Restored ✓", "win"); });
       } catch (err) { toast("Invalid file", "err"); }
     };
-    r.readAsText(f);
-    e.target.value = "";
+    r.readAsText(f); e.target.value = "";
   }
-
   function promptReset() {
-    requirePin(function () {
-      if (!confirm("Reset EVERYTHING?")) return;
-      if (!confirm("Final warning")) return;
-      state = JSON.parse(JSON.stringify(defaultState));
-      milestones = new Set();
-      sync();
-      renderAll();
-      toast("Reset", "warn");
-    }, "PIN to reset");
+    if (!requireAdmin("reset data")) return;
+    confirmAction({ icon: "⚠️", title: "Reset EVERYTHING?", msg: "This will delete all payments and reset the trip to defaults. This cannot be undone!", okText: "⚠️ Reset All", okClass: "btn-w" },
+      function () { confirmAction({ icon: "🚨", title: "Final Warning", msg: "Are you absolutely sure? All data will be lost.", okText: "🚨 YES, Reset", okClass: "btn-w" },
+          function () { state = JSON.parse(JSON.stringify(defaultState)); milestones = new Set(); sync(); refreshAllViews(); toast("Reset complete", "warn"); }); });
   }
 
-  /* ---------- MILESTONES + NOTIFS ---------- */
+  /* ---------- MILESTONES / NOTIFS ---------- */
   function checkMilestones(pct) {
     [25, 50, 75, 100].forEach(function (m) {
       if (pct >= m && !milestones.has(m)) {
         milestones.add(m);
         if (milestones.size > 1 || pct > 5) {
           setTimeout(function () {
-            if (flags.hasConfetti && !device.reducedMotion) {
-              try { confetti({ particleCount: 100, spread: 80, origin: { y: .6 } }); } catch (e) {}
-            }
+            if (flags.hasConfetti && !device.reducedMotion) { try { confetti({ particleCount: 100, spread: 80, origin: { y: .6 } }); } catch (e) {} }
             toast("🎉 " + m + "% reached!", "win");
           }, 300);
         }
       }
     });
   }
-
   function enableNotifs() {
     if (!("Notification" in window)) { toast("Not supported", "err"); return; }
     Notification.requestPermission().then(function (p) {
-      if (p === "granted") {
-        toast("Reminders on 🔔", "win");
-        try { localStorage.setItem("olango_notif", "1"); } catch (e) {}
-      } else {
-        toast("Permission denied", "warn");
-      }
+      if (p === "granted") { toast("Reminders on 🔔", "win"); try { localStorage.setItem("olango_notif", "1"); } catch (e) {} }
+      else toast("Permission denied", "warn");
     });
   }
-
   function checkDeadlineNotif() {
     try {
       if (localStorage.getItem("olango_notif") !== "1") return;
       if (!("Notification" in window) || Notification.permission !== "granted") return;
-      var w = curWeek();
-      var dl = weekDeadline(w);
-      var left = dl - nowMs();
-      var key = "olango_n_" + w + "_" + Math.floor(left / 3600000);
+      var w = curWeek(); var dl = weekDeadline(w); var left = dl - nowMs(); var key = "olango_n_" + w + "_" + Math.floor(left / 3600000);
       if (localStorage.getItem(key)) return;
-      if (left > 0 && left <= 24 * 3600000) {
-        new Notification("🌴 Olango", { body: "Week " + (w + 1) + " deadline in " + countdown(dl) });
-        localStorage.setItem(key, "1");
-      }
+      if (left > 0 && left <= 24 * 3600000) { new Notification("🌴 Olango", { body: "Week " + (w + 1) + " deadline in " + countdown(dl) }); localStorage.setItem(key, "1"); }
     } catch (e) {}
   }
 
   /* ---------- TOASTS ---------- */
   function toast(msg, type) {
     try {
-      var box = DOM["toast-box"];
-      if (!box) return;
-      var el = document.createElement("div");
-      el.className = "toast" + (type ? " " + type : "");
-      el.textContent = msg;
-      box.appendChild(el);
-      setTimeout(function () { try { el.remove(); } catch (e) {} }, 3200);
+      var box = DOM["toast-box"]; if (!box) return;
+      var el = document.createElement("div"); el.className = "toast" + (type ? " " + type : ""); el.textContent = msg;
+      box.appendChild(el); setTimeout(function () { try { el.remove(); } catch (e) {} }, 3200);
     } catch (e) {}
   }
-
   function toastUndo(msg, undoFn) {
     try {
-      var box = DOM["toast-box"];
-      if (!box) return;
-      var el = document.createElement("div");
-      el.className = "toast warn";
-      var span = document.createElement("span");
-      span.textContent = msg;
-      el.appendChild(span);
-
-      var btn = document.createElement("button");
-      btn.className = "toast-btn";
-      btn.textContent = "UNDO";
-      btn.onclick = function () { undoFn(); el.remove(); };
-      el.appendChild(btn);
-
-      box.appendChild(el);
-      setTimeout(function () { try { el.remove(); } catch (e) {} }, 10000);
+      var box = DOM["toast-box"]; if (!box) return;
+      var el = document.createElement("div"); el.className = "toast warn"; var span = document.createElement("span"); span.textContent = msg; el.appendChild(span);
+      var btn = document.createElement("button"); btn.type = "button"; btn.className = "toast-btn"; btn.textContent = "UNDO"; 
+      btn.addEventListener("click", function () { undoFn(); el.remove(); });
+      el.appendChild(btn); box.appendChild(el); setTimeout(function () { try { el.remove(); } catch (e) {} }, 10000);
     } catch (e) {}
   }
-
-  function scrollTop() {
-    try { window.scrollTo({ top: 0, behavior: device.reducedMotion ? 'auto' : 'smooth' }); } catch (e) {}
-  }
+  function scrollTop() { try { window.scrollTo({ top: 0, behavior: device.reducedMotion ? 'auto' : 'smooth' }); } catch (e) {} }
 
   /* ---------- FIREBASE ---------- */
   function initFirebase() {
@@ -1984,112 +1919,237 @@ var Olango = (function () {
       loadScript("https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js", 3500).then(function (ok2) {
         if (!ok2) { setCloudStatus(false); return; }
         try {
-          firebase.initializeApp(firebaseConfig);
-          DB = firebase.database();
-          dbRef = DB.ref("olango_tracker_v5");
-
+          firebase.initializeApp(firebaseConfig); DB = firebase.database(); dbRef = DB.ref("olango_tracker_v5");
           try { dbRef.keepSynced(true); } catch (e) {}
-
-          var settled = false;
-          setTimeout(function () { if (!settled) setCloudStatus(false); }, 4000);
-
+          var settled = false; setTimeout(function () { if (!settled) setCloudStatus(false); }, 4000);
           dbRef.on("value", function (snap) {
             settled = true;
             try {
               var val = snap.val();
               if (val && Array.isArray(val.members) && val.members.length) {
-                var ct = Number(val.lastUpdated) || 0;
-                var lt = Number(state.lastUpdated) || 0;
-                if (ct >= lt) {
-                  state = Object.assign({}, defaultState, val);
-                  saveLocal();
-                  renderAll();
-                } else {
-                  sync();
-                }
-              } else {
-                sync();
-              }
+                var ct = Number(val.lastUpdated) || 0; var lt = Number(state.lastUpdated) || 0;
+                if (ct >= lt) { state = Object.assign({}, defaultState, val); saveLocal(); refreshAllViews(); }
+                else sync();
+              } else sync();
               setCloudStatus(true);
             } catch (e) { setCloudStatus(false); }
-          }, function () {
-            settled = true;
-            setCloudStatus(false);
-          });
+          }, function () { settled = true; setCloudStatus(false); });
         } catch (e) { setCloudStatus(false); }
       });
     });
   }
 
+  /* ---------- GLOBAL EVENT DELEGATION ---------- */
+  function setupGlobalHandlers() {
+    // Use a single delegated handler for the whole document
+    // Attach both click AND touch handlers for mobile reliability
+    var handler = function(e) {
+      var target = e.target;
+      
+      // Walk up to find element with data-action or data-close
+      var el = target;
+      while (el && el !== document.body) {
+        // Close modal button
+        if (el.hasAttribute && el.hasAttribute("data-close")) {
+          e.preventDefault();
+          e.stopPropagation();
+          var closeId = el.getAttribute("data-close");
+          if (closeId) closeModal(closeId);
+          return;
+        }
+        
+        // Action button
+        if (el.hasAttribute && el.hasAttribute("data-action")) {
+          var action = el.getAttribute("data-action");
+          
+          switch(action) {
+            case "scrollTop": e.preventDefault(); scrollTop(); return;
+            case "logout": e.preventDefault(); logout(); return;
+            case "switchMode": e.preventDefault(); switchMode(); return;
+            case "openPayment": e.preventDefault(); openPayment(); return;
+            case "openPaymentLate": e.preventDefault(); openPayment(null, true); return;
+            case "openModal": e.preventDefault(); openModal(el.getAttribute("data-target")); return;
+            case "copyGCash": e.preventDefault(); copyGCash(); return;
+            case "copyMari": e.preventDefault(); copyMari(); return;
+            case "showQR": e.preventDefault(); showQR(el.getAttribute("data-target")); return;
+            case "exportBackup": e.preventDefault(); exportBackup(); return;
+            case "importBackup": e.preventDefault(); importBackup(); return;
+            case "promptReset": e.preventDefault(); promptReset(); return;
+            case "enableNotifs": e.preventDefault(); enableNotifs(); return;
+            case "downloadShareCard": e.preventDefault(); downloadShareCard(); return;
+            case "copySummary": e.preventDefault(); copySummary(); return;
+            case "weekDetails":
+              e.preventDefault();
+              openWeekDetails(Number(el.getAttribute("data-mid")), Number(el.getAttribute("data-wk")));
+              return;
+            case "quickPay":
+              e.preventDefault();
+              quickPay(Number(el.getAttribute("data-mid")), Number(el.getAttribute("data-wk")));
+              return;
+            case "payLate":
+              e.preventDefault();
+              openPayment({ memberId: Number(el.getAttribute("data-mid")), weekIndex: Number(el.getAttribute("data-wk")) }, true);
+              return;
+            case "payNew":
+              e.preventDefault();
+              openPayment({ memberId: Number(el.getAttribute("data-mid")), weekIndex: Number(el.getAttribute("data-wk")) });
+              return;
+            case "editPayment":
+              e.preventDefault();
+              var pid = Number(el.getAttribute("data-pid"));
+              var p = state.payments.find(function(x) { return x.id === pid; });
+              if (p) {
+                var closeAfter = el.getAttribute("data-close");
+                if (closeAfter) closeModal(closeAfter);
+                openPayment(p);
+              }
+              return;
+            case "deletePayment":
+              e.preventDefault();
+              deletePayment(Number(el.getAttribute("data-pid")));
+              return;
+            case "movePayment":
+              e.preventDefault();
+              movePayment(Number(el.getAttribute("data-pid")), Number(el.getAttribute("data-dir")));
+              return;
+            case "editMember":
+              e.preventDefault();
+              editMember(Number(el.getAttribute("data-mid")));
+              return;
+            case "removeMember":
+              e.preventDefault();
+              removeMember(Number(el.getAttribute("data-mid")));
+              return;
+          }
+        }
+        el = el.parentNode;
+      }
+    };
+    
+    document.addEventListener("click", handler);
+    
+    // Onboarding mode cards
+    document.addEventListener("click", function(e) {
+      var t = e.target;
+      while (t && t !== document.body) {
+        if (t.classList && t.classList.contains("ob-card") && t.hasAttribute("data-mode")) {
+          selectMode(t.getAttribute("data-mode"));
+          return;
+        }
+        if (t.classList && t.classList.contains("ob-mem") && t.hasAttribute("data-nm")) {
+          selectWho(t.getAttribute("data-nm"));
+          return;
+        }
+        if (t.classList && t.classList.contains("amt-c") && t.hasAttribute("data-amt")) {
+          if (DOM["pay-amount"]) DOM["pay-amount"].value = t.getAttribute("data-amt");
+          return;
+        }
+        if (t.hasAttribute && t.hasAttribute("data-paytype")) {
+          setPayType(t.getAttribute("data-paytype"));
+          return;
+        }
+        if (t.hasAttribute && t.hasAttribute("data-qrtype")) {
+          renderQR(t.getAttribute("data-qrtype"));
+          return;
+        }
+        if (t.hasAttribute && t.hasAttribute("data-setmode")) {
+          setModeInSettings(t.getAttribute("data-setmode"));
+          return;
+        }
+        t = t.parentNode;
+      }
+    });
+    
+    // Onboarding button handlers
+    var obNext1 = document.getElementById("ob-next-1");
+    if (obNext1) obNext1.addEventListener("click", goStep2);
+    var obNext2 = document.getElementById("ob-next-2");
+    if (obNext2) obNext2.addEventListener("click", finishOnboard);
+    var obBack = document.getElementById("ob-back-btn");
+    if (obBack) obBack.addEventListener("click", goStep1);
+    var obAdd = document.getElementById("ob-add-btn");
+    if (obAdd) obAdd.addEventListener("click", addAndSelect);
+    var obNewName = document.getElementById("ob-new-name");
+    if (obNewName) obNewName.addEventListener("keypress", function(e) { 
+      if (e.key === "Enter") { e.preventDefault(); addAndSelect(); } 
+    });
+    var obAdminInput = document.getElementById("ob-admin-input");
+    if (obAdminInput) {
+      obAdminInput.addEventListener("input", function() {
+        if (DOM["ob-next-2"]) DOM["ob-next-2"].disabled = this.value.length < 1;
+      });
+      obAdminInput.addEventListener("keypress", function(e) { 
+        if (e.key === "Enter") { e.preventDefault(); finishOnboard(); } 
+      });
+    }
+    
+    // Add Member button in members modal
+    var addMemBtn = document.getElementById("add-mem-btn");
+    if (addMemBtn) addMemBtn.addEventListener("click", addMember);
+    var newMemInp = document.getElementById("new-mem");
+    if (newMemInp) newMemInp.addEventListener("keypress", function(e) {
+      if (e.key === "Enter") { e.preventDefault(); addMember(); }
+    });
+    
+    // Add payment button in week details
+    var wdAddBtn = document.getElementById("wd-add-btn");
+    if (wdAddBtn) wdAddBtn.addEventListener("click", function() {
+      var mid = Number(this.getAttribute("data-mid"));
+      var wk = Number(this.getAttribute("data-wk"));
+      closeModal("m-week-details");
+      openPayment({ memberId: mid, weekIndex: wk }, isPast(wk));
+    });
+    
+    // Forms
+    var payForm = document.getElementById("pay-form");
+    if (payForm) payForm.addEventListener("submit", submitPayment);
+    var editMemForm = document.getElementById("edit-mem-form");
+    if (editMemForm) editMemForm.addEventListener("submit", submitEditMember);
+    var settingsForm = document.getElementById("settings-form");
+    if (settingsForm) settingsForm.addEventListener("submit", saveSettings);
+    var payWeek = document.getElementById("pay-week");
+    if (payWeek) payWeek.addEventListener("change", updateAutoBanner);
+    var histFilter = document.getElementById("hist-filter");
+    if (histFilter) histFilter.addEventListener("change", renderHistory);
+    var importInput = document.getElementById("import-input");
+    if (importInput) importInput.addEventListener("change", handleImport);
+    
+    // Confirmation modal buttons
+    var confOk = document.getElementById("conf-ok");
+    if (confOk) confOk.addEventListener("click", acceptConfirm);
+    var confCancel = document.getElementById("conf-cancel");
+    if (confCancel) confCancel.addEventListener("click", cancelConfirm);
+  }
+
   /* ---------- BOOT ---------- */
   function boot() {
-    cacheDOMSelectors();
-    setupPinInputListeners();
-    updateWhoUI();
+    cacheDOMSelectors(); 
+    setupGlobalHandlers();
+    updateWhoUI(); 
+    applyAdminUI();
 
-    loadScript("https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js", 2500)
-      .then(function (ok) { flags.hasConfetti = !!(ok && window.confetti); });
-    loadScript("https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js", 2500)
-      .then(function (ok) { flags.hasQR = !!(ok && window.QRCode); });
-    loadScript("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js", 4000)
-      .then(function (ok) { flags.hasHtml2Canvas = !!(ok && window.html2canvas); });
+    loadScript("https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js", 2500).then(function (ok) { flags.hasConfetti = !!(ok && window.confetti); });
+    loadScript("https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js", 2500).then(function (ok) { flags.hasQR = !!(ok && window.QRCode); });
+    loadScript("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js", 4000).then(function (ok) { flags.hasHtml2Canvas = !!(ok && window.html2canvas); });
 
     initFirebase();
 
     var savedMode = getSessionMode(), savedWho = getSessionWho();
     if (savedMode && savedWho) {
-      applyMode(savedMode);
-      renderAll();
+      applyMode(savedMode); applyAdminUI(); renderAll();
       if (window.hideLoader) window.hideLoader();
     } else {
       setTimeout(startOnboarding, 300);
     }
 
-    setInterval(tickClock, 1000);
-    setInterval(renderAll, 30000);
-    setInterval(checkDeadlineNotif, 60000);
+    setInterval(tickClock, 1000); setInterval(renderAll, 30000); setInterval(checkDeadlineNotif, 60000);
     window.addEventListener("beforeunload", saveLocal);
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
-  else boot();
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 
-  /* ---------- PUBLIC API ---------- */
   return {
-    selectMode: selectMode,
-    goStep1: goStep1,
-    goStep2: goStep2,
-    selectWho: selectWho,
-    addAndSelect: addAndSelect,
-    finishOnboard: finishOnboard,
-    logout: logout,
-    switchMode: switchMode,
-    setModeInSettings: setModeInSettings,
-    scrollTop: scrollTop,
-    openPayment: openPayment,
-    quickPay: quickPay,
-    submitPayment: submitPayment,
-    deletePayment: deletePayment,
-    setPayType: setPayType,
-    onWeekChange: onWeekChange,
-    addMember: addMember,
-    removeMember: removeMember,
-    renderHistory: renderHistory,
-    openModal: openModal,
-    closeModal: closeModal,
-    saveSettings: saveSettings,
-    renderQR: renderQR,
-    showQR: showQR,
-    downloadShareCard: downloadShareCard,
-    copySummary: copySummary,
-    copyGCash: copyGCash,
-    copyMari: copyMari,
-    exportBackup: exportBackup,
-    importBackup: importBackup,
-    handleImport: handleImport,
-    promptReset: promptReset,
-    enableNotifs: enableNotifs,
-    submitPin: submitPin
+    openPayment: openPayment, closeModal: closeModal, openModal: openModal
   };
 })();
 </script>
